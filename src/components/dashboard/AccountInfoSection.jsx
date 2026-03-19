@@ -277,12 +277,14 @@ function AccountDeletionButton({ user }) {
     if (confirmText !== "SUPPRIMER") return;
     
     setDeleting(true);
-    try {
-      await base44.entities.User.delete(user.id);
-window.location.href='/';
-```    } catch (err) {
-      alert("Erreur lors de la suppression du compte");
-      setDeleting(false);
+  try {
+  await base44.entities.User.delete(user.id);
+  window.location.href='/';
+} catch (err) {
+  alert("Erreur lors de la suppression du compte");
+  setDeleting(false);
+}
+```
     }
   };
 
