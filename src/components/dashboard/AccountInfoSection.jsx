@@ -279,8 +279,8 @@ function AccountDeletionButton({ user }) {
     setDeleting(true);
     try {
       await base44.entities.User.delete(user.id);
-      await window.location.href='/';
-    } catch (err) {
+window.location.href='/';
+```    } catch (err) {
       alert("Erreur lors de la suppression du compte");
       setDeleting(false);
     }
