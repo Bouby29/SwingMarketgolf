@@ -1,95 +1,104 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, LayoutDashboard, Users, Package, ShoppingCart, TrendingUp, Truck, HelpCircle, AlertTriangle } from "lucide-react";
+import { useState } from "react";
 import AdminOverview from "../components/admin/AdminOverview";
 import AdminUsers from "../components/admin/AdminUsers";
 import AdminProducts from "../components/admin/AdminProducts";
 import AdminOrders from "../components/admin/AdminOrders";
 import AdminCommissions from "../components/admin/AdminCommissions";
 import AdminShipping from "../components/admin/AdminShipping";
-import AdminFAQ from "../components/admin/AdminFAQ";
 import AdminDisputes from "../components/admin/AdminDisputes";
+import AdminFAQ from "../components/admin/AdminFAQ";
+
+const ADMIN_PASSWORD = "swingadmin2025!";
 
 export default function Admin() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuth, setIsAuth] = useState(false);
+  const [pwd, setPwd] = useState("");
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
 
-  useEffect(() => {
-    Promise.resolve(null).then(setUser).catch(() => setUser(null)).finally(() => setLoading(false));
-  }, []);
+  const handleLogin = () => {
+    if (pwd === ADMIN_PASSWORD) {
+      setIsAuth(true);
+      setError("");
+    } else {
+      setError("Mot de passe incorrect");
+    }
+  };
 
-  if (loading) {
+  if (!isAuth) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-500">Chargement...</div>
-      </div>
-    );
-  }
-
-  if (!user || user.role !== "admin") {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-        <Shield className="w-16 h-16 text-red-400 mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900">Accès refusé</h1>
-        <p className="text-gray-500 mt-2">Vous n'avez pas les droits d'accès à cette page.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-white">
-      <div className="bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] text-white px-6 py-6 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center gap-3">
-          <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
-            <Shield className="w-6 h-6" />
+      <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#0f1923"}}>
+        <div style={{background:"#1a2632",padding:"2.5rem",borderRadius:"12px",width:"100%",maxWidth:"380px"}}>
+          <div style={{textAlign:"center",marginBottom:"2rem"}}>
+            <div style={{fontSize:"2.5rem"}}>⛳</div>
+            <h1 style={{color:"white",fontSize:"1.4rem",fontWeight:"600"}}>SwingMarketGolf</h1>
+            <p style={{color:"#8899aa",fontSize:"0.85rem"}}>Accès Back Office</p>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">Administration SwingMarket</h1>
-            <p className="text-green-100 text-sm">Tableau de bord administrateur</p>
-          </div>
-          <span className="ml-auto text-green-100 text-sm hidden md:block bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm">{user.email}</span>
+          <input
+            type="password"
+            placeholder="Mot de passe admin"
+            value={pwd}
+            onChange={e => setPwd(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleLogin()}
+            style={{width:"100%",padding:"0.75rem 1rem",borderRadius:"8px",border:"1px solid #2d4a5f",background:"#0f1923",color:"white",fontSize:"0.9rem",marginBottom:"0.8rem",outline:"none",boxSizing:"border-box"}}
+          />
+          {error && <p style={{color:"#ff6b6b",fontSize:"0.8rem",marginBottom:"0.8rem"}}>{error}</p>}
+          <button
+            onClick={handleLogin}
+            style={{width:"100%",padding:"0.75rem",borderRadius:"8px",background:"#22c55e",border:"none",color:"white",fontWeight:"600",cursor:"pointer"}}
+          >
+            Accéder au Back Office
+          </button>
         </div>
       </div>
+    );
+  }
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <Tabs defaultValue="overview">
-          <TabsList className="mb-8 bg-gray-100 border-gray-200 h-auto flex-wrap gap-2 p-2 shadow-sm">
-            <TabsTrigger value="overview" className="gap-2 text-sm data-[state=active]:bg-white data-[state=active]:text-[#1B5E20] data-[state=active]:shadow-md">
-              <LayoutDashboard className="w-4 h-4" /> Vue globale
-            </TabsTrigger>
-            <TabsTrigger value="users" className="gap-2 text-sm data-[state=active]:bg-white data-[state=active]:text-[#1B5E20] data-[state=active]:shadow-md">
-              <Users className="w-4 h-4" /> Utilisateurs
-            </TabsTrigger>
-            <TabsTrigger value="products" className="gap-2 text-sm data-[state=active]:bg-white data-[state=active]:text-[#1B5E20] data-[state=active]:shadow-md">
-              <Package className="w-4 h-4" /> Annonces
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="gap-2 text-sm data-[state=active]:bg-white data-[state=active]:text-[#1B5E20] data-[state=active]:shadow-md">
-              <ShoppingCart className="w-4 h-4" /> Commandes
-            </TabsTrigger>
-            <TabsTrigger value="commissions" className="gap-2 text-sm data-[state=active]:bg-white data-[state=active]:text-[#1B5E20] data-[state=active]:shadow-md">
-              <TrendingUp className="w-4 h-4" /> Commissions
-            </TabsTrigger>
-            <TabsTrigger value="shipping" className="gap-2 text-sm data-[state=active]:bg-white data-[state=active]:text-[#1B5E20] data-[state=active]:shadow-md">
-              <Truck className="w-4 h-4" /> Offres de transport
-            </TabsTrigger>
-            <TabsTrigger value="disputes" className="gap-2 text-sm data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-md">
-              <AlertTriangle className="w-4 h-4" /> Litiges
-            </TabsTrigger>
-            <TabsTrigger value="faq" className="gap-2 text-sm data-[state=active]:bg-white data-[state=active]:text-[#1B5E20] data-[state=active]:shadow-md">
-              <HelpCircle className="w-4 h-4" /> FAQ
-            </TabsTrigger>
-          </TabsList>
+  const tabs = [
+    { id: "overview", label: "📊 Vue globale" },
+    { id: "users", label: "👥 Utilisateurs" },
+    { id: "products", label: "📦 Annonces" },
+    { id: "orders", label: "🛒 Commandes" },
+    { id: "commissions", label: "📈 Commissions" },
+    { id: "shipping", label: "🚚 Transport" },
+    { id: "disputes", label: "⚠️ Litiges" },
+    { id: "faq", label: "❓ FAQ" },
+  ];
 
-          <TabsContent value="overview"><AdminOverview /></TabsContent>
-          <TabsContent value="users"><AdminUsers /></TabsContent>
-          <TabsContent value="products"><AdminProducts /></TabsContent>
-          <TabsContent value="orders"><AdminOrders /></TabsContent>
-          <TabsContent value="commissions"><AdminCommissions /></TabsContent>
-          <TabsContent value="shipping"><AdminShipping /></TabsContent>
-          <TabsContent value="disputes"><AdminDisputes /></TabsContent>
-          <TabsContent value="faq"><AdminFAQ /></TabsContent>
-        </Tabs>
+  return (
+    <div style={{display:"flex",minHeight:"100vh",background:"#f8fafc"}}>
+      <div style={{width:"240px",background:"#0f1923",padding:"1.5rem 0",flexShrink:0,display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"0 1.5rem",marginBottom:"2rem"}}>
+          <div style={{fontSize:"1.1rem",fontWeight:"700",color:"white"}}>⛳ Back Office</div>
+          <div style={{fontSize:"0.75rem",color:"#8899aa",marginTop:"0.2rem"}}>SwingMarketGolf</div>
+        </div>
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{width:"100%",textAlign:"left",padding:"0.75rem 1.5rem",background:activeTab===tab.id?"#1e3a4f":"transparent",border:"none",color:activeTab===tab.id?"white":"#8899aa",fontSize:"0.85rem",cursor:"pointer",borderLeft:activeTab===tab.id?"3px solid #22c55e":"3px solid transparent"}}
+          >
+            {tab.label}
+          </button>
+        ))}
+        <div style={{padding:"1.5rem",marginTop:"auto"}}>
+          <button
+            onClick={() => setIsAuth(false)}
+            style={{width:"100%",padding:"0.6rem",borderRadius:"6px",background:"transparent",border:"1px solid #2d4a5f",color:"#8899aa",fontSize:"0.8rem",cursor:"pointer"}}
+          >
+            Déconnexion
+          </button>
+        </div>
+      </div>
+      <div style={{flex:1,padding:"2rem",overflowY:"auto"}}>
+        {activeTab === "overview" && <AdminOverview />}
+        {activeTab === "users" && <AdminUsers />}
+        {activeTab === "products" && <AdminProducts />}
+        {activeTab === "orders" && <AdminOrders />}
+        {activeTab === "commissions" && <AdminCommissions />}
+        {activeTab === "shipping" && <AdminShipping />}
+        {activeTab === "disputes" && <AdminDisputes />}
+        {activeTab === "faq" && <AdminFAQ />}
       </div>
     </div>
   );
