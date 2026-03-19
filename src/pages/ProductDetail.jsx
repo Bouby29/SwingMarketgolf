@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import SEOHead from "../components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { base44 } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";

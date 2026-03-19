@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { X, Image as ImageIcon } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { base44 } from "@/lib/supabase";
 
 export default function PhotosStep({ photos, onPhotosChange }) {
   const [uploading, setUploading] = useState(false);

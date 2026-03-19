@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Heart, Shield, Check, Gavel } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { base44 } from "@/api/base44Client";
+import { base44 } from "@/lib/supabase";
 
 const conditionLabels = {
   neuf: "Neuf",

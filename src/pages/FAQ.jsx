@@ -3,7 +3,7 @@ import { ChevronDown, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import LegalLayout from "../components/legal/LegalLayout";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { base44 } from "@/lib/supabase";
 
 // Fallback statique si la DB est vide
 const sections = [
