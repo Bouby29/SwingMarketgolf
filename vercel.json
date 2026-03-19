@@ -1,10 +1,1 @@
-{
-  "rewrites": [{"source": "/(.*)", "destination": "/"}]
-}
-```
-
-Puis **Cmd + S** et ensuite :
-```
-git add .
-git commit -m "fix vercel json"
-git push
+{"rewrites":[{"source":"/(.*)", "destination":"/"}]}
