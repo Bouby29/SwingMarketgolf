@@ -274,18 +274,18 @@ function AccountDeletionButton({ user }) {
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
-    if (confirmText !== "SUPPRIMER") return;
-    
-    setDeleting(true);
+ const handleDelete = async () => {
+  if (confirmText !== "SUPPRIMER") return;
+  setDeleting(true);
   try {
-  await base44.entities.User.delete(user.id);
-  window.location.href='/';
-} catch (err) {
-  alert("Erreur lors de la suppression du compte");
-  setDeleting(false);
-}
-
-    }
+    await base44.entities.User.delete(user.id);
+    window.location.href='/';
+  } catch (err) {
+    alert("Erreur lors de la suppression du compte");
+    setDeleting(false);
+  }
+};
+```
   };
 
   if (!showConfirm) {
