@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/lib/supabase";
+import { supabase as base44 } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Gavel, Clock, ChevronLeft, ChevronRight } from "lucide-react";

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import SEOHead from "../components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
-import { base44 } from "@/lib/supabase";
+import { supabase as base44 } from "@/lib/supabase";
 import ProductCard from "../components/shared/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

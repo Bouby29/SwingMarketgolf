@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/lib/supabase";
+import { supabase as base44 } from "@/lib/supabase";
 import { Mail, CheckCircle, AlertCircle, Calendar } from "lucide-react";
 
 export default function EmailHistoryPanel() {

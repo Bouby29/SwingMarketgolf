@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/lib/supabase";
+import { supabase as base44 } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { X, Upload } from "lucide-react";
 

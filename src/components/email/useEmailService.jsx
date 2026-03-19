@@ -3,7 +3,7 @@
  * Integrates with Base44 SendEmail API and stores history
  */
 
-import { base44 } from "@/lib/supabase";
+import { supabase as base44 } from "@/lib/supabase";
 import { generateEmailHTML, getEmailSubject } from "./EmailTemplate";
 
 export const useEmailService = () => {

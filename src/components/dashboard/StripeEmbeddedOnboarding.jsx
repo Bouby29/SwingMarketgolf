@@ -4,7 +4,7 @@ import {
   ConnectAccountOnboarding,
   ConnectComponentsProvider,
 } from "@stripe/react-connect-js";
-import { base44 } from "@/lib/supabase";
+import { supabase as base44 } from "@/lib/supabase";
 
 export default function StripeEmbeddedOnboarding({ onComplete }) {
   const [stripeConnectInstance, setStripeConnectInstance] = useState(null);

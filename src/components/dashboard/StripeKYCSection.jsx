@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/lib/supabase";
+import { supabase as base44 } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, AlertCircle, Shield, RefreshCw } from "lucide-react";
 import StripeEmbeddedOnboarding from "./StripeEmbeddedOnboarding";
