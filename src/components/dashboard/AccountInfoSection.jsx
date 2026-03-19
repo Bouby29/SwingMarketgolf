@@ -284,7 +284,7 @@ function AccountDeletionButton({ user }) {
   alert("Erreur lors de la suppression du compte");
   setDeleting(false);
 }
-```
+
     }
   };
 
