@@ -1,0 +1,100 @@
+/**
+ * pages.config.js - Page routing configuration
+ * 
+ * This file is AUTO-GENERATED. Do not add imports or modify PAGES manually.
+ * Pages are auto-registered when you create files in the ./pages/ folder.
+ * 
+ * THE ONLY EDITABLE VALUE: mainPage
+ * This controls which page is the landing page (shown when users visit the app).
+ * 
+ * Example file structure:
+ * 
+ *   import HomePage from './pages/HomePage';
+ *   import Dashboard from './pages/Dashboard';
+ *   import Settings from './pages/Settings';
+ *   
+ *   export const PAGES = {
+ *       "HomePage": HomePage,
+ *       "Dashboard": Dashboard,
+ *       "Settings": Settings,
+ *   }
+ *   
+ *   export const pagesConfig = {
+ *       mainPage: "HomePage",
+ *       Pages: PAGES,
+ *   };
+ * 
+ * Example with Layout (wraps all pages):
+ *
+ *   import Home from './pages/Home';
+ *   import Settings from './pages/Settings';
+ *   import __Layout from './Layout.jsx';
+ *
+ *   export const PAGES = {
+ *       "Home": Home,
+ *       "Settings": Settings,
+ *   }
+ *
+ *   export const pagesConfig = {
+ *       mainPage: "Home",
+ *       Pages: PAGES,
+ *       Layout: __Layout,
+ *   };
+ *
+ * To change the main page from HomePage to Dashboard, use find_replace:
+ *   Old: mainPage: "HomePage",
+ *   New: mainPage: "Dashboard",
+ *
+ * The mainPage value must match a key in the PAGES object exactly.
+ */
+import Admin from './pages/Admin';
+import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
+import CGU from './pages/CGU';
+import CGV from './pages/CGV';
+import Checkout from './pages/Checkout';
+import Confidentialite from './pages/Confidentialite';
+import CreateListing from './pages/CreateListing';
+import Dashboard from './pages/Dashboard';
+import FAQ from './pages/FAQ';
+import Favorites from './pages/Favorites';
+import Home from './pages/Home';
+import Marketplace from './pages/Marketplace';
+import MentionsLegales from './pages/MentionsLegales';
+import Messages from './pages/Messages';
+import ProductDetail from './pages/ProductDetail';
+import ProfessionnelsSellers from './pages/ProfessionnelsSellers';
+import Profile from './pages/Profile';
+import QuiSommesNous from './pages/QuiSommesNous';
+import Setup from './pages/Setup';
+import __Layout from './Layout.jsx';
+
+
+export const PAGES = {
+    "Admin": Admin,
+    "Blog": Blog,
+    "BlogPost": BlogPost,
+    "CGU": CGU,
+    "CGV": CGV,
+    "Checkout": Checkout,
+    "Confidentialite": Confidentialite,
+    "CreateListing": CreateListing,
+    "Dashboard": Dashboard,
+    "FAQ": FAQ,
+    "Favorites": Favorites,
+    "Home": Home,
+    "Marketplace": Marketplace,
+    "MentionsLegales": MentionsLegales,
+    "Messages": Messages,
+    "ProductDetail": ProductDetail,
+    "ProfessionnelsSellers": ProfessionnelsSellers,
+    "Profile": Profile,
+    "QuiSommesNous": QuiSommesNous,
+    "Setup": Setup,
+}
+
+export const pagesConfig = {
+    mainPage: "Home",
+    Pages: PAGES,
+    Layout: __Layout,
+};

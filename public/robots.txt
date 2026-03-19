@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://swingmarketgolf.com/sitemap.xml
+Sitemap: https://swingmarketgolf.com/sitemap
