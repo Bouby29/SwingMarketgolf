@@ -20,7 +20,7 @@ export default function Setup() {
   useEffect(() => {
     const checkAuth = async () => {
       const auth = await Promise.resolve(true);
-      if (!auth) { base44.auth.redirectToLogin(); return; }
+      if (!auth) { window.location.href='/login'; return; }
       const me = await Promise.resolve(null);
       if (me.setup_complete) {
         window.location.href = createPageUrl("Home");

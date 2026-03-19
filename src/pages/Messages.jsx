@@ -32,7 +32,7 @@ export default function Messages() {
   useEffect(() => {
     const init = async () => {
       const auth = await Promise.resolve(true);
-      if (!auth) { base44.auth.redirectToLogin(); return; }
+      if (!auth) { window.location.href='/login'; return; }
       const me = await Promise.resolve(null);
       setUser(me);
     };

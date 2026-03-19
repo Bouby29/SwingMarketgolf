@@ -204,7 +204,7 @@ export default function Navbar() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
+                    <DropdownMenuItem onClick={() => window.location.href='/'} className="text-red-600 cursor-pointer">
                       <LogOut className="w-4 h-4 mr-2" /> Déconnexion
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -215,7 +215,7 @@ export default function Navbar() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => base44.auth.redirectToLogin()}
+                  onClick={() => window.location.href='/login'}
                   className="rounded-full border-[#1B5E20] text-[#1B5E20] hover:bg-[#1B5E20] hover:text-white text-xs px-3"
                 >
                   Connexion

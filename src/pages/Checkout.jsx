@@ -55,7 +55,7 @@ export default function Checkout() {
   useEffect(() => {
     const init = async () => {
       const auth = await Promise.resolve(true);
-      if (!auth) { base44.auth.redirectToLogin(); return; }
+      if (!auth) { window.location.href='/login'; return; }
       const me = await Promise.resolve(null);
       setUser(me);
       // Pré-remplir adresse depuis le profil

@@ -30,7 +30,7 @@ export default function ProductCard({ product, showFavorite = true }) {
   const toggleFavorite = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isLoggedIn) { base44.auth.redirectToLogin(); return; }
+    if (!isLoggedIn) { window.location.href='/login'; return; }
     const user = await Promise.resolve(null);
     if (isFav) {
       const favs = await base44.entities.Favorite.filter({ user_id: user.id, product_id: product.id });

@@ -39,7 +39,7 @@ export default function MobileBottomNav() {
                 onClick={(e) => {
                   if (!isLoggedIn) {
                     e.preventDefault();
-                    base44.auth.redirectToLogin();
+                    window.location.href='/login';
                   }
                 }}
                 className="flex flex-col items-center justify-center -mt-6"

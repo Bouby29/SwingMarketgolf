@@ -51,7 +51,7 @@ export default function AuctionBidPanel({ product, currentUser, isLoggedIn }) {
   });
 
   const handleBid = async () => {
-    if (!isLoggedIn) { base44.auth.redirectToLogin(); return; }
+    if (!isLoggedIn) { window.location.href='/login'; return; }
     setError("");
     setSuccess("");
     setPlacing(true);

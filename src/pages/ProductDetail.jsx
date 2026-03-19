@@ -81,7 +81,7 @@ export default function ProductDetail() {
   const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : null;
 
   const handleContact = () => {
-    if (!isLoggedIn) { base44.auth.redirectToLogin(); return; }
+    if (!isLoggedIn) { window.location.href='/login'; return; }
     window.location.href = createPageUrl("Messages") + `?to=${product.seller_id}&product=${product.id}`;
   };
 

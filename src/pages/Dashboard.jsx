@@ -173,7 +173,7 @@ export default function Dashboard() {
   useEffect(() => {
     const init = async () => {
       const auth = await Promise.resolve(true);
-      if (!auth) { base44.auth.redirectToLogin(); return; }
+      if (!auth) { window.location.href='/login'; return; }
       setUser(await base44.auth.me());
     };
     init();
@@ -440,7 +440,7 @@ export default function Dashboard() {
       ))}
       <div className="border-t border-gray-200 pt-6 mt-6">
         <button
-          onClick={() => base44.auth.logout()}
+          onClick={() => window.location.href='/'}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
         >
           <LogOut className="w-5 h-5 shrink-0" />

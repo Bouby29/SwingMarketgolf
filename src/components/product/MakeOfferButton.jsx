@@ -14,7 +14,7 @@ export default function MakeOfferButton({ product, isLoggedIn, currentUser }) {
 
   const handleMakeOffer = async () => {
     if (!isLoggedIn) {
-      base44.auth.redirectToLogin();
+      window.location.href='/login';
       return;
     }
 

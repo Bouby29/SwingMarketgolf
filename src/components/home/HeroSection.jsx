@@ -21,7 +21,7 @@ export default function HeroSection() {
       tag: t('home.hero_tag1'),
       title: t('home.hero_title1'),
       subtitle: t('home.hero_subtitle1'),
-      cta: { label: t('home.hero_signup'), action: () => isLoggedIn ? setShowAlreadyConnected(true) : base44.auth.redirectToLogin() },
+      cta: { label: t('home.hero_signup'), action: () => isLoggedIn ? setShowAlreadyConnected(true) : window.location.href='/login' },
       ctaSecondary: { label: t('home.hero_sell'), url: createPageUrl("CreateListing") },
     },
     {
