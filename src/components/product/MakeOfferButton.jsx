@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Tag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -31,7 +31,7 @@ export default function MakeOfferButton({ product, isLoggedIn, currentUser }) {
       const conversationId = [currentUser.id, product.seller_id].sort().join('_') + '_' + product.id;
 
       // Send offer message
-      await base44.entities.Message.create({
+      await entities.Message.create({
         conversation_id: conversationId,
         sender_id: currentUser.id,
         sender_name: currentUser.full_name,
@@ -58,7 +58,7 @@ export default function MakeOfferButton({ product, isLoggedIn, currentUser }) {
       });
 
       // Send email to seller
-      const seller = await base44.entities.User.filter({ id: product.seller_id });
+      const seller = await entities.User.filter({ id: product.seller_id });
       if (seller.length > 0) {
         await base44.integrations.Core.SendEmail({
           to: seller[0].email,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,12 +47,12 @@ export default function ProductDetailModal({ product, open, onClose }) {
   }, [product]);
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.Product.update(product.id, data),
+    mutationFn: (data) => entities.Product.update(product.id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-all-products"] }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => base44.entities.Product.delete(product.id),
+    mutationFn: () => entities.Product.delete(product.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-all-products"] });
       onClose();

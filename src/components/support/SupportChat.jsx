@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MessageCircle, X, Send, ChevronRight } from "lucide-react";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 
 const FAQ = [
 {

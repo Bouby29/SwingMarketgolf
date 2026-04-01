@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Gavel, Clock, ChevronLeft, ChevronRight } from "lucide-react";
@@ -33,7 +33,7 @@ export default function AuctionCarousel() {
 
   const { data: auctionProducts = [] } = useQuery({
     queryKey: ["auction-products-home"],
-    queryFn: () => base44.entities.Product.filter({ sale_type: "auction", status: "active" }, "-created_date", 20),
+    queryFn: () => entities.Product.filter({ sale_type: "auction", status: "active" }, "-created_date", 20),
   });
 
   const activeAuctions = auctionProducts.filter(

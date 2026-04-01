@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -54,21 +54,21 @@ export default function AdminShipping() {
 
   const { data: offers = [], isLoading } = useQuery({
     queryKey: ["admin-shipping-offers"],
-    queryFn: () => base44.entities.ShippingOffer.list("-created_date", 200),
+    queryFn: () => entities.ShippingOffer.list("-created_date", 200),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.ShippingOffer.create(data),
+    mutationFn: (data) => entities.ShippingOffer.create(data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-shipping-offers"] }); closeModal(); },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.ShippingOffer.update(id, data),
+    mutationFn: ({ id, data }) => entities.ShippingOffer.update(id, data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-shipping-offers"] }); closeModal(); },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.ShippingOffer.delete(id),
+    mutationFn: (id) => entities.ShippingOffer.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-shipping-offers"] }),
   });
 

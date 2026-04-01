@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Users, Package, ShoppingCart, TrendingUp, Euro, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -8,9 +8,9 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, R
 const calcCommission = (price) => (price || 0) * 0.05 + 0.70;
 
 export default function AdminOverview() {
-  const { data: users = [] } = useQuery({ queryKey: ["admin-users"], queryFn: () => base44.entities.User.list() });
-  const { data: products = [] } = useQuery({ queryKey: ["admin-all-products"], queryFn: () => base44.entities.Product.list("-created_date", 500) });
-  const { data: orders = [] } = useQuery({ queryKey: ["admin-all-orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
+  const { data: users = [] } = useQuery({ queryKey: ["admin-users"], queryFn: () => entities.User.list() });
+  const { data: products = [] } = useQuery({ queryKey: ["admin-all-products"], queryFn: () => entities.Product.list("-created_date", 500) });
+  const { data: orders = [] } = useQuery({ queryKey: ["admin-all-orders"], queryFn: () => entities.Order.list("-created_date", 500) });
 
   const totalRevenue = orders.reduce((s, o) => s + (o.price || 0), 0);
   const totalCommissions = orders.reduce((s, o) => s + (o.commission || calcCommission(o.price)), 0);

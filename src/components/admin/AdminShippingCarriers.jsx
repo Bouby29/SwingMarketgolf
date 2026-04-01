@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -26,7 +26,7 @@ export default function AdminShippingCarriers() {
       return hasFR && m.carrier !== "sendcloud";
     });
 
-    const existing = await base44.entities.ShippingCarrier.list();
+    const existing = await entities.ShippingCarrier.list();
     const existingCodes = new Set(existing.map(e => e.carrier_code));
 
     let created = 0;
@@ -36,7 +36,7 @@ export default function AdminShippingCarriers() {
     for (let i = 0; i < toCreate.length; i++) {
       const m = toCreate[i];
       const fr = m.countries?.find(c => c.iso_2 === "FR");
-      await base44.entities.ShippingCarrier.create({
+      await entities.ShippingCarrier.create({
         carrier_code: `sendcloud_${m.id}`,
         carrier_name: m.name,
         description: m.carrier,
@@ -61,13 +61,13 @@ export default function AdminShippingCarriers() {
   const { data: carriers = [] } = useQuery({
     queryKey: ["admin-carriers"],
     queryFn: async () => {
-      const data = await base44.entities.ShippingCarrier.list();
+      const data = await entities.ShippingCarrier.list();
       return data.sort((a, b) => a.order - b.order);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.ShippingCarrier.update(id, data),
+    mutationFn: ({ id, data }) => entities.ShippingCarrier.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(["admin-carriers"]);
       setEditingId(null);
@@ -78,7 +78,7 @@ export default function AdminShippingCarriers() {
 
   const toggleActiveMutation = useMutation({
     mutationFn: ({ id, isActive }) =>
-      base44.entities.ShippingCarrier.update(id, { is_active: !isActive }),
+      entities.ShippingCarrier.update(id, { is_active: !isActive }),
     onSuccess: () => {
       queryClient.invalidateQueries(["admin-carriers"]);
       toast.success("Statut modifié");
@@ -130,7 +130,7 @@ export default function AdminShippingCarriers() {
             </div>
           )}
           <Button onClick={() => {
-            base44.entities.ShippingCarrier.create({
+            entities.ShippingCarrier.create({
               carrier_code: "nouveau_transporteur",
               carrier_name: "Nouveau transporteur",
               description: "Description",

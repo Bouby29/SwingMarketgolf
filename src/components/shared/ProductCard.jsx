@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Heart, Shield, Check, Gavel } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 
 const conditionLabels = {
   neuf: "Neuf",
@@ -33,15 +33,15 @@ export default function ProductCard({ product, showFavorite = true }) {
     if (!isLoggedIn) { window.location.href='/login'; return; }
     const user = await Promise.resolve(null);
     if (isFav) {
-      const favs = await base44.entities.Favorite.filter({ user_id: user.id, product_id: product.id });
-      if (favs.length > 0) await base44.entities.Favorite.delete(favs[0].id);
+      const favs = await entities.Favorite.filter({ user_id: user.id, product_id: product.id });
+      if (favs.length > 0) await entities.Favorite.delete(favs[0].id);
       // Decrement favorites_count
-      await base44.entities.Product.update(product.id, {
+      await entities.Product.update(product.id, {
         favorites_count: Math.max(0, (product.favorites_count || 0) - 1)
       });
       setIsFav(false);
     } else {
-      await base44.entities.Favorite.create({
+      await entities.Favorite.create({
         user_id: user.id,
         product_id: product.id,
         product_title: product.title,
@@ -49,7 +49,7 @@ export default function ProductCard({ product, showFavorite = true }) {
         product_photo: product.photos?.[0] || "",
       });
       // Increment favorites_count
-      await base44.entities.Product.update(product.id, {
+      await entities.Product.update(product.id, {
         favorites_count: (product.favorites_count || 0) + 1
       });
       setIsFav(true);

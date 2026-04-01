@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SEOHead from "../components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,20 +15,20 @@ export default function Profile() {
 
   const { data: profileUser } = useQuery({
     queryKey: ["profile-user", userId],
-    queryFn: () => base44.entities.User.filter({ id: userId }),
+    queryFn: () => entities.User.filter({ id: userId }),
     select: d => d[0],
     enabled: !!userId,
   });
 
   const { data: products = [], isSuccess: productsLoaded } = useQuery({
     queryKey: ["profile-products", userId],
-    queryFn: () => base44.entities.Product.filter({ seller_id: userId, status: "active" }, "-created_date", 50),
+    queryFn: () => entities.Product.filter({ seller_id: userId, status: "active" }, "-created_date", 50),
     enabled: !!userId,
   });
 
   const { data: reviews = [] } = useQuery({
     queryKey: ["profile-reviews", userId],
-    queryFn: () => base44.entities.Review.filter({ seller_id: userId }, "-created_date", 20),
+    queryFn: () => entities.Review.filter({ seller_id: userId }, "-created_date", 20),
     enabled: !!userId,
   });
 

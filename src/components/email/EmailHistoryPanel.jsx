@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Mail, CheckCircle, AlertCircle, Calendar } from "lucide-react";
 
 export default function EmailHistoryPanel() {
@@ -8,7 +8,7 @@ export default function EmailHistoryPanel() {
     queryKey: ["email-history"],
     queryFn: async () => {
       const user = await Promise.resolve(null);
-      return base44.entities.EmailHistory.filter({
+      return entities.EmailHistory.filter({
         user_email: user.email
       }, "-created_date", 50);
     },

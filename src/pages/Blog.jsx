@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import SEOHead from "../components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +72,7 @@ export default function Blog() {
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["blog-posts"],
-    queryFn: () => base44.entities.BlogPost.filter({ published: true }, "-created_date", 50),
+    queryFn: () => entities.BlogPost.filter({ published: true }, "-created_date", 50),
   });
 
   const filtered = activeCategory ? posts.filter(p => p.category === activeCategory) : posts;

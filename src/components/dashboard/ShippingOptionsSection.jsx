@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 
 export default function ShippingOptionsSection() {
   const { data: shippingOffers = [] } = useQuery({
     queryKey: ["shipping-offers"],
-    queryFn: () => base44.entities.ShippingOffer.filter({ is_active: true }, "-created_date", 50),
+    queryFn: () => entities.ShippingOffer.filter({ is_active: true }, "-created_date", 50),
   });
 
   const [activeShippers, setActiveShippers] = useState({});

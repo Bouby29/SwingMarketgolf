@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, User } from "lucide-react";
@@ -15,7 +15,7 @@ export default function BlogPost() {
 
   const { data: post, isLoading } = useQuery({
     queryKey: ["blog-post", postId],
-    queryFn: () => base44.entities.BlogPost.filter({ id: postId }),
+    queryFn: () => entities.BlogPost.filter({ id: postId }),
     select: d => d[0],
     enabled: !!postId,
   });

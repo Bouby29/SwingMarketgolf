@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,7 +38,7 @@ export default function BuyerOrderCard({ order }) {
   const countdown = useCountdown(order.status === "delivered" ? order.delivered_at : null);
 
   const update = useMutation({
-    mutationFn: (data) => base44.entities.Order.update(order.id, data),
+    mutationFn: (data) => entities.Order.update(order.id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-orders"] }),
   });
 

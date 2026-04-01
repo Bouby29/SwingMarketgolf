@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,16 +14,16 @@ export default function AdminUsers() {
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => entities.User.list(),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.User.update(id, data),
+    mutationFn: ({ id, data }) => entities.User.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.User.delete(id),
+    mutationFn: (id) => entities.User.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
   });
 

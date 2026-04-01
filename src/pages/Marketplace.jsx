@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import SEOHead from "../components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import ProductCard from "../components/shared/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,7 +69,7 @@ export default function Marketplace() {
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["marketplace-products"],
-    queryFn: () => base44.entities.Product.filter({ status: "active" }, "-created_date", 100),
+    queryFn: () => entities.Product.filter({ status: "active" }, "-created_date", 100),
   });
 
   // Extract unique brands from products

@@ -3,7 +3,7 @@ import { ChevronDown, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import LegalLayout from "../components/legal/LegalLayout";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 
 // Fallback statique si la DB est vide
 const sections = [
@@ -172,7 +172,7 @@ export default function FAQ() {
 
   const { data: dbEntries = [] } = useQuery({
     queryKey: ["faq-entries-public"],
-    queryFn: () => base44.entities.FAQEntry.filter({ is_active: true }, "order"),
+    queryFn: () => entities.FAQEntry.filter({ is_active: true }, "order"),
   });
 
   // Si des entrées existent en DB, on les utilise — sinon on utilise le fallback statique

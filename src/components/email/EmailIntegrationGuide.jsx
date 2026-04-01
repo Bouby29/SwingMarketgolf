@@ -17,8 +17,8 @@
  * import { useEmailService } from "@/components/email/useEmailService";
  * 
  * const { sendListingPublished } = useEmailService();
- * const user = await base44.auth.me();
- * const product = await base44.entities.Product.get(productId);
+ * const user = await auth.getMe();
+ * const product = await entities.Product.get(productId);
  * await sendListingPublished(user, product);
  * 
  * 
@@ -27,10 +27,10 @@
  * import { useEmailService } from "@/components/email/useEmailService";
  * 
  * const { sendNewOrderSeller, sendOrderConfirmationBuyer } = useEmailService();
- * const buyer = await base44.auth.me();
- * const product = await base44.entities.Product.get(productId);
- * const seller = await base44.entities.User.get(product.seller_id);
- * const order = await base44.entities.Order.create(orderData);
+ * const buyer = await auth.getMe();
+ * const product = await entities.Product.get(productId);
+ * const seller = await entities.User.get(product.seller_id);
+ * const order = await entities.Order.create(orderData);
  * 
  * // Send to seller
  * await sendNewOrderSeller(seller, order, product);
@@ -49,8 +49,8 @@
  *   sendOrderDelivered
  * } = useEmailService();
  * 
- * const buyer = await base44.entities.User.get(order.buyer_id);
- * const product = await base44.entities.Product.get(order.product_id);
+ * const buyer = await entities.User.get(order.buyer_id);
+ * const product = await entities.Product.get(order.product_id);
  * 
  * // When status changed to "preparing"
  * if (newStatus === "preparing") {
@@ -77,7 +77,7 @@
  * import { useEmailService } from "@/components/email/useEmailService";
  * 
  * const { sendNewMessageNotification } = useEmailService();
- * const recipient = await base44.entities.User.get(receiverId);
+ * const recipient = await entities.User.get(receiverId);
  * 
  * const messageData = {
  *   senderName: senderName,

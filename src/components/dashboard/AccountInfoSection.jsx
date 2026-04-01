@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -67,7 +67,7 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
     setSuccessMsg("");
     setErrorMsg("");
     try {
-      await base44.auth.updateMe({
+      await auth.updateMe({
         full_name: formData.full_name,
         birthDate: formData.birthDate,
         newsletter: formData.newsletter,
@@ -278,7 +278,7 @@ function AccountDeletionButton({ user }) {
   if (confirmText !== "SUPPRIMER") return;
   setDeleting(true);
   try {
-    await base44.entities.User.delete(user.id);
+    await entities.User.delete(user.id);
     window.location.href='/';
   } catch (err) {
     alert("Erreur lors de la suppression du compte");

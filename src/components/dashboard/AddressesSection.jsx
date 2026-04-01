@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Edit2, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
@@ -36,7 +36,7 @@ export default function AddressesSection() {
     setSuccessMsg("");
     setErrorMsg("");
     try {
-      await base44.auth.updateMe({ addresses: updatedAddresses });
+      await auth.updateMe({ addresses: updatedAddresses });
       setAddresses(updatedAddresses);
       setSuccessMsg("Adresse enregistrée avec succès !");
       setTimeout(() => setSuccessMsg(""), 4000);

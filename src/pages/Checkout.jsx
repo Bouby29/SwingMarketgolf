@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Shield, Truck, Home, CheckCircle, Info, MapPin, ChevronRight, Package } from "lucide-react";
@@ -73,7 +73,7 @@ export default function Checkout() {
 
   const { data: product } = useQuery({
     queryKey: ["checkout-product", productId],
-    queryFn: () => base44.entities.Product.filter({ id: productId }),
+    queryFn: () => entities.Product.filter({ id: productId }),
     select: d => d[0],
     enabled: !!productId,
   });
@@ -188,10 +188,10 @@ export default function Checkout() {
       }),
     };
 
-    const order = await base44.entities.Order.create(orderData);
-    await base44.entities.Product.update(product.id, { status: "sold" });
+    const order = await entities.Order.create(orderData);
+    await entities.Product.update(product.id, { status: "sold" });
 
-    const seller = await base44.entities.User.filter({ id: product.seller_id });
+    const seller = await entities.User.filter({ id: product.seller_id });
     if (seller?.length > 0) {
       await sendNewOrderSeller(seller[0], order, product);
       await sendOrderConfirmationBuyer(user, order, product, seller[0]);

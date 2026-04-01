@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, ArrowLeft, Package, Clock, Image as ImageIcon, Video, X, Loader2 } from "lucide-react";
@@ -46,12 +46,12 @@ export default function Messages() {
       let receiverName = "";
       let productTitle = "";
       try {
-        const sellers = await base44.entities.User.filter({ id: toUserId });
+        const sellers = await entities.User.filter({ id: toUserId });
         if (sellers.length > 0) receiverName = sellers[0].full_name || "";
       } catch {}
       if (productId) {
         try {
-          const prods = await base44.entities.Product.filter({ id: productId });
+          const prods = await entities.Product.filter({ id: productId });
           if (prods.length > 0) productTitle = prods[0].title || "";
         } catch {}
       }
@@ -64,8 +64,8 @@ export default function Messages() {
     queryKey: ["all-messages", user?.id],
     queryFn: async () => {
       const [sent, received] = await Promise.all([
-        base44.entities.Message.filter({ sender_id: user.id }, "-created_date", 500),
-        base44.entities.Message.filter({ receiver_id: user.id }, "-created_date", 500),
+        entities.Message.filter({ sender_id: user.id }, "-created_date", 500),
+        entities.Message.filter({ receiver_id: user.id }, "-created_date", 500),
       ]);
       return [...sent, ...received].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
     },
@@ -79,7 +79,7 @@ export default function Messages() {
     queryKey: ["conv-products", productIds],
     queryFn: async () => {
       if (productIds.length === 0) return [];
-      return await base44.entities.Product.filter({ id: { $in: productIds } });
+      return await entities.Product.filter({ id: { $in: productIds } });
     },
     enabled: productIds.length > 0,
   });
@@ -191,7 +191,7 @@ export default function Messages() {
        messageContent = messageContent ? `${messageContent}\n\n${attachmentLinks}` : attachmentLinks;
      }
 
-     await base44.entities.Message.create({
+     await entities.Message.create({
        conversation_id: convId,
        sender_id: user.id,
        sender_name: user.full_name,
@@ -205,7 +205,7 @@ export default function Messages() {
 
      // Send email notification to recipient
      try {
-       const recipientData = await base44.entities.User.filter({ id: receiverId });
+       const recipientData = await entities.User.filter({ id: receiverId });
        if (recipientData?.length > 0) {
          await sendNewMessageNotification(recipientData[0], {
            senderName: user.full_name,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MapPin, X, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 
 // Cache la clé publique pour éviter de la re-fetcher
 let _cachedPublicKey = null;

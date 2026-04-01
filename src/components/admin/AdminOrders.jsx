@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -22,11 +22,11 @@ export default function AdminOrders() {
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["admin-all-orders"],
-    queryFn: () => base44.entities.Order.list("-created_date", 500),
+    queryFn: () => entities.Order.list("-created_date", 500),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Order.update(id, data),
+    mutationFn: ({ id, data }) => entities.Order.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-all-orders"] }),
   });
 

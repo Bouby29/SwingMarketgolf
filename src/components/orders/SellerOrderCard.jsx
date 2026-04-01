@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import OrderStatusBadge from "./OrderStatusBadge";
@@ -14,7 +14,7 @@ export default function SellerOrderCard({ order }) {
   const [labelError, setLabelError] = useState("");
 
   const update = useMutation({
-    mutationFn: (data) => base44.entities.Order.update(order.id, data),
+    mutationFn: (data) => entities.Order.update(order.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-sales"] });
       queryClient.invalidateQueries({ queryKey: ["admin-all-orders"] });

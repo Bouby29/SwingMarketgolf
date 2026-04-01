@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,17 +33,17 @@ export default function UserDetailModal({ user, open, onClose }) {
 
   const { data: products = [] } = useQuery({
     queryKey: ["user-products", user?.id],
-    queryFn: () => base44.entities.Product.filter({ seller_id: user.id }),
+    queryFn: () => entities.Product.filter({ seller_id: user.id }),
     enabled: !!user?.id && open,
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.User.update(user.id, data),
+    mutationFn: (data) => entities.User.update(user.id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => base44.entities.User.delete(user.id),
+    mutationFn: () => entities.User.delete(user.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       onClose();

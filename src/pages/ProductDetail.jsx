@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import SEOHead from "../components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -43,33 +43,33 @@ export default function ProductDetail() {
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", productId],
-    queryFn: () => base44.entities.Product.filter({ id: productId }),
+    queryFn: () => entities.Product.filter({ id: productId }),
     select: (data) => data[0],
     enabled: !!productId,
   });
 
   const { data: seller } = useQuery({
     queryKey: ["seller", product?.seller_id],
-    queryFn: () => base44.entities.User.filter({ id: product.seller_id }),
+    queryFn: () => entities.User.filter({ id: product.seller_id }),
     select: (data) => data[0],
     enabled: !!product?.seller_id,
   });
 
   const { data: reviews = [] } = useQuery({
     queryKey: ["reviews", product?.seller_id],
-    queryFn: () => base44.entities.Review.filter({ seller_id: product.seller_id }),
+    queryFn: () => entities.Review.filter({ seller_id: product.seller_id }),
     enabled: !!product?.seller_id,
   });
 
   const { data: similarProducts = [] } = useQuery({
     queryKey: ["similar", product?.category],
-    queryFn: () => base44.entities.Product.filter({ category: product.category, status: "active" }, "-created_date", 5),
+    queryFn: () => entities.Product.filter({ category: product.category, status: "active" }, "-created_date", 5),
     enabled: !!product?.category,
   });
 
   const { data: sellerProducts = [] } = useQuery({
     queryKey: ["seller-products", product?.seller_id],
-    queryFn: () => base44.entities.Product.filter({ seller_id: product.seller_id, status: "active" }, "-created_date", 7),
+    queryFn: () => entities.Product.filter({ seller_id: product.seller_id, status: "active" }, "-created_date", 7),
     enabled: !!product?.seller_id,
   });
 
@@ -86,7 +86,7 @@ export default function ProductDetail() {
   };
 
   const handleBuy = () => {
-    if (!isLoggedIn) { base44.auth.redirectToLogin(); return; }
+    if (!isLoggedIn) { window.location.href="/login"; return; }
     window.location.href = createPageUrl("Checkout") + `?product=${product.id}`;
   };
 

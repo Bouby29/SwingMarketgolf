@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload, AlertCircle, CheckCircle2, Clock, X, FileText } from "lucide-react";

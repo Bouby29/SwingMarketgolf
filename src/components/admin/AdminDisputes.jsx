@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,12 +15,12 @@ export default function AdminDisputes() {
 
   const { data: disputes = [], isLoading } = useQuery({
     queryKey: ["admin-disputes"],
-    queryFn: () => base44.entities.Order.filter({ status: "disputed" }, "-created_date", 100),
+    queryFn: () => entities.Order.filter({ status: "disputed" }, "-created_date", 100),
   });
 
   const resolveMutation = useMutation({
     mutationFn: ({ id, newStatus }) =>
-      base44.entities.Order.update(id, { status: newStatus }),
+      entities.Order.update(id, { status: newStatus }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-disputes"] });
       setSelectedOrder(null);

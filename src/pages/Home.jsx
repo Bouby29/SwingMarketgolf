@@ -2,7 +2,7 @@ import React from "react";
 import SEOHead from "../components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslate } from "../components/providers/TranslationProvider";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowRight } from "lucide-react";
@@ -19,7 +19,7 @@ export default function Home() {
   
   const { data: products = [] } = useQuery({
     queryKey: ["products-home"],
-    queryFn: () => base44.entities.Product.filter({ status: "active" }, "-created_date", 50),
+    queryFn: () => entities.Product.filter({ status: "active" }, "-created_date", 50),
   });
 
   const clubProducts = products.filter(p => p.category && p.category.toLowerCase().includes("club")).slice(0, 10);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +46,7 @@ export default function AuctionBidPanel({ product, currentUser, isLoggedIn }) {
 
   const { data: bids = [] } = useQuery({
     queryKey: ["bids", product.id],
-    queryFn: () => base44.entities.Bid.filter({ product_id: product.id }, "-created_date", 20),
+    queryFn: () => entities.Bid.filter({ product_id: product.id }, "-created_date", 20),
     refetchInterval: isAuctionEnded ? false : 10000,
   });
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,7 +62,7 @@ export default function RegisterModal({ open, onClose, redirectAfter }) {
     try {
       // Save extra profile data after auth
        const user = await Promise.resolve(null);
-      await base44.auth.updateMe({
+      await auth.updateMe({
         first_name: form.firstName.trim(),
         last_name: form.lastName.trim(),
         birth_date: form.birthDate,
@@ -80,7 +80,7 @@ export default function RegisterModal({ open, onClose, redirectAfter }) {
           subject: subject,
           body: htmlContent
         });
-        await base44.entities.EmailHistory.create({
+        await entities.EmailHistory.create({
           user_email: user.email,
           user_name: user.full_name || form.firstName.trim(),
           email_type: "signup_confirmation",

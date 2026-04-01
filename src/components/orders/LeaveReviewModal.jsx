@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ export default function LeaveReviewModal({ order, onClose }) {
   const handleSubmit = async () => {
     if (rating === 0) return;
     setSaving(true);
-    await base44.entities.Review.create({
+    await entities.Review.create({
       seller_id: order.seller_id,
       buyer_id: order.buyer_id,
       buyer_name: order.buyer_name,
@@ -26,7 +26,7 @@ export default function LeaveReviewModal({ order, onClose }) {
       product_title: order.product_title,
     });
     // Mark order as reviewed
-    await base44.entities.Order.update(order.id, { reviewed: true });
+    await entities.Order.update(order.id, { reviewed: true });
     queryClient.invalidateQueries({ queryKey: ["my-orders"] });
     setSaving(false);
     onClose();

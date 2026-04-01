@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
@@ -89,7 +89,7 @@ export default function CreateListing() {
         } : {})
       };
 
-      const createdProduct = await base44.entities.Product.create(productData);
+      const createdProduct = await entities.Product.create(productData);
       setSaving(false);
       
       // Send listing published email
@@ -158,8 +158,8 @@ export default function CreateListing() {
       <RegisterModal
         open={true}
         onClose={() => {
-          base44.auth.isAuthenticated().then(async auth => {
-            if (auth) { setUser(await base44.auth.me()); setShowRegister(false); }
+          supabase.auth.getSession().then(({data:{session}})=>!!session).then(async auth => {
+            if (auth) { setUser(await auth.getMe()); setShowRegister(false); }
             else window.history.back();
           });
         }}

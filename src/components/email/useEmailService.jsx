@@ -3,7 +3,7 @@
  * Integrates with Base44 SendEmail API and stores history
  */
 
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { generateEmailHTML, getEmailSubject } from "./EmailTemplate";
 
 export const useEmailService = () => {
@@ -23,7 +23,7 @@ export const useEmailService = () => {
       });
 
       // Store in email history
-      await base44.entities.EmailHistory.create({
+      await entities.EmailHistory.create({
         user_email: userData.email,
         user_name: userData.full_name || userData.firstName || "User",
         email_type: templateType,
@@ -44,7 +44,7 @@ export const useEmailService = () => {
         const subject = getEmailSubject(templateType, emailData);
         const htmlContent = generateEmailHTML(templateType, emailData);
 
-        await base44.entities.EmailHistory.create({
+        await entities.EmailHistory.create({
           user_email: userData.email,
           user_name: userData.full_name || userData.firstName || "User",
           email_type: templateType,

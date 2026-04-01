@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,7 @@ export default function Setup() {
       data.company_address = form.company_address;
       data.professional_email = form.professional_email;
     }
-    await base44.auth.updateMe(data);
+    await auth.updateMe(data);
     window.location.href = createPageUrl("Home");
   };
 

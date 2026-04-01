@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -174,38 +174,38 @@ export default function Dashboard() {
     const init = async () => {
       const auth = await Promise.resolve(true);
       if (!auth) { window.location.href='/login'; return; }
-      setUser(await base44.auth.me());
+      setUser(await auth.getMe());
     };
     init();
   }, []);
 
   const { data: myProducts = [] } = useQuery({
     queryKey: ["my-products", user?.id],
-    queryFn: () => base44.entities.Product.filter({ seller_id: user.id }, "-created_date", 100),
+    queryFn: () => entities.Product.filter({ seller_id: user.id }, "-created_date", 100),
     enabled: !!user?.id,
   });
 
   const { data: mySales = [] } = useQuery({
     queryKey: ["my-sales", user?.id],
-    queryFn: () => base44.entities.Order.filter({ seller_id: user.id }, "-created_date", 50),
+    queryFn: () => entities.Order.filter({ seller_id: user.id }, "-created_date", 50),
     enabled: !!user?.id,
   });
 
   const { data: myOrders = [] } = useQuery({
     queryKey: ["my-orders", user?.id],
-    queryFn: () => base44.entities.Order.filter({ buyer_id: user.id }, "-created_date", 50),
+    queryFn: () => entities.Order.filter({ buyer_id: user.id }, "-created_date", 50),
     enabled: !!user?.id,
   });
 
   const { data: myFavorites = [] } = useQuery({
     queryKey: ["my-favorites", user?.id],
-    queryFn: () => base44.entities.Favorite.filter({ user_id: user.id }, "-created_date", 100),
+    queryFn: () => entities.Favorite.filter({ user_id: user.id }, "-created_date", 100),
     enabled: !!user?.id,
   });
 
   const { data: myReviews = [] } = useQuery({
     queryKey: ["my-reviews", user?.id],
-    queryFn: () => base44.entities.Review.filter({ seller_id: user.id }, "-created_date", 100),
+    queryFn: () => entities.Review.filter({ seller_id: user.id }, "-created_date", 100),
     enabled: !!user?.id,
   });
 
@@ -213,7 +213,7 @@ export default function Dashboard() {
   const activeProducts = myProducts.filter(p => p.status === "active");
 
   const deleteProduct = async (id) => {
-    await base44.entities.Product.update(id, { status: "inactive" });
+    await entities.Product.update(id, { status: "inactive" });
     window.location.reload();
   };
 

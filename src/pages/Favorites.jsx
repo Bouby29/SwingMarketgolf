@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { Heart, Trash2 } from "lucide-react";
@@ -20,12 +20,12 @@ export default function Favorites() {
 
   const { data: favorites = [], refetch } = useQuery({
     queryKey: ["favorites", user?.id],
-    queryFn: () => base44.entities.Favorite.filter({ user_id: user.id }, "-created_date", 100),
+    queryFn: () => entities.Favorite.filter({ user_id: user.id }, "-created_date", 100),
     enabled: !!user?.id,
   });
 
   const removeFavorite = async (id) => {
-    await base44.entities.Favorite.delete(id);
+    await entities.Favorite.delete(id);
     refetch();
   };
 

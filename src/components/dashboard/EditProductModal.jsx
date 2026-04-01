@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { X, Upload } from "lucide-react";
 
@@ -36,7 +36,7 @@ export default function EditProductModal({ product, onClose, onSaved }) {
       updateData.photos = [newPhoto, ...formData.photos.slice(1)];
     }
 
-    await base44.entities.Product.update(product.id, updateData);
+    await entities.Product.update(product.id, updateData);
     setLoading(false);
     onSaved();
   };

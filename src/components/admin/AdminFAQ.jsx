@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,21 +64,21 @@ export default function AdminFAQ() {
 
   const { data: entries = [] } = useQuery({
     queryKey: ["faq-entries"],
-    queryFn: () => base44.entities.FAQEntry.list("order"),
+    queryFn: () => entities.FAQEntry.list("order"),
   });
 
   const createMut = useMutation({
-    mutationFn: (data) => base44.entities.FAQEntry.create(data),
+    mutationFn: (data) => entities.FAQEntry.create(data),
     onSuccess: () => { qc.invalidateQueries(["faq-entries"]); setEditing(null); },
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.FAQEntry.update(id, data),
+    mutationFn: ({ id, data }) => entities.FAQEntry.update(id, data),
     onSuccess: () => { qc.invalidateQueries(["faq-entries"]); setEditing(null); setEditEntry(null); },
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id) => base44.entities.FAQEntry.delete(id),
+    mutationFn: (id) => entities.FAQEntry.delete(id),
     onSuccess: () => qc.invalidateQueries(["faq-entries"]),
   });
 

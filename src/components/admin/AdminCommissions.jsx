@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
@@ -9,7 +9,7 @@ const calcCommission = (price) => (price || 0) * 0.05 + 0.70;
 export default function AdminCommissions() {
   const { data: orders = [] } = useQuery({
     queryKey: ["admin-all-orders"],
-    queryFn: () => base44.entities.Order.list("-created_date", 500),
+    queryFn: () => entities.Order.list("-created_date", 500),
   });
 
   const totalCommissions = orders.reduce((s, o) => s + (o.commission || calcCommission(o.price)), 0);

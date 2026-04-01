@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase, entities, auth } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,7 +60,7 @@ export default function CustomizeShopSection({ user, onUpdate }) {
     setSuccessMsg("");
     setErrorMsg("");
     try {
-      await base44.auth.updateMe({
+      await auth.updateMe({
         shop_name: shopData.shop_name,
         shop_description: shopData.shop_description,
         avatar: shopData.avatar,
