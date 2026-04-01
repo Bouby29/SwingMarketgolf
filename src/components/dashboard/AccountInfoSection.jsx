@@ -52,7 +52,7 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
 
   const validateName = (value) => {
     if (!/^[a-zA-Z.\s]*$/.test(value)) {
-      setNameError("Seules les lettres et le point (.), suivi d'un espace, sont autorisés.");
+      setNameError("Seules les lettres et le point (.), suivi d'un espace, sont autoriss.");
       return false;
     }
     setNameError("");
@@ -76,11 +76,11 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
         city: formData.city,
         phone: formData.phone,
       });
-      setSuccessMsg("Informations mises à jour avec succès !");
+      setSuccessMsg("Informations mises  jour avec succs !");
       if (onUserUpdate) await onUserUpdate();
       setTimeout(() => setSuccessMsg(""), 4000);
     } catch (err) {
-      setErrorMsg("Erreur lors de la sauvegarde. Veuillez réessayer.");
+      setErrorMsg("Erreur lors de la sauvegarde. Veuillez ressayer.");
     }
     setLoading(false);
   };
@@ -89,12 +89,12 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
     <div>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Informations personnelles</h2>
-        <p className="text-gray-600">Gérez vos informations de compte</p>
+        <p className="text-gray-600">Grez vos informations de compte</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-5">
         
         <div>
-          <label className="block text-sm font-medium text-gray-900 mb-2">Prénom</label>
+          <label className="block text-sm font-medium text-gray-900 mb-2">Prnom</label>
           <Input
             value={formData.full_name.split(" ")[0] || ""}
             onChange={(e) => {
@@ -103,7 +103,7 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
                 setFormData({ ...formData, full_name: newValue });
               }
             }}
-            placeholder="Prénom"
+            placeholder="Prnom"
             className="rounded-lg"
           />
           {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
@@ -131,7 +131,7 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-900 mb-2">Téléphone</label>
+          <label className="block text-sm font-medium text-gray-900 mb-2">Tlphone</label>
           <Input
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -145,7 +145,7 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
           <Input
             value={formData.address}
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            placeholder="Numéro et nom de rue"
+            placeholder="Numro et nom de rue"
             className="rounded-lg"
           />
         </div>
@@ -173,15 +173,15 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
 
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-2">Mot de passe</label>
-          <Input type="password" placeholder="••••••••" disabled className="rounded-lg bg-gray-50" />
-          <p className="text-xs text-gray-500 mt-1">Mot de passe masqué pour la sécurité</p>
+          <Input type="password" placeholder="" disabled className="rounded-lg bg-gray-50" />
+          <p className="text-xs text-gray-500 mt-1">Mot de passe masqu pour la scurit</p>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-2">Nouveau mot de passe (Optionnel)</label>
           <Input
             type="password"
-            placeholder="••••••••"
+            placeholder=""
             value={formData.newPassword}
             onChange={(e) => {
               setFormData({ ...formData, newPassword: e.target.value });
@@ -193,7 +193,7 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
             <div className="mt-2 space-y-1 text-xs">
               <div className={`flex items-center gap-2 ${formData.newPassword.length >= 8 ? "text-green-600" : "text-gray-500"}`}>
                 {formData.newPassword.length >= 8 ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                8 caractères minimum
+                8 caractres minimum
               </div>
               <div className={`flex items-center gap-2 ${/[a-z]/.test(formData.newPassword) ? "text-green-600" : "text-gray-500"}`}>
                 {/[a-z]/.test(formData.newPassword) ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -229,12 +229,12 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
         <div className="space-y-3 border-t pt-5">
           <label className="flex items-start gap-3 cursor-pointer">
             <Checkbox className="mt-1" />
-            <span className="text-sm">J'ai lu et j'accepte les conditions générales et la politique de confidentialité</span>
+            <span className="text-sm">J'ai lu et j'accepte les conditions gnrales et la politique de confidentialit</span>
           </label>
 
           <label className="flex items-start gap-3 cursor-pointer">
             <Checkbox className="mt-1" checked={formData.newsletter} onChange={(e) => setFormData({ ...formData, newsletter: e.target.checked })} />
-            <span className="text-sm">Recevoir notre newsletter - Rejoignez notre communauté et recevez notre actualité.</span>
+            <span className="text-sm">Recevoir notre newsletter - Rejoignez notre communaut et recevez notre actualit.</span>
           </label>
         </div>
 
@@ -252,7 +252,7 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
         )}
 
         <Button type="submit" disabled={loading} className="bg-[#1B5E20] hover:bg-[#2E7D32] rounded-full w-full">
-          {loading ? "Mise à jour..." : "Enregistrer les modifications"}
+          {loading ? "Mise  jour..." : "Enregistrer les modifications"}
         </Button>
       </form>
 
@@ -260,7 +260,7 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
       <div className="mt-8 pt-6 border-t border-red-100">
         <h3 className="text-lg font-semibold text-red-600 mb-2">Zone dangereuse</h3>
         <p className="text-sm text-gray-600 mb-4">
-          La suppression de votre compte est irréversible. Toutes vos données seront définitivement effacées.
+          La suppression de votre compte est irrversible. Toutes vos donnes seront dfinitivement effaces.
         </p>
         <AccountDeletionButton user={user} />
       </div>
@@ -285,7 +285,6 @@ function AccountDeletionButton({ user }) {
     setDeleting(false);
   }
 };
-```
   };
 
   if (!showConfirm) {
