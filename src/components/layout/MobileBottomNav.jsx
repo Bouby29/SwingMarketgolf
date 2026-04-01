@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { supabase as base44 } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { Home, ShoppingBag, Plus, User } from "lucide-react";
 
 export default function MobileBottomNav() {
@@ -59,7 +59,7 @@ export default function MobileBottomNav() {
               onClick={(e) => {
                 if (tab.name === "Profil" && !isLoggedIn) {
                   e.preventDefault();
-                  base44.auth.redirectToLogin();
+                  window.location.href = "/login";
                 }
               }}
               className="flex flex-col items-center justify-center py-1 px-4 min-w-[60px]"
