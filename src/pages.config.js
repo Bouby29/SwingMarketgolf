@@ -48,6 +48,7 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import Admin from './pages/Admin';
+import Login from './pages/Login';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import CGU from './pages/CGU';
@@ -91,6 +92,7 @@ export const PAGES = {
     "Profile": Profile,
     "QuiSommesNous": QuiSommesNous,
     "Setup": Setup,
+    "Login": Login,
 }
 
 export const pagesConfig = {
