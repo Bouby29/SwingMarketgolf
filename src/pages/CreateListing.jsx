@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { supabase, entities, auth } from "@/lib/supabase";
+import { supabase, entities } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEmailService } from "../components/email/useEmailService";
 import RegisterModal from "../components/auth/RegisterModal";
 import CategorySelector from "../components/listing/CategorySelector";
 import GeneralInfoStep from "../components/listing/GeneralInfoStep";
 import DynamicFieldsStep from "../components/listing/DynamicFieldsStep";
 import PhotosStep from "../components/listing/PhotosStep";
-
 import ReviewStep from "../components/listing/ReviewStep";
 
 export default function CreateListing() {
@@ -21,102 +19,77 @@ export default function CreateListing() {
   const [saving, setSaving] = useState(false);
   const [published, setPublished] = useState(false);
   const [createdProductId, setCreatedProductId] = useState(null);
-  const { sendListingPublished } = useEmailService();
 
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    price: "",
-    retail_price: "",
-    condition: "",
-    brand: "",
-    category: "",
-    package_size: "",
-    photos: [],
-    shipping_carrier: "mondial_relay",
-    specs: {},
-    sale_type: "fixed",
-    auction_duration: "7"
+    title: "", description: "", price: "", retail_price: "",
+    condition: "", brand: "", category: "", package_size: "",
+    photos: [], shipping_carrier: "mondial_relay", specs: {},
+    sale_type: "fixed", auction_duration: "7"
   });
 
   useEffect(() => {
     const init = async () => {
-      const auth = await Promise.resolve(true);
+      const { data: { session } } = await supabase.auth.getSession();
       setAuthChecked(true);
-      if (!auth) {
+      if (!session?.user) {
         setShowRegister(true);
         return;
       }
-      const me = await Promise.resolve(null);
-      setUser(me);
+      const { data: profile } = await supabase
+        .from("profiles").select("*").eq("id", session.user.id).single();
+      setUser(profile || session.user);
     };
     init();
   }, []);
 
-  const handleSubmit = async (e) => {
-    e?.preventDefault();
+  const handleSubmit = async () => {
+    if (!user) return;
     setSaving(true);
-    
     try {
       const isAuction = form.sale_type === 'auction';
       const auctionDays = parseInt(form.auction_duration || '7');
       const auctionEndDate = isAuction
         ? new Date(Date.now() + auctionDays * 24 * 60 * 60 * 1000).toISOString()
-        : undefined;
+        : null;
 
       const productData = {
         title: form.title,
         description: form.description,
         price: parseFloat(form.price),
-        retail_price: form.retail_price ? parseFloat(form.retail_price) : undefined,
+        retail_price: form.retail_price ? parseFloat(form.retail_price) : null,
         condition: form.condition,
         brand: form.brand,
         category: form.category,
         package_size: form.package_size,
-        photos: form.photos,
-        specs: form.specs && Object.keys(form.specs).length > 0 ? form.specs : undefined,
+        images: form.photos,
+        specs: form.specs && Object.keys(form.specs).length > 0 ? form.specs : null,
         seller_id: user.id,
-        seller_name: user.company_name || user.full_name,
         status: "active",
-        views: 0,
+        views_count: 0,
         favorites_count: 0,
         sale_type: form.sale_type || 'fixed',
-        ...(isAuction ? {
-          auction_start_price: parseFloat(form.price),
-          auction_current_price: parseFloat(form.price),
-          auction_end_date: auctionEndDate,
-          auction_bids_count: 0,
-        } : {})
+        auction_end_date: auctionEndDate,
       };
 
-      const createdProduct = await entities.Product.create(productData);
-      setSaving(false);
-      
-      // Send listing published email
-      await sendListingPublished(user, createdProduct);
-      
-      setCreatedProductId(createdProduct.id);
+      const { data, error } = await supabase.from("products").insert(productData).select().single();
+      if (error) throw error;
+      setCreatedProductId(data.id);
       setPublished(true);
     } catch (error) {
       console.error("Erreur:", error);
-      setSaving(false);
+      alert("Erreur lors de la publication : " + error.message);
     }
+    setSaving(false);
   };
 
   const isStepValid = () => {
     switch (currentStep) {
-      case 0:
-        return !!form.category;
-      case 1:
-        return form.title && form.brand && form.description && form.price && form.condition && form.package_size && (form.sale_type !== 'auction' || parseFloat(form.price) > 0);
-      case 2:
-        return !form.category || true;
-      case 3:
-        return form.photos.length > 0;
-      case 4:
-        return true;
-      default:
-        return false;
+      case 0: return !!form.category;
+      case 1: return form.title && form.brand && form.description && form.price && form.condition && form.package_size;
+      case 2: return true;
+      case 3: return form.photos.length > 0;
+      case 4: return true;
+      default: return false;
     }
   };
 
@@ -128,25 +101,15 @@ export default function CreateListing() {
         <div className="flex justify-center mb-6">
           <CheckCircle2 className="w-20 h-20 text-[#1B5E20]" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">Merci, votre annonce est en ligne !</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-3">Votre annonce est en ligne !</h1>
         <p className="text-gray-500 mb-10">Votre matériel est désormais visible par tous les golfeurs sur SwingMarket.</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button
-            onClick={() => {
-              setForm({ title: "", description: "", price: "", retail_price: "", condition: "", brand: "", category: "", package_size: "", photos: [], specs: {}, sale_type: "fixed", auction_duration: "7" });
-              setCurrentStep(0);
-              setPublished(false);
-              setCreatedProductId(null);
-            }}
-            variant="outline"
-            className="rounded-full font-semibold border-[#1B5E20] text-[#1B5E20] hover:bg-green-50"
-          >
+          <Button onClick={() => { setForm({ title: "", description: "", price: "", retail_price: "", condition: "", brand: "", category: "", package_size: "", photos: [], specs: {}, sale_type: "fixed", auction_duration: "7" }); setCurrentStep(0); setPublished(false); setCreatedProductId(null); }}
+            variant="outline" className="rounded-full font-semibold border-[#1B5E20] text-[#1B5E20] hover:bg-green-50">
             Poster une autre annonce
           </Button>
           <Link to={createPageUrl("Dashboard")}>
-            <Button className="rounded-full font-semibold bg-[#1B5E20] hover:bg-[#2E7D32] w-full">
-              Voir mes annonces
-            </Button>
+            <Button className="rounded-full font-semibold bg-[#1B5E20] hover:bg-[#2E7D32] w-full">Voir mes annonces</Button>
           </Link>
         </div>
       </div>
@@ -155,16 +118,9 @@ export default function CreateListing() {
 
   if (showRegister) {
     return (
-      <RegisterModal
-        open={true}
-        onClose={() => {
-          supabase.auth.getSession().then(({data:{session}})=>!!session).then(async auth => {
-            if (auth) { setUser(await auth.getMe()); setShowRegister(false); }
-            else window.history.back();
-          });
-        }}
-        redirectAfter={createPageUrl("CreateListing")}
-      />
+      <RegisterModal open={true}
+        onClose={() => window.location.href = createPageUrl("Login")}
+        redirectAfter={createPageUrl("CreateListing")} />
     );
   }
 
@@ -180,8 +136,6 @@ export default function CreateListing() {
     <div className="max-w-3xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Créer une annonce</h1>
       <p className="text-gray-500 text-sm mb-8">Vendez votre matériel de golf en quelques minutes</p>
-
-      {/* Progress bar */}
       <div className="flex gap-2 mb-8">
         {steps.map((step, idx) => (
           <div key={idx} className="flex-1">
@@ -190,39 +144,23 @@ export default function CreateListing() {
           </div>
         ))}
       </div>
-
-      {/* Step content */}
       <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
         {steps[currentStep].component}
-
-        {/* Navigation buttons */}
         <div className="flex gap-3 pt-6">
-          <Button
-            type="button"
-            variant="outline"
+          <Button type="button" variant="outline"
             onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-            disabled={currentStep === 0}
-            className="flex items-center gap-2"
-          >
+            disabled={currentStep === 0} className="flex items-center gap-2">
             <ChevronLeft className="w-4 h-4" /> Précédent
           </Button>
-
           {currentStep < steps.length - 1 ? (
-            <Button
-              type="button"
-              disabled={!isStepValid()}
+            <Button type="button" disabled={!isStepValid()}
               onClick={() => setCurrentStep(currentStep + 1)}
-              className="ml-auto flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32]"
-            >
+              className="ml-auto flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32]">
               Suivant <ChevronRight className="w-4 h-4" />
             </Button>
           ) : (
-            <Button
-              type="button"
-              disabled={saving || !isStepValid()}
-              onClick={handleSubmit}
-              className="ml-auto bg-[#1B5E20] hover:bg-[#2E7D32] rounded-full font-semibold"
-            >
+            <Button type="button" disabled={saving || !isStepValid()} onClick={handleSubmit}
+              className="ml-auto bg-[#1B5E20] hover:bg-[#2E7D32] rounded-full font-semibold">
               {saving ? "Publication..." : "Publier l'annonce"}
             </Button>
           )}
