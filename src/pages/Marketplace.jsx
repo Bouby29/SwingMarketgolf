@@ -69,7 +69,7 @@ export default function Marketplace() {
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["marketplace-products"],
-    queryFn: () => entities.Product.filter({ status: "active" }, "-created_date", 100),
+   queryFn: () => entities.Product.filter({ status: "active" }, "-created_at", 100),
   });
 
   // Extract unique brands from products
