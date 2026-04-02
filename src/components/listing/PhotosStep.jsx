@@ -11,8 +11,12 @@ export default function PhotosStep({ photos, onPhotosChange }) {
     setUploading(true);
     const urls = [];
     for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      urls.push(file_url);
+      const fileName = Date.now() + '-' + file.name.replace(/\s/g, '_');
+      const { data, error } = await supabase.storage.from('products').upload(fileName, file);
+      if (!error) {
+        const { data: urlData } = supabase.storage.from('products').getPublicUrl(fileName);
+        urls.push(urlData.publicUrl);
+      }
     }
     onPhotosChange([...photos, ...urls]);
     setUploading(false);
