@@ -19,11 +19,11 @@ export default function Home() {
   
   const { data: products = [] } = useQuery({
     queryKey: ["products-home"],
-    queryFn: () => entities.Product.filter({ status: "active" }, "-created_date", 50),
+    queryFn: () => entities.Product.filter({ status: "active" }, "-created_at", 50),
   });
 
   const clubProducts = products.filter(p => p.category && p.category.toLowerCase().includes("club")).slice(0, 10);
-  const newProducts = [...products].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 10);
+  const newProducts = [...products].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
   const deals = [...products].sort((a, b) => a.price - b.price).slice(0, 10);
 
   const structuredData = {
