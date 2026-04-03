@@ -46,7 +46,7 @@ export default function ProductCard({ product, showFavorite = true }) {
         product_id: product.id,
         product_title: product.title,
         product_price: product.price,
-        product_photo: product.photos?.[0] || "",
+        product_photo: product.images?.[0] || "",
       });
       // Increment favorites_count
       await entities.Product.update(product.id, {
@@ -64,7 +64,7 @@ export default function ProductCard({ product, showFavorite = true }) {
         {/* Image */}
         <div className="relative aspect-square overflow-hidden">
           <img
-            src={product.photos?.[0] || placeholder}
+            src={product.images?.[0] || placeholder}
             alt={product.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
