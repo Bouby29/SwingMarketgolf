@@ -68,7 +68,7 @@ function MyProductsSection({ myProducts, deleteProduct, onProductUpdate }) {
           {myProducts.map(p => (
             <div key={p.id} className="bg-white rounded-xl p-4 border border-gray-100 flex items-center gap-4">
               <img
-                src={p.photos?.[0] || "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=100&h=100&fit=crop"}
+                src={p.images?.[0] || "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=100&h=100&fit=crop"}
                 alt="" className="w-16 h-16 rounded-lg object-cover shrink-0"
               />
               <div className="flex-1 min-w-0">
@@ -166,15 +166,16 @@ export default function Dashboard() {
   const [mobileShowContent, setMobileShowContent] = useState(false);
 
   const refreshUser = async () => {
-    const me = await Promise.resolve(null);
+    const { data: { user: supaUser } } = await supabase.auth.getUser();
     setUser(me);
   };
 
   useEffect(() => {
     const init = async () => {
-      const auth = await Promise.resolve(true);
-      if (!auth) { window.location.href='/login'; return; }
-      setUser(await auth.getMe());
+      const { data: { user: supaUser } } = await supabase.auth.getUser();
+      if (!supaUser) { window.location.href='/login'; return; }
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", supaUser.id).single();
+      setUser({ ...supaUser, ...(profile || {}) });
     };
     init();
   }, []);
