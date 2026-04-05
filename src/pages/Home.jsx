@@ -21,7 +21,7 @@ export default function Home() {
   
   const { data: products = [] } = useQuery({
     queryKey: ["products-home"],
-    queryFn: () => entities.Product.filter({ status: "active" }, "-created_at", 50),
+    queryFn: async () => { const data = await entities.Product.filter({ status: "active" }, "-created_at", 50); return data.filter(p => p.sale_type !== 'auction'); },
   });
 
   const clubProducts = products.filter(p => p.category && p.category.toLowerCase().includes("club")).slice(0, 10);
