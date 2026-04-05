@@ -5,7 +5,7 @@ import { createPageUrl } from "@/utils";
 import { supabase as base44 } from "@/lib/supabase";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
-const VIDEO_URL = "https://pnhiuifejnnklbfpjmdr.supabase.co/storage/v1/object/public/products/6542259-hd_1280_720_25fps.mp4";
+const VIDEO_URL = "https://pnhiuifejnnklbfpjmdr.supabase.co/storage/v1/object/public/products/6542259-uhd_2560_1440_25fps%20(1).mp4";
 
 export default function HeroSection() {
   const { t } = useTranslate();
