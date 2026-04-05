@@ -10,6 +10,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Guides from './pages/Guides';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import Setup from './pages/Setup';
 import Contact from './pages/Contact';
 import CGS from './pages/CGS';
@@ -90,6 +91,7 @@ const AuthenticatedApp = () => {
           <CGSPro />
         </LayoutWrapper>
       } />
+      <Route path="/Admin" element={<AdminDashboard />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
