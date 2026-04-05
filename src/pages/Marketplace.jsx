@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useTranslate } from '../components/providers/TranslationProvider';
 import SEOHead from "../components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
@@ -47,6 +48,7 @@ const CLUB_TYPES = [
 ];
 
 export default function Marketplace() {
+  const { t } = useTranslate();
   const location = useLocation();
 
   const [search, setSearch] = useState("");
