@@ -77,7 +77,6 @@ export default function Home() {
         products={deals}
       />
 
-      <StatsCounter />
       <AuctionCarousel />
 
 
