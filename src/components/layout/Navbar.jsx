@@ -149,7 +149,18 @@ export default function Navbar() {
                 </DropdownMenu>
               </>
             ) : (
-              <div className="hidden md:flex items-center gap-1">
+              <div className="hidden md:flex items-center gap-2">
+                <div className="flex items-center gap-0.5 border border-gray-200 rounded-lg px-1.5 py-1">
+                  {AVAILABLE_LANGUAGES.map(lang => (
+                    <button
+                      key={lang.code}
+                      onClick={() => changeLanguage(lang.code)}
+                      className={`text-xs font-semibold px-1.5 py-0.5 rounded transition-colors ${language === lang.code ? "bg-[#1B5E20] text-white" : "text-gray-500 hover:text-[#1B5E20]"}`}
+                    >
+                      {lang.flag} {lang.label}
+                    </button>
+                  ))}
+                </div>
                 <Button variant="outline" size="sm" onClick={() => window.location.href = createPageUrl("Login")}
                   className="rounded-full border-[#1B5E20] text-[#1B5E20] hover:bg-[#1B5E20] hover:text-white text-xs px-3">Connexion</Button>
                 <Button size="sm" onClick={() => window.location.href = createPageUrl("Login")}
