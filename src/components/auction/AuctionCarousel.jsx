@@ -33,7 +33,17 @@ export default function AuctionCarousel() {
 
   const { data: auctionProducts = [] } = useQuery({
     queryKey: ["auction-products-home"],
-    queryFn: () => entities.Product.filter({ type_de_vente: "enchères", status: "active" }, "-created_at", 20),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("status", "active")
+        .eq("type_de_vente", "enchères")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   const activeAuctions = auctionProducts.filter(
