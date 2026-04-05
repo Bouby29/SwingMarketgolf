@@ -128,7 +128,7 @@ export default function WelcomePopup() {
         <button
           onClick={openPopup}
           style={{
-            position: "fixed", bottom: 24, right: 24,
+            position: "fixed", bottom: 24, left: 24,
             background: "#0F3D2E", color: "white",
             border: "2px solid #D4AF37",
             borderRadius: 50, padding: "0.75rem 1.25rem",
