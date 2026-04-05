@@ -1,4 +1,5 @@
-import React from "react";
+import React
+import { useTranslate, AVAILABLE_LANGUAGES } from '../providers/TranslationProvider'; from from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -21,6 +22,7 @@ const TikTokIcon = () =>
 
 
 export default function Footer() {
+  const { language, changeLanguage } = useTranslate();
   return (
     <footer className="bg-[#0A1F0C] text-white mt-16">
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -121,6 +123,17 @@ export default function Footer() {
             </div>
           </div>
 
+          <div className="flex justify-center gap-2 mb-3">
+            {AVAILABLE_LANGUAGES.map(lang => (
+              <button
+                key={lang.code}
+                onClick={() => changeLanguage(lang.code)}
+                className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${language === lang.code ? "bg-white text-[#1B5E20] border-white" : "text-gray-400 border-gray-600 hover:border-gray-400"}`}
+              >
+                {lang.flag} {lang.label}
+              </button>
+            ))}
+          </div>
           <div className="flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 gap-2">
             <p>© 2026 SwingMarketGolf. Tous droits réservés.</p>
             <div className="flex gap-4">
