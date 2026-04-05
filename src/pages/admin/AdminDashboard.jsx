@@ -44,7 +44,14 @@ export default function AdminDashboard() {
   const [saved, setSaved] = useState("");
   const [newUser, setNewUser] = useState({ email: "", full_name: "", phone: "" });
 
-  useEffect(() => { if (sessionStorage.getItem("admin_authed")) setAuthed(true); }, []);
+  useEffect(() => {
+    if (sessionStorage.getItem("admin_authed")) setAuthed(true);
+    // Forcer light mode sur l'admin
+    document.documentElement.classList.remove('dark');
+    document.documentElement.style.colorScheme = 'light';
+    document.body.style.background = '#f5f5f5';
+    document.body.style.color = '#333';
+  }, []);
   useEffect(() => { if (authed) loadData(); }, [authed]);
 
   const loadData = async () => {
