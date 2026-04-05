@@ -58,6 +58,8 @@ export default function ProductCard({ product, showFavorite = true }) {
 
   const placeholder = "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=400&h=300&fit=crop";
 
+  const isNew = product.created_at && (new Date() - new Date(product.created_at)) < 7 * 24 * 60 * 60 * 1000;
+
   return (
     <Link to={createPageUrl("ProductDetail") + `?id=${product.id}`} className="group block">
       <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 flex flex-col h-full">
@@ -78,6 +80,11 @@ export default function ProductCard({ product, showFavorite = true }) {
                 <span className="text-[9px] font-bold text-gray-700">{product.favorites_count}</span>
               )}
             </button>
+          )}
+          {isNew && (
+            <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-emerald-500 to-green-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
+              ✨ Fraîchement arrivé
+            </div>
           )}
           {product.sale_type === 'auction' ? (
             <Badge className="absolute top-3 left-3 bg-amber-500 text-white border-0 text-xs font-bold flex items-center gap-1">
