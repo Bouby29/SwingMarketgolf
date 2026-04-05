@@ -5,6 +5,8 @@ import { createPageUrl } from "@/utils";
 import { supabase as base44 } from "@/lib/supabase";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
+const VIDEO_URL = "https://pnhiuifejnnklbfpjmdr.supabase.co/storage/v1/object/public/products/6542259-hd_1280_720_25fps.mp4";
+
 export default function HeroSection() {
   const { t } = useTranslate();
   const [current, setCurrent] = useState(0);
@@ -32,6 +34,15 @@ export default function HeroSection() {
       cta: { label: t('home.hero_clubs'), url: createPageUrl("Marketplace") + "?category=Clubs+de+golf" },
       ctaSecondary: null,
     },
+    {
+      type: "video",
+      video: VIDEO_URL,
+      tag: "🏌️ La passion du golf",
+      title: "Vivez le golf\nautrement",
+      subtitle: "Trouvez l'équipement qui fait la différence",
+      cta: { label: "Voir les annonces", url: createPageUrl("Marketplace") },
+      ctaSecondary: { label: "Vendre mon matériel", url: createPageUrl("CreateListing") },
+    },
   ];
 
   useEffect(() => {
@@ -50,11 +61,11 @@ export default function HeroSection() {
           className="absolute inset-0 transition-opacity duration-1000"
           style={{ opacity: i === current ? 1 : 0 }}
         >
-          <img
-            src={s.image}
-            alt=""
-            className="w-full h-full object-cover"
-          />
+          {s.type === "video" ? (
+            <video src={s.video} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+          ) : (
+            <img src={s.image} alt="" className="w-full h-full object-cover" />
+          )}
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
         </div>
       ))}
