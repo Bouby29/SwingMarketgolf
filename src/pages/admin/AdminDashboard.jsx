@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseAdmin = createClient(
+  "https://pnhiuifejnnklbfpjmdr.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaGl1aWZlam5ua2xiZnBqbWRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzY5MDc4NSwiZXhwIjoyMDg5MjY2Nzg1fQ.pdIrv8cLFbTEJATtDVAqgAODYEJKHS7n_g6BE4ft0qU"
+);
 
 const ADMIN_PASSWORD = "swingadmin2024";
 
@@ -78,7 +84,7 @@ export default function AdminDashboard() {
   };
 
   const saveUser = async () => {
-    await supabase.from("profiles").update({
+    await supabaseAdmin.from("profiles").update({
       full_name: editingUser.full_name,
       email: editingUser.email,
       phone: editingUser.phone,
@@ -92,12 +98,12 @@ export default function AdminDashboard() {
 
   const deleteUser = async (id) => {
     if (!confirm("Supprimer cet utilisateur ?")) return;
-    await supabase.from("profiles").delete().eq("id", id);
+    await supabaseAdmin.from("profiles").delete().eq("id", id);
     loadData();
   };
 
   const saveProduct = async () => {
-    await supabase.from("products").update({
+    await supabaseAdmin.from("products").update({
       title: editingProduct.title,
       price: parseFloat(editingProduct.price),
       description: editingProduct.description,
@@ -112,12 +118,12 @@ export default function AdminDashboard() {
 
   const deleteProduct = async (id) => {
     if (!confirm("Supprimer cette annonce ?")) return;
-    await supabase.from("products").update({ status: "inactive" }).eq("id", id);
+    await supabaseAdmin.from("products").update({ status: "inactive" }).eq("id", id);
     loadData();
   };
 
   const saveOrder = async () => {
-    await supabase.from("orders").update({ status: editingOrder.status, price: parseFloat(editingOrder.price) }).eq("id", editingOrder.id);
+    await supabaseAdmin.from("orders").update({ status: editingOrder.status, price: parseFloat(editingOrder.price) }).eq("id", editingOrder.id);
     setEditingOrder(null);
     loadData();
     flash("Commande mise à jour ✓");
