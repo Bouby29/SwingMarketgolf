@@ -73,11 +73,13 @@ export default function AdminDashboard() {
           placeholder="Mot de passe"
           value={pwd}
           onChange={e => setPwd(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && login()}
+          onKeyDown={e => { if(e.key === "Enter") { if(e.target.value === ADMIN_PASSWORD) { sessionStorage.setItem("admin_authed","1"); setAuthed(true); } else { setError("Mot de passe incorrect"); } } }}
           style={{ width: "100%", padding: "0.8rem", borderRadius: 8, border: "1.5px solid #ddd", fontSize: "0.95rem", marginBottom: "0.75rem", boxSizing: "border-box" }}
         />
         {error && <p style={{ color: "red", fontSize: "0.85rem", marginBottom: "0.5rem" }}>{error}</p>}
-        <button onClick={login} style={{ width: "100%", padding: "0.85rem", background: "#0F3D2E", color: "white", border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer", fontSize: "0.95rem" }}>
+        <button
+          onClick={() => { if(pwd === ADMIN_PASSWORD) { sessionStorage.setItem("admin_authed","1"); setAuthed(true); } else { setError("Mot de passe incorrect"); } }}
+          style={{ width: "100%", padding: "0.85rem", background: "#0F3D2E", color: "white", border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer", fontSize: "0.95rem" }}>
           Se connecter
         </button>
       </div>
