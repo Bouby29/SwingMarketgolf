@@ -122,9 +122,12 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-      <GolfBallScroll />
-      <WelcomePopup />
-          <AuthenticatedApp />
+          <GolfBallScroll />
+          <WelcomePopup />
+          <Routes>
+            <Route path="/Admin" element={<AdminDashboard />} />
+            <Route path="/*" element={<AuthenticatedApp />} />
+          </Routes>
         </Router>
         <Toaster />
       </QueryClientProvider>
