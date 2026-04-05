@@ -58,7 +58,7 @@ export default function ProductCard({ product, showFavorite = true }) {
 
   const placeholder = "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=400&h=300&fit=crop";
 
-  const isNew = product.created_at && (new Date() - new Date(product.created_at)) < 7 * 24 * 60 * 60 * 1000;
+  const isNew = product.created_at && (new Date() - new Date(product.created_at)) < 10 * 24 * 60 * 60 * 1000;
 
   return (
     <Link to={createPageUrl("ProductDetail") + `?id=${product.id}`} className="group block">
