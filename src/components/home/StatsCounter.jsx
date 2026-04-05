@@ -33,9 +33,9 @@ export default function StatsCounter() {
   useEffect(() => {
     const fetchStats = async () => {
       const [{ count: products }, { count: sellers }, { count: sales }] = await Promise.all([
-        supabase.from("produits").select("*", { count: "exact", head: true }).eq("status", "active"),
-        supabase.from("profils").select("*", { count: "exact", head: true }),
-        supabase.from("ordres").select("*", { count: "exact", head: true }).eq("status", "completed"),
+        supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "active"),
+        supabase.from("profiles").select("*", { count: "exact", head: true }),
+        supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "completed"),
       ]);
       setStats({ products: products || 0, sellers: sellers || 0, sales: sales || 0 });
     };
