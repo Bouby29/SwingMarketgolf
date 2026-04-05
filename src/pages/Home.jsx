@@ -14,6 +14,7 @@ import ReviewsSection from "../components/home/ReviewsSection";
 import SellCTAStrip from "../components/home/SellCTAStrip";
 import AuctionCarousel from "../components/auction/AuctionCarousel";
 import VideoCtaBanner from "../components/home/VideoCtaBanner";
+import StatsCounter from "../components/home/StatsCounter";
 
 export default function Home() {
   const { t } = useTranslate();
@@ -76,6 +77,7 @@ export default function Home() {
         products={deals}
       />
 
+      <StatsCounter />
       <AuctionCarousel />
 
 
