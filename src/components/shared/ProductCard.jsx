@@ -81,21 +81,24 @@ export default function ProductCard({ product, showFavorite = true }) {
               )}
             </button>
           )}
-          {isNew && (
-            <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-emerald-500 to-green-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
-              ✨ Fraîchement arrivé
-            </div>
-          )}
-          {product.sale_type === 'auction' ? (
-            <Badge className="absolute top-3 left-3 bg-amber-500 text-white border-0 text-xs font-bold flex items-center gap-1">
-              <Gavel className="w-3 h-3" />
-              Enchère
-            </Badge>
-          ) : product.condition && (
-            <Badge className={`absolute top-3 left-3 ${conditionColors[product.condition]} border-0 text-xs font-medium`}>
-              {conditionLabels[product.condition]}
-            </Badge>
-          )}
+          <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 flex-wrap">
+            {isNew && (
+              <div className="bg-gradient-to-r from-emerald-500 to-green-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
+                ✨ Fraîchement arrivé
+              </div>
+            )}
+            {product.sale_type === 'auction' ? (
+              <Badge className="bg-amber-500 text-white border-0 text-[9px] font-bold flex items-center gap-0.5 px-2 py-0.5">
+                <Gavel className="w-2.5 h-2.5" />
+                Enchère
+              </Badge>
+            ) : product.condition && (
+              <Badge className={`${conditionColors[product.condition]} border-0 text-[9px] font-medium px-2 py-0.5`}>
+                {conditionLabels[product.condition]}
+              </Badge>
+            )}
+          </div>
+
         </div>
 
         {/* Body */}
