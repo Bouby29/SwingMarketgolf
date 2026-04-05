@@ -4,8 +4,8 @@ import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import ProductCard from "../shared/ProductCard";
 
-export default function ProductCarousel({
-  const { t } = useTranslate(); title, subtitle, products, titleKey, subtitleKey }) {
+export default function ProductCarousel({ title, subtitle, products, titleKey, subtitleKey }) {
+  const { t } = useTranslate();
   const scrollRef = useRef(null);
   const displayProducts = products.slice(0, 10);
 
