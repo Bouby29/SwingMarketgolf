@@ -95,7 +95,7 @@ export default function ProductDetail() {
     "@type": "Product",
     "name": product.title,
     "description": product.description || product.title,
-    "image": product.photos?.[0] || "",
+    "image": product.images?.[0] || "",
     "brand": product.brand ? { "@type": "Brand", "name": product.brand } : undefined,
     "condition": product.condition === "neuf" ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
     "offers": {
@@ -138,14 +138,14 @@ export default function ProductDetail() {
     );
   }
 
-  const photos = product.photos?.length > 0 ? product.photos : ["https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=600&h=600&fit=crop"];
+  const photos = product.images?.length > 0 ? product.images : ["https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=600&h=600&fit=crop"];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <SEOHead
         title={`${product.title} - Occasion | SwingMarket`}
         description={`Achetez ${product.title} d'occasion au meilleur prix. Produit vérifié, livraison rapide et sécurisée sur SwingMarket.`}
-        image={product.photos?.[0]}
+        image={product.images?.[0]}
         url={`https://swingmarketgolf.com/ProductDetail?id=${product.id}`}
         type="product"
         structuredData={productStructuredData}
