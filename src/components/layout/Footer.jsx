@@ -22,7 +22,7 @@ const TikTokIcon = () =>
 
 
 export default function Footer() {
-  const { language, changeLanguage } = useTranslate();
+  const { language, changeLanguage, t } = useTranslate();
   return (
     <footer className="bg-[#0A1F0C] text-white mt-16">
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -135,7 +135,7 @@ export default function Footer() {
             ))}
           </div>
           <div className="flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 gap-2">
-            <p>© 2026 SwingMarketGolf. Tous droits réservés.</p>
+            <p>{t("footer.copyright")}</p>
             <div className="flex gap-4">
               <span>Paiement sécurisé par Stripe</span>
               <span>·</span>
