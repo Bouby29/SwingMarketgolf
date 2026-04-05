@@ -262,3 +262,43 @@ const translations = {
     legal: { cgv: "Allgemeine Verkaufsbedingungen", cgu: "Allgemeine Nutzungsbedingungen", confidentialite: "Datenschutzrichtlinie", mentionsLegales: "Rechtliche Hinweise", faq: "Häufig gestellte Fragen" }
   }
 };
+export function TranslationProvider({ children }) {
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('language') || 'fr';
+  });
+
+  const changeLanguage = (lang) => {
+    setLanguage(lang);
+    localStorage.setItem('language', lang);
+  };
+
+  const t = (key) => {
+    const keys = key.split('.');
+    let value = translations[language];
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return value || key;
+  };
+
+  return (
+    <TranslationContext.Provider value={{ language, changeLanguage, t }}>
+      {children}
+    </TranslationContext.Provider>
+  );
+}
+
+export function useTranslate() {
+  const context = useContext(TranslationContext);
+  if (!context) {
+    throw new Error('useTranslate must be used within TranslationProvider');
+  }
+  return context;
+}
+
+export const AVAILABLE_LANGUAGES = [
+  { code: 'fr', flag: '🇫🇷', label: 'FR' },
+  { code: 'en', flag: '🇬🇧', label: 'EN' },
+  { code: 'es', flag: '🇪🇸', label: 'ES' },
+  { code: 'de', flag: '🇩🇪', label: 'DE' },
+];
