@@ -33,7 +33,7 @@ export default function AuctionCarousel() {
 
   const { data: auctionProducts = [] } = useQuery({
     queryKey: ["auction-products-home"],
-    queryFn: () => entities.Product.filter({ sale_type: "auction", status: "active" }, "-created_date", 20),
+    queryFn: () => entities.Product.filter({ type_de_vente: "enchères", status: "active" }, "-created_at", 20),
   });
 
   const activeAuctions = auctionProducts.filter(
@@ -90,7 +90,7 @@ export default function AuctionCarousel() {
             >
               <div className="relative">
                 <img
-                  src={product.photos?.[0] || "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=300&h=200&fit=crop"}
+                  src={product.images?.[0] || "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=300&h=200&fit=crop"}
                   alt={product.title}
                   className="w-full h-44 object-cover"
                 />
