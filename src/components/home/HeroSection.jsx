@@ -46,8 +46,9 @@ export default function HeroSection() {
   ];
 
   useEffect(() => {
-    const t = setInterval(() => setCurrent(c => (c + 1) % SLIDES.length), 5000);
-    return () => clearInterval(t);
+    const duration = SLIDES[current]?.type === 'video' ? 8000 : 5000;
+    const t = setTimeout(() => setCurrent(c => (c + 1) % SLIDES.length), duration);
+    return () => clearTimeout(t);
   }, []);
 
   const slide = SLIDES[current];
