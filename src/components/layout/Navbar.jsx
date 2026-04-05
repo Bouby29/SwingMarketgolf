@@ -178,7 +178,7 @@ export default function Navbar() {
           <form onSubmit={handleSearch} className="md:hidden pb-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input autoFocus type="text" placeholder={t("common.search")..." value={searchQuery}
+              <input autoFocus type="text" placeholder={`${t("common.search")}...`} value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32]" />
             </div>
