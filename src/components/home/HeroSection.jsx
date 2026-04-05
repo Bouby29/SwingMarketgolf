@@ -15,7 +15,7 @@ export default function HeroSection() {
 
   useEffect(() => {
     Promise.resolve(true).then(setIsLoggedIn);
-  }, []);
+  }, [current]);
 
   const SLIDES = [
     {
@@ -49,7 +49,7 @@ export default function HeroSection() {
     const duration = SLIDES[current]?.type === 'video' ? 8000 : 5000;
     const t = setTimeout(() => setCurrent(c => (c + 1) % SLIDES.length), duration);
     return () => clearTimeout(t);
-  }, []);
+  }, [current]);
 
   const slide = SLIDES[current];
 
