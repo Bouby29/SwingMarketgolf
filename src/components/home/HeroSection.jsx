@@ -31,7 +31,7 @@ export default function HeroSection() {
       tag: t('home.hero_tag2'),
       title: t('home.hero_title2'),
       subtitle: t('home.hero_subtitle2'),
-      cta: { label: t('home.hero_clubs'), url: createPageUrl("Marketplace") + "?category=Clubs+de+golf" },
+      cta: { label: t('home.hero_clubs'), url: createPageUrl(t("common.marketplace")) + "?category=Clubs+de+golf" },
       ctaSecondary: null,
     },
     {
@@ -40,7 +40,7 @@ export default function HeroSection() {
       tag: "🏌️ La passion du golf",
       title: "Vivez le golf\nautrement",
       subtitle: "Trouvez l'équipement qui fait la différence",
-      cta: { label: "Voir les annonces", url: createPageUrl("Marketplace") },
+      cta: { label: "Voir les annonces", url: createPageUrl(t("common.marketplace")) },
       ctaSecondary: { label: "Vendre mon matériel", url: createPageUrl("CreateListing") },
     },
   ];

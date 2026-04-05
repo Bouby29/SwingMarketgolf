@@ -1,9 +1,11 @@
 import React, { useRef } from "react";
+import { useTranslate } from '../providers/TranslationProvider';
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import ProductCard from "../shared/ProductCard";
 
-export default function ProductCarousel({ title, subtitle, products, titleKey, subtitleKey }) {
+export default function ProductCarousel({
+  const { t } = useTranslate(); title, subtitle, products, titleKey, subtitleKey }) {
   const scrollRef = useRef(null);
   const displayProducts = products.slice(0, 10);
 
@@ -58,7 +60,7 @@ export default function ProductCarousel({ title, subtitle, products, titleKey, s
 
       <div className="flex justify-center mt-8">
         <a
-          href={createPageUrl("Marketplace")}
+          href={createPageUrl(t("common.marketplace"))}
           className="inline-flex items-center gap-2 px-6 py-3 bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full font-semibold transition-colors"
         >
           Voir plus de produits

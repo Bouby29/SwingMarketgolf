@@ -9,13 +9,13 @@ export default function CategoriesGrid() {
   const scrollRef = useRef(null);
 
   const CATEGORIES = [
-    { name: "Clubs de golf",  icon: "🏌️", image: "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=300&h=200&fit=crop", count: "250+",  page: "Marketplace" },
-    { name: "Balles de golf", icon: "⛳",  image: "https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=300&h=200&fit=crop", count: "180+",  page: "Marketplace" },
-    { name: "Chariots",       icon: "🛒",  image: "https://www.routedugolf.com/blog/wp-content/uploads/2024/10/chariot-de-golf.webp", count: "85+",   page: "Marketplace" },
-    { name: "Sacs de golf",   icon: "🎒",  image: "https://img-4.linternaute.com/DiXViOrXa2dyTrLk6iE6j6iliLk=/1500x/smart/926bb9ebf34744978cb60453dbbbb006/ccmcms-linternaute/10773860.jpg", count: "120+",  page: "Marketplace" },
-    { name: "Accessoires",    icon: "🧤",  image: "https://img.freepik.com/photos-gratuite/vue-balles-golf-autres-accessoires_23-2150424605.jpg?semt=ais_wordcount_boost&w=740&q=80", count: "200+",  page: "Marketplace" },
-    { name: "Entraînement",   icon: "🎯",  image: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=300&h=200&fit=crop", count: "95+",   page: "Marketplace" },
-    { name: "Vêtements",      icon: "👕",  image: "https://www.ker-sun.com/cdn/shop/files/vetement-anti-uv-golf-homme-upf-50-ker-sun-desktop_c3712276-0731-4af4-9d2b-51cb9f901726.jpg?v=1734345495&width=2048", count: "300+",  page: "Marketplace" },
+    { name: t("nav.golfClubs"),  icon: "🏌️", image: "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=300&h=200&fit=crop", count: "250+",  page: t("common.marketplace") },
+    { name: t("nav.golfBalls"), icon: "⛳",  image: "https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=300&h=200&fit=crop", count: "180+",  page: t("common.marketplace") },
+    { name: t("nav.carts"),       icon: "🛒",  image: "https://www.routedugolf.com/blog/wp-content/uploads/2024/10/chariot-de-golf.webp", count: "85+",   page: t("common.marketplace") },
+    { name: t("nav.bags"),   icon: "🎒",  image: "https://img-4.linternaute.com/DiXViOrXa2dyTrLk6iE6j6iliLk=/1500x/smart/926bb9ebf34744978cb60453dbbbb006/ccmcms-linternaute/10773860.jpg", count: "120+",  page: t("common.marketplace") },
+    { name: t("nav.accessories"),    icon: "🧤",  image: "https://img.freepik.com/photos-gratuite/vue-balles-golf-autres-accessoires_23-2150424605.jpg?semt=ais_wordcount_boost&w=740&q=80", count: "200+",  page: t("common.marketplace") },
+    { name: t("nav.training"),   icon: "🎯",  image: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=300&h=200&fit=crop", count: "95+",   page: t("common.marketplace") },
+    { name: t("nav.clothing"),      icon: "👕",  image: "https://www.ker-sun.com/cdn/shop/files/vetement-anti-uv-golf-homme-upf-50-ker-sun-desktop_c3712276-0731-4af4-9d2b-51cb9f901726.jpg?v=1734345495&width=2048", count: "300+",  page: t("common.marketplace") },
     { name: "Blog",           icon: "📝",  image: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=300&h=200&fit=crop", count: "Articles", page: "Blog" },
   ];
 
@@ -43,7 +43,7 @@ export default function CategoriesGrid() {
         {CATEGORIES.map((cat) => (
           <Link
             key={cat.name}
-            to={cat.page === "Blog" ? createPageUrl("Blog") : createPageUrl("Marketplace") + `?category=${encodeURIComponent(cat.name)}`}
+            to={cat.page === "Blog" ? createPageUrl("Blog") : createPageUrl(t("common.marketplace")) + `?category=${encodeURIComponent(cat.name)}`}
             className="group relative overflow-hidden rounded-2xl card-hover shrink-0"
             style={{ width: "300px", height: "240px" }}
           >

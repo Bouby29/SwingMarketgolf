@@ -1,10 +1,12 @@
 import React from "react";
+import { useTranslate } from '../providers/TranslationProvider';
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowRight } from "lucide-react";
 import ProductCard from "../shared/ProductCard";
 
-export default function ProductsSection({ title, subtitle, products, linkCategory }) {
+export default function ProductsSection({
+  const { t } = useTranslate(); title, subtitle, products, linkCategory }) {
   if (!products || products.length === 0) return null;
 
   return (
@@ -15,7 +17,7 @@ export default function ProductsSection({ title, subtitle, products, linkCategor
           {subtitle && <p className="text-gray-500 mt-1 text-sm">{subtitle}</p>}
         </div>
         <Link
-          to={createPageUrl("Marketplace") + (linkCategory ? `?category=${encodeURIComponent(linkCategory)}` : "")}
+          to={createPageUrl(t("common.marketplace")) + (linkCategory ? `?category=${encodeURIComponent(linkCategory)}` : "")}
           className="text-[#1B5E20] text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all"
         >
           Voir tout <ArrowRight className="w-4 h-4" />
