@@ -52,7 +52,7 @@ function CategoryItem({ cat }) {
 }
 
 export default function Navbar() {
-  const { language, changeLanguage } = useTranslate();
+  const { language, changeLanguage, t } = useTranslate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -104,7 +104,7 @@ export default function Navbar() {
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl mx-4">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input type="text" placeholder="Rechercher clubs, balles, vêtements..." value={searchQuery}
+              <input type="text" placeholder={t("common.search") + "..."} value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] transition-all" />
             </div>
@@ -125,7 +125,7 @@ export default function Navbar() {
                   </Button>
                 </Link>
                 <Link to={createPageUrl("Favorites")} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20]"><Heart className="w-5 h-5" /></Link>
-                <Link to={createPageUrl("Messages")} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20]"><MessageCircle className="w-5 h-5" /></Link>
+                <Link to={createPageUrl(t("nav.messages"))} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20]"><MessageCircle className="w-5 h-5" /></Link>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="p-1">
@@ -162,9 +162,9 @@ export default function Navbar() {
                   ))}
                 </div>
                 <Button variant="outline" size="sm" onClick={() => window.location.href = createPageUrl("Login")}
-                  className="rounded-full border-[#1B5E20] text-[#1B5E20] hover:bg-[#1B5E20] hover:text-white text-xs px-3">Connexion</Button>
+                  className="rounded-full border-[#1B5E20] text-[#1B5E20] hover:bg-[#1B5E20] hover:text-white text-xs px-3">{t("common.login")}</Button>
                 <Button size="sm" onClick={() => window.location.href = createPageUrl("Login")}
-                  className="rounded-full bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-xs px-3">+ Vendre</Button>
+                  className="rounded-full bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-xs px-3">{t("common.sell")}</Button>
               </div>
             )}
 
@@ -178,7 +178,7 @@ export default function Navbar() {
           <form onSubmit={handleSearch} className="md:hidden pb-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input autoFocus type="text" placeholder="Rechercher..." value={searchQuery}
+              <input autoFocus type="text" placeholder={t("common.search")..." value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32]" />
             </div>
@@ -195,7 +195,7 @@ export default function Navbar() {
         <div className="md:hidden border-t bg-white max-h-[80vh] overflow-y-auto">
           {!isLoggedIn && (
             <div className="p-4 flex gap-2 border-b">
-              <Button className="flex-1 bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full" onClick={() => window.location.href = createPageUrl("Login")}>Connexion</Button>
+              <Button className="flex-1 bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full" onClick={() => window.location.href = createPageUrl("Login")}>{t("common.login")}</Button>
               <Button variant="outline" className="flex-1 border-[#C5A028] text-[#C5A028] hover:bg-[#C5A028] hover:text-white rounded-full" onClick={() => window.location.href = createPageUrl("Login")}>S'inscrire</Button>
             </div>
           )}
@@ -246,7 +246,7 @@ export default function Navbar() {
             <div className="px-4 py-3 border-t space-y-1">
               <Link to={createPageUrl("Dashboard")} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><ShoppingBag className="w-4 h-4" /> Tableau de bord</Link>
               <Link to={createPageUrl("Favorites")} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><Heart className="w-4 h-4" /> Favoris</Link>
-              <Link to={createPageUrl("Messages")} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><MessageCircle className="w-4 h-4" /> Messages</Link>
+              <Link to={createPageUrl(t("nav.messages"))} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><MessageCircle className="w-4 h-4" /> Messages</Link>
               <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg"><LogOut className="w-4 h-4" /> Déconnexion</button>
             </div>
           )}
