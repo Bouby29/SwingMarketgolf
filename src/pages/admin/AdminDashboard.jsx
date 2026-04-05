@@ -316,12 +316,24 @@ export default function AdminDashboard() {
               <div style={{ ...S.card, border: "2px solid #0F3D2E" }}>
                 <h3 style={{ marginBottom: 16 }}>Modifier l'annonce</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  {[["Titre", "title"], ["Prix (€)", "price"], ["Catégorie", "category"], ["Condition", "condition"]].map(([label, key]) => (
+                  {[["Titre", "title"], ["Prix (€)", "price"]].map(([label, key]) => (
                     <div key={key}>
                       <label style={{ fontSize: "0.8rem", color: "#666", display: "block", marginBottom: 4 }}>{label}</label>
                       <input style={S.input} value={editingProduct[key] || ""} onChange={e => setEditingProduct({ ...editingProduct, [key]: e.target.value })} />
                     </div>
                   ))}
+                  <div>
+                    <label style={{ fontSize: "0.8rem", color: "#666", display: "block", marginBottom: 4 }}>Catégorie</label>
+                    <select style={S.input} value={editingProduct.category || ""} onChange={e => setEditingProduct({ ...editingProduct, category: e.target.value })}>
+                      {["Clubs de golf","Balles de golf","Chariots","Sacs de golf","Accessoires","Entraînement","Vêtements"].map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", color: "#666", display: "block", marginBottom: 4 }}>Condition</label>
+                    <select style={S.input} value={editingProduct.condition || ""} onChange={e => setEditingProduct({ ...editingProduct, condition: e.target.value })}>
+                      {["neuf","comme_neuf","bon_etat","etat_correct","tres_bon_etat"].map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
                   <div style={{ gridColumn: "span 2" }}>
                     <label style={{ fontSize: "0.8rem", color: "#666", display: "block", marginBottom: 4 }}>Description</label>
                     <textarea style={{ ...S.input, height: 80, resize: "vertical" }} value={editingProduct.description || ""} onChange={e => setEditingProduct({ ...editingProduct, description: e.target.value })} />
