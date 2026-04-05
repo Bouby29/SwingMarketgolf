@@ -69,7 +69,7 @@ export default function Marketplace() {
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["marketplace-products"],
-   queryFn: async () => { const data = await entities.Product.filter({ status: "active" }, "-created_at", 100); return data.filter(p => p.sale_type !== 'auction'); },
+   queryFn: async () => { const data = await entities.Product.filter({ status: "active" }, "-created_at", 100); return data.filter(p => p.type_de_vente !== 'enchères'); },
   });
 
   // Extract unique brands from products
