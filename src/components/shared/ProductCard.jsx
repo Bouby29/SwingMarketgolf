@@ -87,7 +87,7 @@ export default function ProductCard({ product, showFavorite = true }) {
                 ✨ Fraîchement arrivé
               </div>
             )}
-            {product.type_de_vente === 'enchères' ? (
+            {product.sale_type === 'auction' ? (
               <Badge className="bg-amber-500 text-white border-0 text-[9px] font-bold flex items-center gap-0.5 px-2 py-0.5">
                 <Gavel className="w-2.5 h-2.5" />
                 Enchère

@@ -38,7 +38,7 @@ export default function AuctionCarousel() {
         .from("products")
         .select("*")
         .eq("status", "active")
-        .eq("type_de_vente", "enchères")
+        .eq("sale_type", "auction")
         .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw error;
