@@ -244,41 +244,21 @@ const translations = {
       mentionsLegales: "Legal Notices",
       faq: "Frequently Asked Questions"
     }
+  },
+  es: {
+    common: { language: "Español", home: "Inicio", marketplace: "Mercado", login: "Iniciar sesión", signup: "Registrarse", logout: "Cerrar sesión", search: "Buscar", buy: "Comprar", sell: "Vender", categories: "Categorías", condition: "Estado", price: "Precio", minPrice: "Precio mín", maxPrice: "Precio máx", new: "Nuevo", likeNew: "Como nuevo", goodCondition: "Buen estado", fair: "Estado correcto", noResults: "Sin resultados", loading: "Cargando..." },
+    nav: { allListings: "Todos los anuncios", golfClubs: "Palos de golf", golfBalls: "Pelotas de golf", carts: "Carritos", bags: "Bolsas de golf", accessories: "Accesorios", training: "Entrenamiento", clothing: "Ropa", dashboard: "Panel", myProfile: "Mi perfil", myOrders: "Mis pedidos", myListings: "Mis anuncios", messages: "Mensajes" },
+    home: { title: "SwingMarket - Mercado Golf", hero_tag1: "Marketplace #1 Golf Francia", hero_title1: "Compra, vende\ntu equipo de golf", hero_subtitle1: "Únete a miles de golfistas que compran y venden con confianza.", hero_signup: "Registrarse", hero_sell: "Vender artículo", hero_tag2: "Palos y equipos", hero_title2: "Palos premium\na precio de ocasión", hero_subtitle2: "Drivers, hierros, putters — todo el equipo de golf de segunda mano.", hero_clubs: "Ver palos", categories_title: "Categorías", categories_subtitle: "Encuentra exactamente lo que buscas", new_listings: "Nuevos anuncios", fresh: "Recién añadidos", deals: "Buenas ofertas", best_prices: "Mejores precios", reviews_title: "Confían en SwingMarket", trust_secure: "Pago seguro", trust_secure_desc: "Vendedor pagado tras entrega", trust_shipping: "Envío rastreado y asegurado", trust_shipping_desc: "Mondial Relay · Chronopost · Colissimo", trust_refund: "Reembolso automático", trust_refund_desc: "Si el vendedor no valida en 72h", trust_support: "Asistencia SwingMarket", trust_support_desc: "En caso de disputa o problema", trust_commission: "Comisión regresiva", trust_commission_desc: "Las mejores tarifas del mercado" },
+    marketplace: { title: "Mercado", noResults: "Sin resultados", allListings: "Todos los anuncios" },
+    footer: { copyright: "© 2026 SwingMarket. Todos los derechos reservados." },
+    legal: { cgv: "Términos y Condiciones", cgu: "Condiciones Generales de Uso", confidentialite: "Política de Privacidad", mentionsLegales: "Avisos Legales", faq: "Preguntas Frecuentes" }
+  },
+  de: {
+    common: { language: "Deutsch", home: "Startseite", marketplace: "Marktplatz", login: "Anmelden", signup: "Registrieren", logout: "Abmelden", search: "Suchen", buy: "Kaufen", sell: "Verkaufen", categories: "Kategorien", condition: "Zustand", price: "Preis", minPrice: "Mindestpreis", maxPrice: "Höchstpreis", new: "Neu", likeNew: "Wie neu", goodCondition: "Guter Zustand", fair: "Akzeptabler Zustand", noResults: "Keine Ergebnisse", loading: "Laden..." },
+    nav: { allListings: "Alle Anzeigen", golfClubs: "Golfschläger", golfBalls: "Golfbälle", carts: "Trolleys", bags: "Golftaschen", accessories: "Zubehör", training: "Training", clothing: "Kleidung", dashboard: "Dashboard", myProfile: "Mein Profil", myOrders: "Meine Bestellungen", myListings: "Meine Anzeigen", messages: "Nachrichten" },
+    home: { title: "SwingMarket - Golf Marktplatz", hero_tag1: "Marktplatz #1 Golf Frankreich", hero_title1: "Kaufen, verkaufen\nIhre Golfausrüstung", hero_subtitle1: "Schließen Sie sich Tausenden von Golfern an, die vertrauensvoll kaufen und verkaufen.", hero_signup: "Registrieren", hero_sell: "Artikel verkaufen", hero_tag2: "Schläger & Ausrüstung", hero_title2: "Premium-Schläger\nzu Gebrauchtpreisen", hero_subtitle2: "Driver, Eisen, Putter — alle Gebrauchtwaren unter Enthusiasten.", hero_clubs: "Schläger ansehen", categories_title: "Kategorien", categories_subtitle: "Finden Sie genau das, was Sie suchen", new_listings: "Neue Anzeigen", fresh: "Frisch hinzugefügt", deals: "Schnäppchen", best_prices: "Beste Preise", reviews_title: "Sie vertrauen SwingMarket", trust_secure: "Sichere Zahlung", trust_secure_desc: "Verkäufer nach Lieferung bezahlt", trust_shipping: "Verfolgter & versicherter Versand", trust_shipping_desc: "Mondial Relay · Chronopost · Colissimo", trust_refund: "Automatische Rückerstattung", trust_refund_desc: "Wenn Verkäufer nicht innerhalb 72h bestätigt", trust_support: "SwingMarket-Support", trust_support_desc: "Bei Streitigkeiten oder Problemen", trust_commission: "Degressive Provision", trust_commission_desc: "Die besten Gebühren auf dem Markt" },
+    marketplace: { title: "Marktplatz", noResults: "Keine Ergebnisse", allListings: "Alle Anzeigen" },
+    footer: { copyright: "© 2026 SwingMarket. Alle Rechte vorbehalten." },
+    legal: { cgv: "Allgemeine Verkaufsbedingungen", cgu: "Allgemeine Nutzungsbedingungen", confidentialite: "Datenschutzrichtlinie", mentionsLegales: "Rechtliche Hinweise", faq: "Häufig gestellte Fragen" }
   }
 };
-
-export function TranslationProvider({ children }) {
-  const [language, setLanguage] = useState(() => {
-    return localStorage.getItem('language') || 'fr';
-  });
-
-  const changeLanguage = (lang) => {
-    setLanguage(lang);
-    localStorage.setItem('language', lang);
-  };
-
-  const t = (key) => {
-    const keys = key.split('.');
-    let value = translations[language];
-    for (const k of keys) {
-      value = value?.[k];
-    }
-    return value || key;
-  };
-
-  return (
-    <TranslationContext.Provider value={{ language, changeLanguage, t }}>
-      {children}
-    </TranslationContext.Provider>
-  );
-}
-
-export function useTranslate() {
-  const context = useContext(TranslationContext);
-  if (!context) {
-    throw new Error('useTranslate must be used within TranslationProvider');
-  }
-  return context;
-}
-
-export const AVAILABLE_LANGUAGES = ['fr', 'en'];

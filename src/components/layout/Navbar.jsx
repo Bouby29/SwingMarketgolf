@@ -13,6 +13,7 @@ import {
   ShoppingBag, Plus, ChevronDown, ChevronRight
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useTranslate, AVAILABLE_LANGUAGES } from "../providers/TranslationProvider";
 
 const CATEGORIES = [
   { name: "Clubs de golf", subcats: ["Drivers", "Bois de parcours", "Hybrides", "Fers (sets complets)", "Fers individuels", "Wedges", "Putters", "Sets complets", "Clubs juniors", "Clubs femmes", "Clubs gauchers", "Shafts", "Grips", "Pièces détachées"] },
@@ -51,6 +52,7 @@ function CategoryItem({ cat }) {
 }
 
 export default function Navbar() {
+  const { language, changeLanguage } = useTranslate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
