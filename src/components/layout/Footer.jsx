@@ -1,5 +1,5 @@
-import React
-import { useTranslate, AVAILABLE_LANGUAGES } from '../providers/TranslationProvider'; from from "react";
+import React from 'react';
+import { useTranslate, AVAILABLE_LANGUAGES } from '../providers/TranslationProvider';
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
