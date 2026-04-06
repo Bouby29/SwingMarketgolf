@@ -144,7 +144,7 @@ export default function Login() {
           {mode === "login" && (
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <h1 className="text-2xl font-black text-gray-900 mb-1">Bon retour !</h1>
+                <h1 className="text-2xl font-black text-gray-900 mb-1">Ravi de vous revoir sur SwingMarket 👋</h1>
                 <p className="text-gray-500 text-sm">Connectez-vous à votre compte SwingMarket.</p>
               </div>
               <Field label="Adresse email" required>
