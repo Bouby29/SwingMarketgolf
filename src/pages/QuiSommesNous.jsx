@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowRight, ShoppingBag, Tag } from "lucide-react";
@@ -22,6 +23,12 @@ const BulletList = ({ items }) => (
 );
 
 export default function QuiSommesNous() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setIsLoggedIn(!!data.session);
+    });
+  }, []);
   return (
     <div className="bg-[#FAFAFA]">
       {/* Hero */}
@@ -156,7 +163,7 @@ export default function QuiSommesNous() {
               <ArrowRight className="w-4 h-4" />
             </button>
           </Link>
-          <Link to={createPageUrl("Login")}>
+          <Link to={isLoggedIn ? createPageUrl("CreateListing") : createPageUrl("Login")}>
             <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#C5A028] hover:bg-[#D4AF37] text-white font-semibold rounded-full px-8 py-3.5 text-sm transition-all shadow-lg hover:shadow-xl">
               <Tag className="w-4 h-4" />
               Vendre mon équipement
