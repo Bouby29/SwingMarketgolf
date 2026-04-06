@@ -59,6 +59,7 @@ export default function Footer() {
             <div className="space-y-2 text-sm text-gray-400">
               <Link to={createPageUrl("QuiSommesNous")} className="block hover:text-white transition-colors">Qui sommes-nous ?</Link>
               <Link to="/Guides" className="block hover:text-white transition-colors">Guides acheteur & vendeur</Link>
+              <Link to="/Encheres" className="block hover:text-white transition-colors">Ventes aux enchères</Link>
               <Link to={createPageUrl("Blog")} className="block hover:text-white transition-colors">Blog</Link>
               <Link to={createPageUrl("FAQ")} className="block hover:text-white transition-colors">FAQ</Link>
               <Link to={createPageUrl("MentionsLegales")} className="block hover:text-white transition-colors">Mentions légales</Link>
