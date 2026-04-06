@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, ArrowRight, User, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const HERO = "https://media.istockphoto.com/id/626097022/fr/photo/parcours-de-golf-dans-la-campagne.jpg?s=612x612&w=0&k=20&c=mO31GZsrioxtg2E9MUOQL3I_K8_u3xFDB9xaonepO8U=";
 
@@ -37,7 +38,7 @@ function BlogCard({ post, featured = false }) {
   const cls = featured ? "flex-col md:flex-row" : "flex-col";
   const imgCls = featured ? "md:w-1/2 aspect-video md:aspect-auto" : "aspect-video";
   return (
-    <div className={"group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all h-full flex " + cls}>
+    <Link to={"/BlogPost?id=" + post.id} className={"group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all h-full flex cursor-pointer " + cls}>
       <div className={"overflow-hidden shrink-0 " + imgCls}>
         <img src={post.cover} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
       </div>
@@ -58,7 +59,7 @@ function BlogCard({ post, featured = false }) {
           <span className="text-xs font-semibold text-[#1B5E20] flex items-center gap-1">Lire <ArrowRight className="w-3 h-3" /></span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
