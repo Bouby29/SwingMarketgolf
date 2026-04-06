@@ -113,7 +113,7 @@ export default function Login() {
           </h2>
           <p className="text-green-100 text-lg mb-12">Achetez et vendez vos clubs, balles et équipements en toute confiance.</p>
           <div className="space-y-4">
-            {["Paiement sécurisé par Stripe", "Protection acheteur sur chaque transaction", "Livraison suivie & assurée"].map((item, i) => (
+            {["Paiement sécurisé par Stripe", "Protection acheteur sur chaque transaction", "Livraison suivie"].map((item, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
                   <Check className="w-3.5 h-3.5 text-[#1B5E20] font-bold" />
