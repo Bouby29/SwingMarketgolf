@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useTranslate } from '../components/providers/TranslationProvider';
 import SEOHead from "../components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { supabase, entities, auth } from "@/lib/supabase";
 import ProductCard from "../components/shared/ProductCard";
 import { Input } from "@/components/ui/input";
@@ -88,6 +88,10 @@ export default function Marketplace() {
 
   const filtered = useMemo(() => {
     let result = [...products];
+
+    if (saleTypeFilter) {
+      result = result.filter(p => p.sale_type === saleTypeFilter);
+    }
 
     if (search) {
       const s = search.toLowerCase();
