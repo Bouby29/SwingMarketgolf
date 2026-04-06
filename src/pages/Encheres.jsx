@@ -102,7 +102,7 @@ export default function Encheres() {
             {[
               { q: "Puis-je fixer un prix de réserve ?", a: "Oui, vous pouvez définir un prix de réserve confidentiel. L'enchère ne sera validée que si ce seuil est atteint." },
               { q: "Que se passe-t-il si personne ne mise ?", a: "Si aucune offre n'est reçue avant la fin du délai, l'annonce expire sans obligation de vente. Vous pouvez la republier en modifiant le prix de départ." },
-              { q: "L'acheteur peut-il se rétracter ?", a: "Non, une offre d'enchère est un engagement ferme d'achat. L'acheteur gagnant est automatiquement facturé à la fin de l'enchère." },
+              { q: "L'acheteur peut-il se rétracter ?", a: "Non, une offre d'enchère est un engagement ferme d'achat. L'acheteur gagnant doit procéder au paiement pour finaliser la transaction." },
               { q: "Quelle commission SwingMarket prélève-t-il ?", a: "Les mêmes commissions dégressives qu'une vente classique s'appliquent : de 10% pour les articles sous 100€ à 4% pour les articles au-dessus de 1000€." },
               { q: "Puis-je annuler mon enchère en cours ?", a: "L'annulation est possible uniquement si aucune offre n'a encore été reçue. Une fois des enchères placées, la vente doit aller à son terme." },
             ].map((item, i) => (
