@@ -3,7 +3,7 @@ import { supabase, entities } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import RegisterModal from "../components/auth/RegisterModal";
 import CategorySelector from "../components/listing/CategorySelector";
 import GeneralInfoStep from "../components/listing/GeneralInfoStep";
@@ -12,6 +12,7 @@ import PhotosStep from "../components/listing/PhotosStep";
 import ReviewStep from "../components/listing/ReviewStep";
 
 export default function CreateListing() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
@@ -32,7 +33,7 @@ export default function CreateListing() {
       const { data: { session } } = await supabase.auth.getSession();
       setAuthChecked(true);
       if (!session?.user) {
-        setShowRegister(true);
+        navigate("/Login");
         return;
       }
       const { data: profile } = await supabase
