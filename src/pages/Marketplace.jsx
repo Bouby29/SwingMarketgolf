@@ -49,6 +49,8 @@ const CLUB_TYPES = [
 
 export default function Marketplace() {
   const { t } = useTranslate();
+  const [searchParams] = useSearchParams();
+  const saleTypeFilter = searchParams.get("sale_type");
   const location = useLocation();
 
   const [search, setSearch] = useState("");
@@ -71,7 +73,11 @@ export default function Marketplace() {
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["marketplace-products"],
-   queryFn: async () => { const data = await entities.Product.filter({ status: "active" }, "-created_at", 100); return data.filter(p => p.sale_type !== 'auction'); },
+   queryFn: async () => {
+      const { data, error } = await supabase.from("products").select("*").eq("status", "active").order("created_at", { ascending: false }).limit(100);
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   // Extract unique brands from products

@@ -22,7 +22,7 @@ export default function Encheres() {
             Le système d'enchères SwingMarket vous permet de mettre votre matériel golf aux enchères et d'obtenir le meilleur prix grâce à la compétition entre acheteurs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to={createPageUrl("CreateListing")}
+            <Link to={createPageUrl("Login")}
               className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-bold px-8 py-4 rounded-full text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
               <Gavel className="w-5 h-5" />
               Mettre aux enchères
@@ -127,7 +127,7 @@ export default function Encheres() {
             Rejoignez les centaines de golfeurs qui ont déjà vendu leur matériel plus vite et plus cher grâce aux enchères SwingMarket.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to={createPageUrl("CreateListing")}
+            <Link to={createPageUrl("Login")}
               className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-black px-8 py-4 rounded-full text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
               <Gavel className="w-5 h-5" />
               Créer mon enchère maintenant
