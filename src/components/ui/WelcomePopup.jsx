@@ -132,11 +132,11 @@ export default function WelcomePopup() {
             background: "#0F3D2E", color: "white",
             border: "2px solid #D4AF37",
             borderRadius: 50, padding: "0.75rem 1.25rem",
-            fontWeight: 600, fontSize: "0.75rem",
+            fontWeight: 500, fontSize: "0.65rem",
             cursor: "pointer", zIndex: 9998,
             boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
             transition: "transform 0.2s",
-            opacity: 0.85,
+            opacity: 0.7,
           }}
           onMouseOver={e => e.target.style.transform = "scale(1.05)"}
           onMouseOut={e => e.target.style.transform = "scale(1)"}
