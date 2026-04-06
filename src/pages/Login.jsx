@@ -49,8 +49,8 @@ function Field({ label, required, children, hint }) {
   );
 }
 
-const inputCls = "w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#1B5E20] focus:ring-2 focus:ring-[#1B5E20]/10 outline-none text-sm transition-all bg-white";
-const selectCls = "w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#1B5E20] focus:ring-2 focus:ring-[#1B5E20]/10 outline-none text-sm transition-all bg-white appearance-none";
+const inputCls = "w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#1B5E20] focus:ring-2 focus:ring-[#1B5E20]/10 outline-none text-sm transition-all bg-white text-gray-900 placeholder-gray-400";
+const selectCls = "w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#1B5E20] focus:ring-2 focus:ring-[#1B5E20]/10 outline-none text-sm transition-all bg-white appearance-none text-gray-900";
 
 export default function Login() {
   const [mode, setMode] = useState("login");
@@ -109,11 +109,11 @@ export default function Login() {
             <span className="text-white font-black text-xl">SwingMarket<span className="text-amber-400">Golf</span></span>
           </div>
           <h2 className="text-4xl font-black text-white leading-tight mb-6">
-            La marketplace<br />du golf d'occasion<br /><span className="text-amber-400">#1 en France</span>
+            La marketplace<br />dédiée aux<br /><span className="text-amber-400">passionnés de golf</span>
           </h2>
           <p className="text-green-100 text-lg mb-12">Achetez et vendez vos clubs, balles et équipements en toute confiance.</p>
           <div className="space-y-4">
-            {["Paiement sécurisé par Stripe", "Protection acheteur sur chaque transaction", "Livraison suivie & assurée", "Commission dégressive à partir de 4%"].map((item, i) => (
+            {["Paiement sécurisé par Stripe", "Protection acheteur sur chaque transaction", "Livraison suivie & assurée"].map((item, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
                   <Check className="w-3.5 h-3.5 text-[#1B5E20] font-bold" />
