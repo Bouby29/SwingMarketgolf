@@ -1,9 +1,19 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { Link } , { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { X } from "lucide-react";
 
 export default function WelcomePopup() {
+  const navigate = useNavigate();
+  const handleSellClick = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      navigate("/CreateListing");
+    } else {
+      navigate("/Login");
+    }
+  };
   const [show, setShow] = useState(false);
   const [visible, setVisible] = useState(false);
 
