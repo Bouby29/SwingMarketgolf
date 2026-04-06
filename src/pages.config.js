@@ -61,6 +61,7 @@ import FAQ from './pages/FAQ';
 import Favorites from './pages/Favorites';
 import Home from './pages/Home';
 import Marketplace from './pages/Marketplace';
+import Encheres from './pages/Encheres';
 import MentionsLegales from './pages/MentionsLegales';
 import Messages from './pages/Messages';
 import ProductDetail from './pages/ProductDetail';
@@ -85,6 +86,7 @@ export const PAGES = {
     "Favorites": Favorites,
     "Home": Home,
     "Marketplace": Marketplace,
+    "Encheres": Encheres,
     "MentionsLegales": MentionsLegales,
     "Messages": Messages,
     "ProductDetail": ProductDetail,
