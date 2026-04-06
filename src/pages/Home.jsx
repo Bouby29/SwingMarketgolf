@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import SEOHead from "../components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslate } from "../components/providers/TranslationProvider";
@@ -17,6 +17,10 @@ import VideoCtaBanner from "../components/home/VideoCtaBanner";
 import StatsCounter from "../components/home/StatsCounter";
 
 export default function Home() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setIsLoggedIn(!!data.session));
+  }, []);
   const { t } = useTranslate();
   
   const { data: products = [] } = useQuery({

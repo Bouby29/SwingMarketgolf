@@ -1,10 +1,15 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { useTranslate } from '../providers/TranslationProvider';
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Plus, ShoppingBag } from "lucide-react";
 
 export default function SellCTAStrip() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setIsLoggedIn(!!data.session));
+  }, []);
   const { t } = useTranslate();
   return (
     <div className="bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] py-10">
