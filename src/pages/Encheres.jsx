@@ -22,13 +22,13 @@ export default function Encheres() {
             Le système d'enchères SwingMarket vous permet de mettre votre matériel golf aux enchères et d'obtenir le meilleur prix grâce à la compétition entre acheteurs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to={createPageUrl("NewListing")}
+            <Link to={createPageUrl("CreateListing")}
               className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-bold px-8 py-4 rounded-full text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
               <Gavel className="w-5 h-5" />
               Mettre aux enchères
               <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link to={createPageUrl("Marketplace") + "?type=auction"}
+            <Link to={createPageUrl("Marketplace") + "?sale_type=auction"}
               className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-full text-lg transition-all border border-white/20">
               <Trophy className="w-5 h-5" />
               Voir les enchères en cours
@@ -37,23 +37,7 @@ export default function Encheres() {
         </div>
       </section>
 
-      {/* STATS */}
-      <section className="bg-amber-50 py-12 px-4 border-b border-amber-100">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {[
-            { value: "+340", label: "Enchères réalisées", icon: "🏆" },
-            { value: "€ 127", label: "Prix moyen obtenu", icon: "💰" },
-            { value: "72h", label: "Durée moyenne", icon: "⏱️" },
-            { value: "4.8★", label: "Satisfaction vendeurs", icon: "⭐" },
-          ].map((stat, i) => (
-            <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-amber-100">
-              <div className="text-2xl mb-1">{stat.icon}</div>
-              <div className="text-2xl font-black text-[#1B5E20]">{stat.value}</div>
-              <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      
 
       {/* COMMENT CA MARCHE */}
       <section className="py-20 px-4">
@@ -135,22 +119,22 @@ export default function Encheres() {
       </section>
 
       {/* CTA FINAL */}
-      <section className="bg-gradient-to-br from-amber-500 to-orange-500 py-20 px-4">
+      <section className="bg-gradient-to-br from-[#0F3D2E] via-[#1B5E20] to-[#2E7D32] py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="text-5xl mb-6">🏌️</div>
           <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Prêt à mettre votre matériel aux enchères ?</h2>
-          <p className="text-amber-100 text-lg mb-10 max-w-xl mx-auto">
+          <p className="text-green-100 text-lg mb-10 max-w-xl mx-auto">
             Rejoignez les centaines de golfeurs qui ont déjà vendu leur matériel plus vite et plus cher grâce aux enchères SwingMarket.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to={createPageUrl("NewListing")}
-              className="inline-flex items-center gap-2 bg-white text-amber-600 font-black px-8 py-4 rounded-full text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+            <Link to={createPageUrl("CreateListing")}
+              className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-black px-8 py-4 rounded-full text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
               <Gavel className="w-5 h-5" />
               Créer mon enchère maintenant
               <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link to={createPageUrl("Marketplace") + "?type=auction"}
-              className="inline-flex items-center gap-2 bg-amber-600/30 hover:bg-amber-600/40 text-white font-bold px-8 py-4 rounded-full text-lg transition-all border border-white/30">
+            <Link to={createPageUrl("Marketplace") + "?sale_type=auction"}
+              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-full text-lg transition-all border border-white/20">
               Voir les enchères en cours
             </Link>
           </div>
