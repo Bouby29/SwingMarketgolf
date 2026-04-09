@@ -15,20 +15,28 @@ export default function Profile() {
 
   const { data: profileUser } = useQuery({
     queryKey: ["profile-user", userId],
-    queryFn: () => entities.User.filter({ id: userId }),
-    select: d => d[0],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
+      return data;
+    },
     enabled: !!userId,
   });
 
   const { data: products = [], isSuccess: productsLoaded } = useQuery({
     queryKey: ["profile-products", userId],
-    queryFn: () => entities.Product.filter({ seller_id: userId, status: "active" }, "-created_date", 50),
+    queryFn: async () => {
+      const { data } = await supabase.from("products").select("*").eq("seller_id", userId).eq("status", "active").order("created_at", { ascending: false }).limit(50);
+      return data || [];
+    },
     enabled: !!userId,
   });
 
   const { data: reviews = [] } = useQuery({
     queryKey: ["profile-reviews", userId],
-    queryFn: () => entities.Review.filter({ seller_id: userId }, "-created_date", 20),
+    queryFn: async () => {
+      const { data } = await supabase.from("reviews").select("*").eq("seller_id", userId).order("created_at", { ascending: false }).limit(20);
+      return data || [];
+    },
     enabled: !!userId,
   });
 
@@ -41,7 +49,7 @@ export default function Profile() {
 
   const shopName = profileUser?.shop_name || profileUser?.company_name || profileUser?.full_name || sellerNameFallback || "Vendeur";
   const displayName = profileUser?.full_name || sellerNameFallback || "Vendeur";
-  const memberSince = profileUser?.created_date ? new Date(profileUser.created_date).getFullYear() : null;
+  const memberSince = profileUser?.created_at ? new Date(profileUser.created_date).getFullYear() : null;
 
   return (
     <div className="bg-gradient-to-b from-gray-50 to-white">
