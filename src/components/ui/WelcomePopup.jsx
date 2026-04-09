@@ -100,7 +100,7 @@ export default function WelcomePopup() {
               {/* CTAs */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <Link to="/login" onClick={closePopup}>
-                  <button style={{
+                  <button onClick={() => navigate("/Login")} style={{
                     width: "100%", padding: "0.85rem",
                     background: "#0F3D2E", color: "white",
                     border: "none", borderRadius: 10,
