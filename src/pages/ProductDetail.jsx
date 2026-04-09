@@ -230,14 +230,14 @@ export default function ProductDetail() {
             <Link to={createPageUrl("Profile") + `?id=${product.seller_id}`} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl mb-6 hover:bg-gray-100 transition-colors border border-gray-100">
               <div className="w-12 h-12 rounded-full bg-[#1B5E20] flex items-center justify-center overflow-hidden shrink-0">
                 {seller?.avatar_url ? (
-                  <img src={seller.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                  <img src={seller?.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                 ) : (
-                  <span className="text-white font-bold text-lg">{product.seller_name?.[0]?.toUpperCase()}</span>
+                  <span className="text-white font-bold text-lg">{(seller?.shop_name || seller?.full_name || product.seller_name || "V")?.[0]?.toUpperCase()}</span>
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-bold text-sm text-gray-900">{product.seller_name}</p>
+                  <p className="font-bold text-sm text-gray-900">{seller?.shop_name || seller?.full_name || product.seller_name || "Vendeur"}</p>
                   {seller?.is_pro && <Badge variant="outline" className="text-[10px] py-0">Pro</Badge>}
                 </div>
                 <div className="flex items-center gap-1 mt-0.5">
