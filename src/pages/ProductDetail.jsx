@@ -51,26 +51,37 @@ export default function ProductDetail() {
 
   const { data: seller } = useQuery({
     queryKey: ["seller", product?.seller_id],
-    queryFn: () => entities.User.filter({ id: product.seller_id }),
-    select: (data) => data[0],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("*").eq("id", product.seller_id).single();
+      return data;
+    },
     enabled: !!product?.seller_id,
   });
 
   const { data: reviews = [] } = useQuery({
     queryKey: ["reviews", product?.seller_id],
-    queryFn: () => entities.Review.filter({ seller_id: product.seller_id }),
+    queryFn: async () => {
+      const { data } = await supabase.from("reviews").select("*").eq("seller_id", product.seller_id);
+      return data || [];
+    },
     enabled: !!product?.seller_id,
   });
 
   const { data: similarProducts = [] } = useQuery({
     queryKey: ["similar", product?.category],
-    queryFn: () => entities.Product.filter({ category: product.category, status: "active" }, "-created_date", 5),
+    queryFn: async () => {
+      const { data } = await supabase.from("products").select("*").eq("category", product.category).eq("status", "active").neq("id", productId).order("created_at", { ascending: false }).limit(5);
+      return data || [];
+    },
     enabled: !!product?.category,
   });
 
   const { data: sellerProducts = [] } = useQuery({
     queryKey: ["seller-products", product?.seller_id],
-    queryFn: () => entities.Product.filter({ seller_id: product.seller_id, status: "active" }, "-created_date", 7),
+    queryFn: async () => {
+      const { data } = await supabase.from("products").select("*").eq("seller_id", product.seller_id).eq("status", "active").order("created_at", { ascending: false }).limit(7);
+      return data || [];
+    },
     enabled: !!product?.seller_id,
   });
 
@@ -218,7 +229,7 @@ export default function ProductDetail() {
           {product.seller_name && (
             <Link to={createPageUrl("Profile") + `?id=${product.seller_id}`} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl mb-6 hover:bg-gray-100 transition-colors border border-gray-100">
               <div className="w-12 h-12 rounded-full bg-[#1B5E20] flex items-center justify-center overflow-hidden shrink-0">
-                {seller?.avatar ? (
+                {seller?.avatar_url ? (
                   <img src={seller.avatar} alt="" className="w-full h-full rounded-full object-cover" />
                 ) : (
                   <span className="text-white font-bold text-lg">{product.seller_name?.[0]?.toUpperCase()}</span>
