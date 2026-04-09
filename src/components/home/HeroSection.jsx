@@ -14,7 +14,7 @@ export default function HeroSection() {
   const [showAlreadyConnected, setShowAlreadyConnected] = useState(false);
 
   useEffect(() => {
-    Promise.resolve(true).then(setIsLoggedIn);
+    supabase.auth.getSession().then(({ data }) => setIsLoggedIn(!!data.session));
   }, [current]);
 
   const SLIDES = [
