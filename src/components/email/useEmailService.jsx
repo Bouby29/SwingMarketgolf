@@ -16,11 +16,8 @@ export const useEmailService = () => {
       const htmlContent = generateEmailHTML(templateType, emailData);
 
       // Send email via base44 integration
-      await base44.integrations.Core.SendEmail({
-        to: userData.email,
-        subject: subject,
-        body: htmlContent
-      });
+      console.warn("SendEmail TODO: remplacer par Supabase Edge Function");
+      // TODO: envoyer email via Supabase Edge Function
 
       // Store in email history
       await entities.EmailHistory.create({

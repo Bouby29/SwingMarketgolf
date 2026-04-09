@@ -97,7 +97,7 @@ function MessageBubble({ msg, user }) {
   const handleLinkClick = (e, to) => {
     if (!user && (to === "/Contact" || to === "/Dashboard")) {
       e.preventDefault();
-      base44.auth.redirectToLogin(window.location.pathname);
+      window.location.href = "/Login";
     }
   };
 

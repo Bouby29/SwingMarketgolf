@@ -76,11 +76,8 @@ export default function RegisterModal({ open, onClose, redirectAfter }) {
       try {
         const subject = getEmailSubject("signup_confirmation", { firstName: form.firstName.trim() });
         const htmlContent = generateEmailHTML("signup_confirmation", { firstName: form.firstName.trim() });
-        await base44.integrations.Core.SendEmail({
-          to: user.email,
-          subject: subject,
-          body: htmlContent
-        });
+        console.warn("SendEmail non disponible - TODO Supabase");
+        // TODO: envoyer email via Supabase Edge Function
         await entities.EmailHistory.create({
           user_email: user.email,
           user_name: user.full_name || form.firstName.trim(),
@@ -104,7 +101,7 @@ export default function RegisterModal({ open, onClose, redirectAfter }) {
 
   const handleLoginRedirect = () => {
     onClose();
-    base44.auth.redirectToLogin(redirectAfter || window.location.href);
+    window.location.href = "/Login";
   };
 
   return (

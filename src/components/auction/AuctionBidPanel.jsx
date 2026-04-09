@@ -57,7 +57,8 @@ export default function AuctionBidPanel({ product, currentUser, isLoggedIn }) {
     setPlacing(true);
 
     try {
-      const res = await base44.functions.invoke("placeBid", { product_id: product.id, amount: bidAmountNum });
+      console.warn("placeBid: fonctionnalité enchères non encore disponible");
+      const res = { error: "Enchères non disponibles pour le moment." };
 
       if (res.data?.success) {
         queryClient.invalidateQueries(["bids", product.id]);

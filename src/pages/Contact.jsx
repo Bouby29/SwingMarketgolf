@@ -26,11 +26,8 @@ export default function Contact() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await base44.integrations.Core.SendEmail({
-      to: "contact@swingmarket.fr",
-      subject: `[Contact] ${form.subject} — ${form.name}`,
-      body: `<p><strong>Nom :</strong> ${form.name}</p><p><strong>Email :</strong> ${form.email}</p><p><strong>Sujet :</strong> ${form.subject}</p><p><strong>Message :</strong></p><p>${form.message.replace(/\n/g, "<br/>")}</p>`,
-    });
+    console.warn("Contact email TODO: connecter Supabase Edge Function");
+    // TODO: envoyer email via Supabase
     setLoading(false);
     setSent(true);
   };
