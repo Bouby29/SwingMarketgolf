@@ -226,7 +226,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Seller card — always visible */}
-          {product.seller_name && (
+          {product.seller_id && (
             <Link to={createPageUrl("Profile") + `?id=${product.seller_id}`} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl mb-6 hover:bg-gray-100 transition-colors border border-gray-100">
               <div className="w-12 h-12 rounded-full bg-[#1B5E20] flex items-center justify-center overflow-hidden shrink-0">
                 {seller?.avatar_url ? (
