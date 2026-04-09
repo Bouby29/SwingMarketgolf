@@ -24,7 +24,7 @@ export default function ProductCard({ product, showFavorite = true }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    Promise.resolve(true).then(setIsLoggedIn);
+    supabase.auth.getSession().then(({ data }) => setIsLoggedIn(!!data.session));
   }, []);
 
   const toggleFavorite = async (e) => {

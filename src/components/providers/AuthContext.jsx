@@ -13,13 +13,14 @@ export function AuthProvider({ children }) {
     const checkAuth = async () => {
       try {
         setIsLoadingPublicSettings(false);
-        const isAuthenticated = await Promise.resolve(true);
+        const { data: { session } } = await supabase.auth.getSession();
+          const isAuthenticated = !!session;
         
         if (!isAuthenticated) {
           setAuthError({ type: 'auth_required' });
           setUser(null);
         } else {
-          const currentUser = await Promise.resolve(null);
+          const currentUser = session?.user || null;
           setUser(currentUser);
         }
       } catch (error) {
