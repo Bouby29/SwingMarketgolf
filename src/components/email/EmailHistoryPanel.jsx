@@ -7,7 +7,8 @@ export default function EmailHistoryPanel() {
   const { data: emailHistory = [], isLoading } = useQuery({
     queryKey: ["email-history"],
     queryFn: async () => {
-      const user = await Promise.resolve(null);
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user || null;
       return entities.EmailHistory.filter({
         user_email: user.email
       }, "-created_date", 50);

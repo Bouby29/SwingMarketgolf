@@ -20,7 +20,8 @@ export default function AddressesSection() {
   useEffect(() => {
     const load = async () => {
       try {
-        const me = await Promise.resolve(null);
+        const { data: { session } } = await supabase.auth.getSession();
+        const me = session?.user || null;
         setAddresses(me?.addresses || []);
       } catch (e) {
         console.error(e);

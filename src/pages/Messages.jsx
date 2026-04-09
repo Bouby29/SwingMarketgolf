@@ -31,9 +31,10 @@ export default function Messages() {
 
   useEffect(() => {
     const init = async () => {
-      const auth = await Promise.resolve(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const auth = !!session;
       if (!auth) { window.location.href='/login'; return; }
-      const me = await Promise.resolve(null);
+      const me = session?.user || null;
       setUser(me);
     };
     init();

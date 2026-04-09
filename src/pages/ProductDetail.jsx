@@ -35,9 +35,10 @@ export default function ProductDetail() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    Promise.resolve(true).then(async (auth) => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      const auth = !!data.session;
       setIsLoggedIn(auth);
-      if (auth) setCurrentUser(await Promise.resolve(null));
+      if (auth) setCurrentUser(data.session?.user || null);
     });
   }, []);
 

@@ -27,7 +27,8 @@ export default function CustomizeShopSection({ user, onUpdate }) {
   useEffect(() => {
     const load = async () => {
       try {
-        const me = await Promise.resolve(null);
+        const { data: { session } } = await supabase.auth.getSession();
+        const me = session?.user || null;
         setShopData({
           shop_name: me?.shop_name || me?.full_name || "",
           shop_description: me?.shop_description || "",

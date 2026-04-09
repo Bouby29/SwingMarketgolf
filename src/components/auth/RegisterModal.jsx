@@ -61,7 +61,8 @@ export default function RegisterModal({ open, onClose, redirectAfter }) {
     setSubmitting(true);
     try {
       // Save extra profile data after auth
-       const user = await Promise.resolve(null);
+       const { data: { session } } = await supabase.auth.getSession();
+       const user = session?.user || null;
       await auth.updateMe({
         first_name: form.firstName.trim(),
         last_name: form.lastName.trim(),

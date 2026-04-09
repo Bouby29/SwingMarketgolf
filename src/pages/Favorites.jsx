@@ -11,9 +11,10 @@ export default function Favorites() {
 
   useEffect(() => {
     const init = async () => {
-      const auth = await Promise.resolve(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const auth = !!session;
       if (!auth) { window.location.href='/login'; return; }
-      setUser(await Promise.resolve(null));
+      setUser(session?.user || null);
     };
     init();
   }, []);

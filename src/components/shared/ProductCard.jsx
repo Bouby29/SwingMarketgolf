@@ -31,7 +31,8 @@ export default function ProductCard({ product, showFavorite = true }) {
     e.preventDefault();
     e.stopPropagation();
     if (!isLoggedIn) { window.location.href='/login'; return; }
-    const user = await Promise.resolve(null);
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user || null;
     if (isFav) {
       const favs = await entities.Favorite.filter({ user_id: user.id, product_id: product.id });
       if (favs.length > 0) await entities.Favorite.delete(favs[0].id);

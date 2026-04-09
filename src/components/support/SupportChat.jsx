@@ -143,7 +143,7 @@ export default function SupportChat() {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    Promise.resolve(null).then(setCurrentUser).catch(() => setCurrentUser(null));
+    supabase.auth.getSession().then(({ data }) => setCurrentUser(data.session?.user || null));
   }, []);
 
   useEffect(() => {
