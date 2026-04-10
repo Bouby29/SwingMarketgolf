@@ -20,6 +20,7 @@ export default function Messages() {
   const [sending, setSending] = useState(false);
   const [profiles, setProfiles] = useState({});
   const [products, setProducts] = useState({});
+  const [unreadPerConv, setUnreadPerConv] = useState({});
   const messagesEndRef = useRef(null);
 
   // Auth
@@ -225,7 +226,14 @@ export default function Messages() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className="font-semibold text-sm text-gray-900 truncate">{getDisplayName(other)}</p>
-                        <span className="text-xs text-gray-400 shrink-0 ml-2">{formatTime(conv.last_message_at)}</span>
+                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                          {unreadPerConv[conv.id] > 0 && (
+                            <span className="min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                              {unreadPerConv[conv.id] > 9 ? "9+" : unreadPerConv[conv.id]}
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-400">{formatTime(conv.last_message_at)}</span>
+                        </div>
                       </div>
                       {product && (
                         <p className="text-xs text-[#1B5E20] truncate flex items-center gap-1 mt-0.5">

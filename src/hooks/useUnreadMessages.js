@@ -26,7 +26,7 @@ export function useUnreadMessages() {
       } catch {}
     };
     check();
-    interval = setInterval(check, 15000);
+    interval = setInterval(check, 3000);
     return () => clearInterval(interval);
   }, []);
 
