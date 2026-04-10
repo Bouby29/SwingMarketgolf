@@ -15,7 +15,7 @@ export default function Guides() {
       <MobileHeader title="Guides" showBack={true} />
       
       {/* Hero Section */}
-      <div className="golf-gradient text-white py-12 md:py-16">
+      <div className="bg-[#1B5E20] text-white py-12 md:py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Guides Acheteur & Vendeur SwingMarket
