@@ -188,13 +188,19 @@ export default function Dashboard() {
 
   const { data: mySales = [] } = useQuery({
     queryKey: ["my-sales", user?.id],
-    queryFn: () => entities.Order.filter({ seller_id: user.id }, "-created_date", 50),
+    queryFn: async () => {
+      const { data } = await supabase.from("orders").select("*").eq("seller_id", user.id).order("created_at", { ascending: false }).limit(50);
+      return data || [];
+    },
     enabled: !!user?.id,
   });
 
   const { data: myOrders = [] } = useQuery({
     queryKey: ["my-orders", user?.id],
-    queryFn: () => entities.Order.filter({ buyer_id: user.id }, "-created_date", 50),
+    queryFn: async () => {
+      const { data } = await supabase.from("orders").select("*").eq("buyer_id", user.id).order("created_at", { ascending: false }).limit(50);
+      return data || [];
+    },
     enabled: !!user?.id,
   });
 
