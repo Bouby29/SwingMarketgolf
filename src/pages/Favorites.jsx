@@ -21,12 +21,18 @@ export default function Favorites() {
 
   const { data: favorites = [], refetch } = useQuery({
     queryKey: ["favorites", user?.id],
-    queryFn: () => entities.Favorite.filter({ user_id: user.id }, "-created_date", 100),
+    queryFn: async () => {
+      const { data } = await supabase.from("favorites")
+        .select("*, products(*)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
     enabled: !!user?.id,
   });
 
   const removeFavorite = async (id) => {
-    await entities.Favorite.delete(id);
+    await supabase.from("favorites").delete().eq("id", id);
     refetch();
   };
 
