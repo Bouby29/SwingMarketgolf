@@ -66,7 +66,7 @@ export default function Favorites() {
                 </div>
               </Link>
               <div className="p-4">
-                <h3 className="font-medium text-sm line-clamp-2 mb-1">{fav.products?.title}</h3>
+                <h3 className="font-medium text-sm line-clamp-2 mb-1 text-gray-900">{fav.products?.title}</h3>
                 <div className="flex items-center justify-between">
                   <p className="text-[#1B5E20] font-bold">{fav.products?.price?.toFixed(2)} €</p>
                   <button onClick={() => removeFavorite(fav.id)} className="text-red-400 hover:text-red-600 p-1">
