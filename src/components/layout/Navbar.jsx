@@ -57,29 +57,30 @@ function useUnreadMessages() {
   const [unread, setUnread] = React.useState(0);
   
   React.useEffect(() => {
+    let interval;
     const checkUnread = async () => {
-      const { supabase } = await import('@/lib/supabase');
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      
-      const { count } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('read', false)
-        .neq('sender_id', session.user.id)
-        .in('conversation_id', 
-          (await supabase
-            .from('conversations')
-            .select('id')
-            .or(`participant_1.eq.${session.user.id},participant_2.eq.${session.user.id}`)
-          ).data?.map(c => c.id) || []
-        );
-      
-      setUnread(count || 0);
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const uid = session.user.id;
+        const { data: convs } = await supabase
+          .from('conversations')
+          .select('id')
+          .or(`participant_1.eq.${uid},participant_2.eq.${uid}`);
+        if (!convs || convs.length === 0) return;
+        const convIds = convs.map(c => c.id);
+        const { count } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('read', false)
+          .neq('sender_id', uid)
+          .in('conversation_id', convIds);
+        setUnread(count || 0);
+      } catch {}
     };
-    
     checkUnread();
-    const interval = setInterval(checkUnread, 10000);
+    interval = setInterval(checkUnread, 10000);
     return () => clearInterval(interval);
   }, []);
   
