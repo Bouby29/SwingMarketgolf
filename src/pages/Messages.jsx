@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, Link } from "react-router-dom";
+import { useEmailService } from "../components/email/useEmailService";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -143,6 +144,8 @@ export default function Messages() {
     }
     prevMsgCount.current = messages.length;
   }, [messages]);
+
+  const { sendNewMessageNotification } = useEmailService();
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConv || sending) return;
