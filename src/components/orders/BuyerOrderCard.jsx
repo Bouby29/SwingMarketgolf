@@ -38,7 +38,9 @@ export default function BuyerOrderCard({ order }) {
   const countdown = useCountdown(order.status === "delivered" ? order.delivered_at : null);
 
   const update = useMutation({
-    mutationFn: (data) => entities.Order.update(order.id, data),
+    mutationFn: async (data) => {
+      await supabase.from("orders").update(data).eq("id", order.id);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-orders"] }),
   });
 
@@ -56,7 +58,7 @@ export default function BuyerOrderCard({ order }) {
   };
 
   const handleConfirm = async () => {
-    await base44.functions.invoke("releaseFundsToSeller", { orderId: order.id });
+    await supabase.from("orders").update({ status: "completed" }).eq("id", order.id);
     queryClient.invalidateQueries({ queryKey: ["my-orders"] });
   };
 
@@ -72,7 +74,7 @@ export default function BuyerOrderCard({ order }) {
         <div>
           <p className="font-semibold text-gray-900">{order.product_title}</p>
           <p className="text-xs text-gray-500 mt-0.5">Vendeur : {order.seller_name}</p>
-          <p className="text-xs text-gray-400">{new Date(order.created_date).toLocaleDateString("fr-FR")}</p>
+          <p className="text-xs text-gray-400">{new Date(order.created_at).toLocaleDateString("fr-FR")}</p>
           {order.carrier_name && (
             <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
               <Truck className="w-3 h-3" /> {order.carrier_name}
@@ -85,7 +87,7 @@ export default function BuyerOrderCard({ order }) {
           )}
         </div>
         <div className="text-right">
-          <p className="font-bold text-gray-900 text-lg">{order.total_paid?.toFixed(2)} €</p>
+          <p className="font-bold text-gray-900 text-lg">{(order.total_paid || order.price)?.toFixed(2)} €</p>
           <OrderStatusBadge status={order.status} />
         </div>
       </div>
