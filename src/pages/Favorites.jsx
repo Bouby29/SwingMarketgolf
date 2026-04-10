@@ -59,16 +59,16 @@ export default function Favorites() {
               <Link to={createPageUrl("ProductDetail") + `?id=${fav.product_id}`}>
                 <div className="aspect-square overflow-hidden">
                   <img
-                    src={fav.product_photo || "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=400&h=400&fit=crop"}
-                    alt={fav.product_title}
+                    src={fav.products?.images?.[0] || "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=400&h=400&fit=crop"}
+                    alt={fav.products?.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   />
                 </div>
               </Link>
               <div className="p-4">
-                <h3 className="font-medium text-sm line-clamp-2 mb-1">{fav.product_title}</h3>
+                <h3 className="font-medium text-sm line-clamp-2 mb-1">{fav.products?.title}</h3>
                 <div className="flex items-center justify-between">
-                  <p className="text-[#1B5E20] font-bold">{fav.product_price?.toFixed(2)} €</p>
+                  <p className="text-[#1B5E20] font-bold">{fav.products?.price?.toFixed(2)} €</p>
                   <button onClick={() => removeFavorite(fav.id)} className="text-red-400 hover:text-red-600 p-1">
                     <Trash2 className="w-4 h-4" />
                   </button>
