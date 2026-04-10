@@ -48,7 +48,7 @@ export default function SellerOrderCard({ order }) {
         <div>
           <p className="font-semibold text-gray-900">{order.product_title}</p>
           <p className="text-xs text-gray-500 mt-0.5">Acheteur : {order.buyer_name}</p>
-          <p className="text-xs text-gray-400">{new Date(order.created_at).toLocaleDateString("fr-FR")}</p>
+          <p className="text-xs text-gray-400">{order.created_at ? new Date(order.created_at).toLocaleDateString("fr-FR") : ""}</p>
           {order.carrier_name && (
             <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
               <Truck className="w-3 h-3" /> {order.carrier_name}
@@ -70,19 +70,21 @@ export default function SellerOrderCard({ order }) {
 
       {/* Validation commande */}
       {(order.status === "pending_payment" || order.status === "pending_validation") && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-yellow-800">Nouvelle commande !</p>
-            <p className="text-xs text-yellow-700 mt-1">Confirmez que l'article est disponible pour valider la commande.</p>
-            <Button
-              className="mt-3 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-xs h-8 rounded-full gap-2"
-              onClick={handleValidate}
-              disabled={update.isPending}
-            >
-              <CheckCircle className="w-4 h-4" /> Valider la disponibilité
-            </Button>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-yellow-800">Nouvelle commande reçue !</p>
+              <p className="text-xs text-yellow-700 mt-1">Confirmez que l'article est disponible pour valider la commande.</p>
+            </div>
           </div>
+          <Button
+            className="w-full bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm h-10 rounded-full gap-2"
+            onClick={handleValidate}
+            disabled={update.isPending}
+          >
+            <CheckCircle className="w-4 h-4" /> {update.isPending ? "Validation..." : "Valider la commande"}
+          </Button>
         </div>
       )}
 
