@@ -214,12 +214,12 @@ export default function Messages() {
                   className={`w-full text-left p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors ${isSelected ? "bg-[#F0F7F0] border-l-4 border-l-[#1B5E20]" : ""}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="relative shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
                       <div className="w-10 h-10 rounded-full bg-[#1B5E20] flex items-center justify-center text-white font-bold">
                         {getDisplayName(other)?.[0]?.toUpperCase() || "?"}
                       </div>
                       {product?.images?.[0] && (
-                        <img src={product.images[0]} alt="" className="absolute -bottom-1 -right-1 w-5 h-5 rounded object-cover border-2 border-white" />
+                        <img src={product.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover border border-gray-200" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
