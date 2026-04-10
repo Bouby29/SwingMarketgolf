@@ -364,7 +364,7 @@ export default function Dashboard() {
             <p className="text-gray-600 mb-6">Pour toute question ou assistance, notre équipe est à votre disposition</p>
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
               <p className="text-gray-900 font-medium mb-2">Email de support :</p>
-              <a href="mailto:support@swingmarket.com" className="text-[#1B5E20] text-lg font-bold hover:underline">support@swingmarket.com</a>
+              <a href="mailto:contact@swingmarketgolf.com" className="text-[#1B5E20] text-lg font-bold hover:underline">contact@swingmarketgolf.com</a>
             </div>
           </div>
         );

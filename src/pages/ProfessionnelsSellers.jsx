@@ -50,7 +50,7 @@ export default function ProfessionnelsSellers() {
                   Créer mon compte pro
                 </Link>
                 <a
-                  href="mailto:contact@swingmarket.fr?subject=Partenariat professionnel SwingMarket"
+                  href="mailto:contact@swingmarketgolf.com?subject=Partenariat professionnel SwingMarket"
                   className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white/20 backdrop-blur border-2 border-white text-white font-bold rounded-lg hover:bg-white/30 transition-colors text-base sm:text-lg"
                 >
                   Nous contacter
@@ -268,7 +268,7 @@ export default function ProfessionnelsSellers() {
                   Créer mon compte professionnel
                 </Link>
                 <a
-                  href="mailto:contact@swingmarket.fr?subject=Professionnel golf - prise de contact"
+                  href="mailto:contact@swingmarketgolf.com?subject=Professionnel golf - prise de contact"
                   className="block w-full px-6 py-3 border border-[#1B5E20] text-[#1B5E20] font-semibold rounded-lg hover:bg-[#F5F5F5] transition-colors text-center"
                 >
                   Nous écrire
@@ -289,7 +289,7 @@ export default function ProfessionnelsSellers() {
             L'équipe SwingMarket est disponible pour répondre à toutes vos questions et vous accompagner.
           </p>
           <a
-            href="mailto:contact@swingmarket.fr?subject=Professionnel golf - question"
+            href="mailto:contact@swingmarketgolf.com?subject=Professionnel golf - question"
             className="inline-flex items-center justify-center px-8 py-4 bg-[#1B5E20] text-white font-semibold rounded-lg hover:bg-[#2E7D32] transition-colors text-lg"
           >
             Écrivez-nous

@@ -34,7 +34,7 @@ export default function Confidentialite() {
               ["Commande", "désigne l'achat de Produit réalisé par un Client sur la Plateforme."],
               ["Compte", "désigne l'espace au sein duquel est regroupé l'ensemble des données fournies par le Client ou le Vendeur."],
               ["Identifiants", "désigne l'adresse e-mail et le mot de passe choisis par le Client ou par le Vendeur lui permettant de se connecter à son Compte ou à son Back-Office."],
-              ["Plateforme", "désigne la Plateforme en ligne accessible à l'adresse suivante : www.swingmarket.fr. La Plateforme regroupe l'ensemble des pages web, Services et fonctionnalités proposés aux Utilisateurs."],
+              ["Plateforme", "désigne la Plateforme en ligne accessible à l'adresse suivante : www.swingmarketgolf.com. La Plateforme regroupe l'ensemble des pages web, Services et fonctionnalités proposés aux Utilisateurs."],
               ["Produits", "désigne le matériel de golf (clubs, balles, sacs, chariots, accessoires, équipements d'entraînement, vêtements et chaussures golf) et leurs accessoires pouvant être commercialisés sur la Plateforme par un Vendeur."],
               ["Services", "désigne l'ensemble des services proposés par DANIEL PARTNERS aux Utilisateurs par l'intermédiaire de la Plateforme."],
               ["Utilisateur", "désigne toute personne qui accède et navigue sur la Plateforme, qu'il soit Vendeur, Client ou simple internaute."],
@@ -53,7 +53,7 @@ export default function Confidentialite() {
 
         <Section title="RESPONSABLE DE TRAITEMENT">
           <p>Le Responsable de traitement est <strong>DANIEL PARTNERS</strong>, Société à Responsabilité Limitée, au capital social de 2 700 euros, immatriculée au Registre du Commerce et des Sociétés de Versailles sous le numéro <strong>927 678 169</strong>, dont le siège social est sis 6 rue des Vignes, 78910 Tacoignières.</p>
-          <p className="mt-2">DANIEL PARTNERS est joignable par courriel à <a href="mailto:contact@swingmarket.fr" className="text-[#1B5E20] hover:underline font-medium">contact@swingmarket.fr</a>.</p>
+          <p className="mt-2">DANIEL PARTNERS est joignable par courriel à <a href="mailto:contact@swingmarketgolf.com" className="text-[#1B5E20] hover:underline font-medium">contact@swingmarketgolf.com</a>.</p>
         </Section>
 
         <Section title="ORIGINE ET COLLECTE DE VOS DONNÉES PERSONNELLES">
@@ -158,7 +158,7 @@ export default function Confidentialite() {
             ))}
           </div>
           <InfoBox color="blue">
-            <p>Pour exercer vos droits, contactez-nous par email à : <a href="mailto:contact@swingmarket.fr" className="font-semibold hover:underline">contact@swingmarket.fr</a></p>
+            <p>Pour exercer vos droits, contactez-nous par email à : <a href="mailto:contact@swingmarketgolf.com" className="font-semibold hover:underline">contact@swingmarketgolf.com</a></p>
             <p className="mt-2">Vous devrez joindre à votre demande une copie d'un titre d'identité en cours de validité (carte d'identité ou passeport). DANIEL PARTNERS s'engage à répondre dans un délai d'un (1) mois à compter de la réception de votre demande.</p>
             <p className="mt-2">Vous pouvez également introduire une réclamation auprès de la <strong>CNIL</strong> — Commission Nationale de l'Informatique et des Libertés, 3 Place de Fontenoy, TSA 80715, 75334 Paris Cedex 07 — <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" className="font-semibold hover:underline">www.cnil.fr</a></p>
           </InfoBox>

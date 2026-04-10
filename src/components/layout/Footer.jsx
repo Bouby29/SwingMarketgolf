@@ -75,7 +75,7 @@ export default function Footer() {
             <div className="space-y-2 text-sm text-gray-400 mb-6">
               <Link to={createPageUrl("Confidentialite")} className="block hover:text-white transition-colors">Politique de confidentialité</Link>
               <Link to="/Contact" className="block hover:text-white transition-colors">Nous contacter</Link>
-              <p>contact@swingmarket.fr</p>
+              <p>contact@swingmarketgolf.com</p>
             </div>
             <h4 className="font-semibold mb-3 text-[#C5A028]">Suivez-nous</h4>
             <div className="flex items-center gap-3">

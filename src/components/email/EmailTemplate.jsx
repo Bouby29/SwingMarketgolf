@@ -35,7 +35,7 @@ export const generateEmailHTML = (templateType, data = {}) => {
                     <td style="padding-bottom:16px;">
                       <p style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:#1B5E20; font-family:'Helvetica Neue',Arial,sans-serif;">L'équipe Service Client SwingMarket</p>
                       <p style="margin:6px 0 0 0; font-size:12px; color:#888;">
-                        📧 <a href="mailto:support@swingmarketgolf.com" style="color:#1B5E20; text-decoration:none;">support@swingmarketgolf.com</a>
+                        📧 <a href="mailto:contact@swingmarketgolf.com" style="color:#1B5E20; text-decoration:none;">contact@swingmarketgolf.com</a>
                       </p>
                     </td>
                   </tr>

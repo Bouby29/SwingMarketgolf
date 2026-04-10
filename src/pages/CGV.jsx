@@ -44,7 +44,7 @@ export default function CGV() {
               ["Conditions Générales d'Utilisation ou CGU", "désigne conditions contractuelles mises à disposition sur la page d'accueil de la Plateforme régissant l'utilisation de celle-ci et que tout Utilisateur de la Plateforme doit accepter lors de son inscription sur la Plateforme, qu'il soit Vendeur ou Client."],
               ["Identifiants", "désigne l'adresse e-mail et le mot de passe choisis par le Client lui permettant de se connecter à son Compte."],
               ["Parties", "au pluriel, désigne ensemble DANIEL PARTNERS et le Client. Au singulier, désigne une seule des deux Parties."],
-              ["Plateforme", "désigne la Plateforme en ligne accessible à l'adresse suivante : www.swingmarket.fr. La Plateforme regroupe l'ensemble des pages web, Services et fonctionnalités proposés aux Utilisateurs."],
+              ["Plateforme", "désigne la Plateforme en ligne accessible à l'adresse suivante : www.swingmarketgolf.com. La Plateforme regroupe l'ensemble des pages web, Services et fonctionnalités proposés aux Utilisateurs."],
               ["Prestataire de Services de Paiement ou PSP", "désigne la société détentrice d'un agrément bancaire fournissant par l'intermédiaire de DANIEL PARTNERS, ses services de paiement aux Vendeurs afin de leur permettre d'encaisser les paiements des Clients. Le PSP choisi par DANIEL PARTNERS est Stripe Payments Europe, Ltd., société de droit irlandais, dont le siège social est situé à the One Building, 1, Lower Grand Canal Street, Dublin 2, Ireland, et habilitée à exercer son activité au sein de l'Espace Economique Européen, en qualité d'établissement de monnaie électronique agréé par la Banque Centrale d'Irlande sous le numéro C187865. Le PSP dispose d'une filiale en France (« Stripe France »), immatriculée au Registre du Commerce et des Sociétés de Paris sous le numéro 807 572 011 et dont le siège est au 10 Boulevard Haussmann, 75009 – Paris."],
               ["Produits", "désigne le matériel de golf (clubs tels que drivers, bois, hybrides, fers, wedges et putters ; balles de golf ; sacs de golf ; chariots ; accessoires golf ; équipements d'entraînement ; vêtements et chaussures golf) et leurs accessoires pouvant être commercialisés sur la Plateforme par un Vendeur."],
               ["Services", "désigne l'ensemble des services proposés par DANIEL PARTNERS aux Clients par l'intermédiaire de la Plateforme."],
@@ -208,7 +208,7 @@ export default function CGV() {
           <SubSection title="9.2. Exercice du droit de rétractation">
             <p>
               Pour exercer ce droit, le Client doit notifier sa décision de rétractation via la messagerie interne de la Plateforme ou par email à{" "}
-              <a href="mailto:contact@swingmarket.fr" className="text-[#1B5E20] hover:underline">contact@swingmarket.fr</a>{" "}
+              <a href="mailto:contact@swingmarketgolf.com" className="text-[#1B5E20] hover:underline">contact@swingmarketgolf.com</a>{" "}
               avant l'expiration du délai de 14 jours.
             </p>
           </SubSection>
@@ -293,7 +293,7 @@ export default function CGV() {
           </p>
           <InfoBox color="blue">
             Pour toute réclamation, le Client peut contacter le service client SwingMarket à l'adresse{" "}
-            <a href="mailto:contact@swingmarket.fr" className="text-[#1B5E20] font-medium hover:underline">contact@swingmarket.fr</a>.
+            <a href="mailto:contact@swingmarketgolf.com" className="text-[#1B5E20] font-medium hover:underline">contact@swingmarketgolf.com</a>.
             En cas de litige non résolu, le Client peut également recourir gratuitement à un médiateur de la consommation conformément à l'article L.612-1 du Code de la consommation.
           </InfoBox>
         </Section>

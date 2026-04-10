@@ -13,7 +13,7 @@ export default function MentionsLegales() {
       <div className="mt-8">
         <Section title="ÉDITEUR DU SITE">
           <p>
-            Le présent site internet accessible à l'adresse suivante : <strong>www.swingmarket.fr</strong> est édité et exploité par{" "}
+            Le présent site internet accessible à l'adresse suivante : <strong>www.swingmarketgolf.com</strong> est édité et exploité par{" "}
             <strong>DANIEL PARTNERS</strong>, société à responsabilité limitée au capital social de 2 700 euros, immatriculée au Registre du Commerce et des Sociétés de Versailles sous le numéro <strong>927 678 169</strong>, dont le siège social est sis <strong>6 rue des Vignes, 78910 Tacoignières</strong>, ayant pour numéro de TVA intracommunautaire <strong>FR50927678169</strong>.
           </p>
           <div className="grid md:grid-cols-2 gap-4 mt-4">
@@ -21,7 +21,7 @@ export default function MentionsLegales() {
               <Mail className="w-4 h-4 text-[#1B5E20] mt-0.5 shrink-0" />
               <div>
                 <p className="font-medium text-gray-800 text-xs uppercase tracking-wide mb-1">E-mail</p>
-                <p>contact@swingmarket.fr</p>
+                <p>contact@swingmarketgolf.com</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
@@ -35,7 +35,7 @@ export default function MentionsLegales() {
               <Globe className="w-4 h-4 text-[#1B5E20] mt-0.5 shrink-0" />
               <div>
                 <p className="font-medium text-gray-800 text-xs uppercase tracking-wide mb-1">Site web</p>
-                <p>www.swingmarket.fr</p>
+                <p>www.swingmarketgolf.com</p>
               </div>
             </div>
           </div>
@@ -71,7 +71,7 @@ export default function MentionsLegales() {
           </p>
           <p>
             L'Utilisateur dispose d'un droit d'accès, de modification, de rectification et de suppression des données le concernant.
-            Pour exercer ces droits, contactez-nous à : <a href="mailto:contact@swingmarket.fr" className="text-[#1B5E20] hover:underline">contact@swingmarket.fr</a>
+            Pour exercer ces droits, contactez-nous à : <a href="mailto:contact@swingmarketgolf.com" className="text-[#1B5E20] hover:underline">contact@swingmarketgolf.com</a>
           </p>
           <p>
             Pour plus d'informations sur le traitement de vos données personnelles, consultez notre{" "}

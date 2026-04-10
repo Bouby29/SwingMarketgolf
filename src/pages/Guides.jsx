@@ -336,7 +336,7 @@ export default function Guides() {
               <FileText className="w-5 h-5" />
               Consulter la FAQ
             </Link>
-            <a href="mailto:contact@swingmarket.fr" className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/20 transition-colors border border-white/20">
+            <a href="mailto:contact@swingmarketgolf.com" className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/20 transition-colors border border-white/20">
               <MessageSquare className="w-5 h-5" />
               Nous contacter
             </a>

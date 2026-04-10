@@ -235,7 +235,7 @@ export default function FAQ() {
         <h3 className="font-bold text-lg">Vous n'avez pas trouvé votre réponse ?</h3>
         <p className="text-green-200 text-sm mt-1">Notre équipe est disponible pour vous aider</p>
         <a
-          href="mailto:contact@swingmarket.fr"
+          href="mailto:contact@swingmarketgolf.com"
           className="inline-block mt-4 px-6 py-2 bg-[#C5A028] hover:bg-[#D4AF37] text-white rounded-full font-semibold text-sm transition-colors"
         >
           Nous contacter

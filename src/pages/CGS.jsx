@@ -6,7 +6,7 @@ export default function CGS() {
   return (
     <LegalLayout title="Conditions Générales de Services — Vendeurs Consommateurs" version="Version du 29.09.2025">
       <InfoBox color="green">
-        <strong>DANIEL PARTNERS</strong> édite et exploite la marketplace SwingMarket accessible à l'adresse <strong>www.swingmarket.fr</strong>. Par le biais de la Plateforme, DANIEL PARTNERS permet de mettre en relation des Vendeurs de matériel de golf avec des Clients consommateurs.
+        <strong>DANIEL PARTNERS</strong> édite et exploite la marketplace SwingMarket accessible à l'adresse <strong>www.swingmarketgolf.com</strong>. Par le biais de la Plateforme, DANIEL PARTNERS permet de mettre en relation des Vendeurs de matériel de golf avec des Clients consommateurs.
       </InfoBox>
 
       <p className="mt-6 text-gray-600 leading-relaxed">
@@ -38,7 +38,7 @@ export default function CGS() {
               ["Informations confidentielles", "désigne toutes les informations financières, juridiques, techniques, commerciales, stratégiques, ainsi que les données, documents de toute nature, dessins, concepts, secrets de fabrication, savoir-faire, systèmes d'information, logiciels, transmis ou portés à la connaissance d'une Partie au titre du Contrat, quels que soient la forme et/ou les supports utilisés."],
               ["Page HOME", "désigne la page de la Plateforme dédiée à la présentation d'un Vendeur."],
               ["Parties", "au pluriel, désigne ensemble DANIEL PARTNERS et le Vendeur. Au singulier, désigne DANIEL PARTNERS ou le Vendeur, de façon indifférenciée."],
-              ["Plateforme", "désigne la Plateforme en ligne accessible à l'adresse suivante : www.swingmarket.fr. La Plateforme regroupe l'ensemble des pages web, Services et fonctionnalités proposés aux Utilisateurs."],
+              ["Plateforme", "désigne la Plateforme en ligne accessible à l'adresse suivante : www.swingmarketgolf.com. La Plateforme regroupe l'ensemble des pages web, Services et fonctionnalités proposés aux Utilisateurs."],
               ["Prestataire de Services de Paiement ou PSP", "désigne la société détentrice d'un agrément bancaire fournissant par l'intermédiaire de DANIEL PARTNERS, ses services de paiement aux Vendeurs afin de leur permettre d'encaisser les paiements des Clients. Le PSP choisi par DANIEL PARTNERS est Stripe Payments Europe, Ltd., société de droit irlandais, dont le siège social est situé à the One Building, 1, Lower Grand Canal Street, Dublin 2, Ireland, et habilitée à exercer son activité au sein de l'Espace Economique Européen, en qualité d'établissement de monnaie électronique agréé par la Banque Centrale d'Irlande sous le numéro C187865. Le PSP dispose d'une filiale en France (« Stripe France »), immatriculée au Registre du Commerce et des Sociétés de Paris sous le numéro 807 572 011 et dont le siège est au 10 Boulevard Haussmann, 75009 – Paris."],
               ["Produits", "désigne le matériel de golf (clubs tels que drivers, bois, hybrides, fers, wedges et putters ; balles de golf ; sacs de golf ; chariots manuels et électriques ; accessoires golf ; équipements d'entraînement ; vêtements et chaussures golf) et leurs accessoires pouvant être commercialisés sur la Plateforme par un Vendeur."],
               ["Services", "désigne l'ensemble des services proposés par DANIEL PARTNERS aux Vendeurs par l'intermédiaire de sa Plateforme."],
@@ -233,7 +233,7 @@ export default function CGS() {
             <p>La suspension est notifiée au Vendeur avec indication des motifs, sauf si la notification risque de compromettre la lutte contre la fraude.</p>
           </SubSection>
           <SubSection title="13.2. Résiliation par le Vendeur">
-            <p>Le Vendeur peut résilier le présent Contrat à tout moment en contactant DANIEL PARTNERS à <a href="mailto:contact@swingmarket.fr" className="text-[#1B5E20] hover:underline">contact@swingmarket.fr</a>. La résiliation prend effet après traitement des Commandes en cours.</p>
+            <p>Le Vendeur peut résilier le présent Contrat à tout moment en contactant DANIEL PARTNERS à <a href="mailto:contact@swingmarketgolf.com" className="text-[#1B5E20] hover:underline">contact@swingmarketgolf.com</a>. La résiliation prend effet après traitement des Commandes en cours.</p>
           </SubSection>
           <SubSection title="13.3. Effets de la résiliation">
             <p>En cas de résiliation, les annonces du Vendeur sont désactivées. Les Commandes en cours sont exécutées jusqu'à leur terme. Les données personnelles sont conservées conformément aux délais légaux applicables.</p>
