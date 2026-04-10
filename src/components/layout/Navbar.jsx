@@ -1,3 +1,4 @@
+import { supabase } from '@/lib/supabase';
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -55,35 +56,23 @@ function CategoryItem({ cat }) {
 // Hook pour compter les messages non lus
 function useUnreadMessages() {
   const [unread, setUnread] = React.useState(0);
-  
   React.useEffect(() => {
     let interval;
     const checkUnread = async () => {
       try {
-        const { supabase } = await import('@/lib/supabase');
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
         const uid = session.user.id;
-        const { data: convs } = await supabase
-          .from('conversations')
-          .select('id')
-          .or(`participant_1.eq.${uid},participant_2.eq.${uid}`);
-        if (!convs || convs.length === 0) return;
-        const convIds = convs.map(c => c.id);
-        const { count } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('read', false)
-          .neq('sender_id', uid)
-          .in('conversation_id', convIds);
+        const { data: convs } = await supabase.from('conversations').select('id').or(`participant_1.eq.${uid},participant_2.eq.${uid}`);
+        if (!convs?.length) return;
+        const { count } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('read', false).neq('sender_id', uid).in('conversation_id', convs.map(c => c.id));
         setUnread(count || 0);
-      } catch {}
+      } catch (e) {}
     };
     checkUnread();
-    interval = setInterval(checkUnread, 10000);
+    interval = setInterval(checkUnread, 15000);
     return () => clearInterval(interval);
   }, []);
-  
   return unread;
 }
 
