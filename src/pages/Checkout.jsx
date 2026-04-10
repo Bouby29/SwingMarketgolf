@@ -48,7 +48,7 @@ export default function Checkout() {
     if (!product || !user) return;
     setPlacing(true);
     try {
-      await supabase.from("orders").insert({
+      const { data: orderData, error: orderError } = await supabase.from("orders").insert({
         product_id: product.id,
         product_title: product.title,
         buyer_id: user.id,
@@ -63,6 +63,7 @@ export default function Checkout() {
         buyer_phone: address.phone,
         created_at: new Date().toISOString(),
       });
+      if (orderError) { console.error("ORDER ERROR:", orderError); alert("Erreur: " + orderError.message); setPlacing(false); return; }
       await supabase.from("products").update({ status: "reserved" }).eq("id", product.id);
       setStep(2);
     } catch (e) {
