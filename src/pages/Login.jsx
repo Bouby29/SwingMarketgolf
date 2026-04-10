@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useEmailService } from "../components/email/useEmailService";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, ChevronDown, Shield, Check, Building2, User, Lock, Mail, Calendar, ChevronRight } from "lucide-react";
@@ -78,6 +79,8 @@ export default function Login() {
     setLoading(false);
   };
 
+  const { sendSignupConfirmation } = useEmailService();
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true); setError("");
@@ -88,7 +91,10 @@ export default function Login() {
       options: { data: { full_name: form.firstName + " " + form.lastName, is_pro: isPro, ...(isPro ? { company: form.companyName } : {}) } }
     });
     if (error) setError(error.message);
-    else setSuccess("Compte créé ! Vérifiez votre email pour confirmer votre inscription.");
+    else {
+      setSuccess("Compte créé ! Vérifiez votre email pour confirmer votre inscription.");
+      sendSignupConfirmation({ email: form.email, full_name: form.firstName + " " + form.lastName });
+    }
     setLoading(false);
   };
 
