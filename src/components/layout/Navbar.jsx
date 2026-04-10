@@ -13,7 +13,6 @@ import {
   Search, Menu, X, Heart, MessageCircle, User, LogOut,
   ShoppingBag, Plus, ChevronDown, ChevronRight
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { useTranslate, AVAILABLE_LANGUAGES } from "../providers/TranslationProvider";
 
 const CATEGORIES = [
