@@ -14,7 +14,9 @@ export default function SellerOrderCard({ order }) {
   const [labelError, setLabelError] = useState("");
 
   const update = useMutation({
-    mutationFn: (data) => entities.Order.update(order.id, data),
+    mutationFn: async (data) => {
+      await supabase.from("orders").update(data).eq("id", order.id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-sales"] });
       queryClient.invalidateQueries({ queryKey: ["admin-all-orders"] });
@@ -31,15 +33,7 @@ export default function SellerOrderCard({ order }) {
   };
 
   const handleGenerateLabel = async () => {
-    setGeneratingLabel(true);
-    setLabelError("");
-    const res = await base44.functions.invoke("createShippingLabel", { orderId: order.id });
-    if (res.data?.success) {
-      queryClient.invalidateQueries({ queryKey: ["my-sales"] });
-      if (res.data.tracking_number) setTrackingInput(res.data.tracking_number);
-    } else {
-      setLabelError(res.data?.error || "Erreur lors de la génération de l'étiquette");
-    }
+    setLabelError("Génération d'étiquette Sendcloud disponible prochainement.");
     setGeneratingLabel(false);
   };
 
@@ -54,7 +48,7 @@ export default function SellerOrderCard({ order }) {
         <div>
           <p className="font-semibold text-gray-900">{order.product_title}</p>
           <p className="text-xs text-gray-500 mt-0.5">Acheteur : {order.buyer_name}</p>
-          <p className="text-xs text-gray-400">{new Date(order.created_date).toLocaleDateString("fr-FR")}</p>
+          <p className="text-xs text-gray-400">{new Date(order.created_at).toLocaleDateString("fr-FR")}</p>
           {order.carrier_name && (
             <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
               <Truck className="w-3 h-3" /> {order.carrier_name}
@@ -75,7 +69,7 @@ export default function SellerOrderCard({ order }) {
       <OrderProgress status={order.status} />
 
       {/* Validation commande */}
-      {order.status === "pending_validation" && (
+      {(order.status === "pending_payment" || order.status === "pending_validation") && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
           <div className="flex-1">
