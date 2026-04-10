@@ -126,20 +126,21 @@ export default function Messages() {
     loadMessages(conv.id);
   };
 
-  // Realtime messages
+  // Polling messages toutes les 2s
   useEffect(() => {
     if (!selectedConv?.id) return;
-    const sub = supabase.channel(`messages-${selectedConv.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${selectedConv.id}` },
-        (payload) => {
-          setMessages(prev => [...prev, payload.new]);
-        })
-      .subscribe();
-    return () => supabase.removeChannel(sub);
+    const interval = setInterval(() => {
+      loadMessages(selectedConv.id);
+    }, 2000);
+    return () => clearInterval(interval);
   }, [selectedConv?.id]);
 
+  const prevMsgCount = useRef(0);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > prevMsgCount.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevMsgCount.current = messages.length;
   }, [messages]);
 
   const sendMessage = async () => {
@@ -213,8 +214,13 @@ export default function Messages() {
                   className={`w-full text-left p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors ${isSelected ? "bg-[#F0F7F0] border-l-4 border-l-[#1B5E20]" : ""}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#1B5E20] flex items-center justify-center text-white font-bold shrink-0">
-                      {getDisplayName(other)?.[0]?.toUpperCase() || "?"}
+                    <div className="relative shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-[#1B5E20] flex items-center justify-center text-white font-bold">
+                        {getDisplayName(other)?.[0]?.toUpperCase() || "?"}
+                      </div>
+                      {product?.images?.[0] && (
+                        <img src={product.images[0]} alt="" className="absolute -bottom-1 -right-1 w-5 h-5 rounded object-cover border-2 border-white" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
