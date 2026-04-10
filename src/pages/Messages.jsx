@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "react-router-dom";
-import { supabase, entities, auth } from "@/lib/supabase";
+import { useLocation, Link } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, ArrowLeft, Package, Clock, Image as ImageIcon, Video, X, Loader2 } from "lucide-react";
-import moment from "moment";
-import "moment/locale/fr";
-import { useEmailService } from "../components/email/useEmailService";
+import { Send, ArrowLeft, MessageCircle, Package } from "lucide-react";
+import { createPageUrl } from "@/utils";
 
 export default function Messages() {
   const location = useLocation();
@@ -16,433 +13,315 @@ export default function Messages() {
   const productId = params.get("product");
 
   const [user, setUser] = useState(null);
+  const [conversations, setConversations] = useState([]);
   const [selectedConv, setSelectedConv] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const [attachments, setAttachments] = useState([]);
-  const [uploading, setUploading] = useState(false);
-  // Cache product/seller name for new conversations
-  const [newConvMeta, setNewConvMeta] = useState({ receiverName: "", productTitle: "" });
-  const fileInputRef = useRef(null);
+  const [profiles, setProfiles] = useState({});
+  const [products, setProducts] = useState({});
   const messagesEndRef = useRef(null);
-  const sendingRef = useRef(false);
-  const queryClient = useQueryClient();
-  const { sendNewMessageNotification } = useEmailService();
 
+  // Auth
   useEffect(() => {
-    const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const auth = !!session;
-      if (!auth) { window.location.href='/login'; return; }
-      const me = session?.user || null;
-      setUser(me);
-    };
-    init();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) { window.location.href = "/Login"; return; }
+      setUser(session.user);
+    });
   }, []);
 
-  // Fetch seller name and product title when opening a new conversation from ProductDetail
+  // Load conversations
   useEffect(() => {
-    const fetchMeta = async () => {
-      if (!toUserId) return;
-      let receiverName = "";
-      let productTitle = "";
-      try {
-        const sellers = await entities.User.filter({ id: toUserId });
-        if (sellers.length > 0) receiverName = sellers[0].full_name || "";
-      } catch {}
-      if (productId) {
-        try {
-          const prods = await entities.Product.filter({ id: productId });
-          if (prods.length > 0) productTitle = prods[0].title || "";
-        } catch {}
+    if (!user?.id) return;
+    loadConversations();
+    // Realtime subscription
+    const sub = supabase.channel("conversations")
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, loadConversations)
+      .subscribe();
+    return () => supabase.removeChannel(sub);
+  }, [user?.id]);
+
+  const loadConversations = async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from("conversations")
+      .select("*")
+      .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
+      .order("last_message_at", { ascending: false });
+    if (!data) return;
+    setConversations(data);
+
+    // Load profiles for all participants
+    const otherIds = [...new Set(data.flatMap(c => [c.participant_1, c.participant_2]).filter(id => id !== user.id))];
+    if (otherIds.length > 0) {
+      const { data: profs } = await supabase.from("profiles").select("id,full_name,shop_name,avatar_url").in("id", otherIds);
+      if (profs) {
+        const map = {};
+        profs.forEach(p => map[p.id] = p);
+        setProfiles(map);
       }
-      setNewConvMeta({ receiverName, productTitle });
-    };
-    fetchMeta();
-  }, [toUserId, productId]);
-
-  const { data: allMessages = [] } = useQuery({
-    queryKey: ["all-messages", user?.id],
-    queryFn: async () => {
-      const [sent, received] = await Promise.all([
-        entities.Message.filter({ sender_id: user.id }, "-created_date", 500),
-        entities.Message.filter({ receiver_id: user.id }, "-created_date", 500),
-      ]);
-      return [...sent, ...received].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-    },
-    enabled: !!user?.id,
-    refetchInterval: 5000,
-  });
-
-  // Fetch product images for conversations
-  const productIds = [...new Set(allMessages.map(m => m.product_id).filter(Boolean))];
-  const { data: products = [] } = useQuery({
-    queryKey: ["conv-products", productIds],
-    queryFn: async () => {
-      if (productIds.length === 0) return [];
-      return await entities.Product.filter({ id: { $in: productIds } });
-    },
-    enabled: productIds.length > 0,
-  });
-
-  const productMap = products.reduce((acc, p) => {
-    acc[p.id] = p;
-    return acc;
-  }, {});
-
-  // Group by conversation - use conversation_id if exists, otherwise generate from user IDs
-  const conversations = {};
-  allMessages.forEach(m => {
-    // Generate conversation ID consistently
-    let convId;
-    if (m.conversation_id) {
-      convId = m.conversation_id;
-    } else {
-      // Generate ID from sorted user IDs to ensure consistency
-      convId = [m.sender_id, m.receiver_id].sort().join("_");
     }
-    
-    if (!conversations[convId]) {
-      conversations[convId] = {
-        id: convId,
-        messages: [],
-        otherUser: m.sender_id === user?.id
-          ? { id: m.receiver_id, name: m.receiver_name }
-          : { id: m.sender_id, name: m.sender_name },
-        productTitle: m.product_title,
-        productId: m.product_id,
-      };
+
+    // Load products
+    const prodIds = [...new Set(data.map(c => c.product_id).filter(Boolean))];
+    if (prodIds.length > 0) {
+      const { data: prods } = await supabase.from("products").select("id,title,images").in("id", prodIds);
+      if (prods) {
+        const map = {};
+        prods.forEach(p => map[p.id] = p);
+        setProducts(map);
+      }
     }
-    conversations[convId].messages.push(m);
-  });
+  };
 
-  const convList = Object.values(conversations).sort((a, b) => {
-    const aLast = a.messages[a.messages.length - 1];
-    const bLast = b.messages[b.messages.length - 1];
-    return new Date(bLast.created_date) - new Date(aLast.created_date);
-  });
-
-  // Auto-select conversation from URL
+  // Open conversation from ProductDetail (?to=userId&product=productId)
   useEffect(() => {
-    if (toUserId && user?.id) {
-      const convId = [user.id, toUserId].sort().join("_");
-      setSelectedConv(convId);
+    if (!user?.id || !toUserId) return;
+    openOrCreateConversation(toUserId, productId);
+  }, [user?.id, toUserId]);
+
+  const openOrCreateConversation = async (otherId, prodId) => {
+    // Check if conversation exists
+    let query = supabase.from("conversations")
+      .select("*")
+      .or(`and(participant_1.eq.${user.id},participant_2.eq.${otherId}),and(participant_1.eq.${otherId},participant_2.eq.${user.id})`);
+    if (prodId) query = query.eq("product_id", prodId);
+    
+    const { data: existing } = await query.limit(1);
+    
+    if (existing && existing.length > 0) {
+      setSelectedConv(existing[0]);
+      loadMessages(existing[0].id);
+    } else {
+      // Create new conversation
+      const { data: newConv } = await supabase.from("conversations").insert({
+        participant_1: user.id,
+        participant_2: otherId,
+        product_id: prodId || null,
+      }).select().single();
+      if (newConv) {
+        setSelectedConv(newConv);
+        setMessages([]);
+        loadConversations();
+      }
     }
-  }, [toUserId, user?.id]);
+  };
+
+  const loadMessages = async (convId) => {
+    const { data } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", convId)
+      .order("created_at", { ascending: true });
+    setMessages(data || []);
+    // Mark as read
+    await supabase.from("messages")
+      .update({ read: true })
+      .eq("conversation_id", convId)
+      .neq("sender_id", user.id);
+  };
+
+  const selectConversation = (conv) => {
+    setSelectedConv(conv);
+    loadMessages(conv.id);
+  };
+
+  // Realtime messages
+  useEffect(() => {
+    if (!selectedConv?.id) return;
+    const sub = supabase.channel(`messages-${selectedConv.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${selectedConv.id}` },
+        (payload) => {
+          setMessages(prev => [...prev, payload.new]);
+        })
+      .subscribe();
+    return () => supabase.removeChannel(sub);
+  }, [selectedConv?.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [allMessages]);
-
-  const handleFileSelect = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
-    setUploading(true);
-    try {
-      const uploadPromises = files.map(async (file) => {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        return {
-          url: file_url,
-          type: file.type.startsWith("image/") ? "image" : "video",
-          name: file.name
-        };
-      });
-      const uploaded = await Promise.all(uploadPromises);
-      setAttachments(prev => [...prev, ...uploaded]);
-    } catch (err) {
-      console.error("Upload failed:", err);
-    }
-    setUploading(false);
-    e.target.value = "";
-  };
-
-  const removeAttachment = (index) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
-  };
+  }, [messages]);
 
   const sendMessage = async () => {
-   if (!newMessage.trim() && attachments.length === 0) return;
-   if (sending || sendingRef.current) return; // Prevent double submission
-   sendingRef.current = true;
-   setSending(true);
+    if (!newMessage.trim() || !selectedConv || sending) return;
+    setSending(true);
+    const content = newMessage.trim();
+    setNewMessage("");
+    
+    await supabase.from("messages").insert({
+      conversation_id: selectedConv.id,
+      sender_id: user.id,
+      content,
+      read: false,
+    });
 
-   try {
-     // Determine receiver — from existing conv or from URL param
-     const activeConvData = selectedConv ? conversations[selectedConv] : null;
-     const receiverId = activeConvData?.otherUser?.id || toUserId;
-     const receiverName = activeConvData?.otherUser?.name || newConvMeta.receiverName;
-     const convId = selectedConv || [user.id, receiverId].sort().join("_");
-     const prodTitle = activeConvData?.productTitle || newConvMeta.productTitle;
+    await supabase.from("conversations").update({
+      last_message: content,
+      last_message_at: new Date().toISOString(),
+    }).eq("id", selectedConv.id);
 
-     if (!receiverId) { 
-       setSending(false);
-       sendingRef.current = false;
-       return;
-     }
-
-     // Build message content with attachments
-     let messageContent = newMessage.trim();
-     if (attachments.length > 0) {
-       const attachmentLinks = attachments.map(att => 
-         att.type === "image" 
-           ? `[Image: ${att.url}]` 
-           : `[Video: ${att.url}]`
-       ).join("\n");
-       messageContent = messageContent ? `${messageContent}\n\n${attachmentLinks}` : attachmentLinks;
-     }
-
-     await entities.Message.create({
-       conversation_id: convId,
-       sender_id: user.id,
-       sender_name: user.full_name,
-       receiver_id: receiverId,
-       receiver_name: receiverName,
-       content: messageContent,
-       product_id: productId || "",
-       product_title: prodTitle,
-       read: false,
-     });
-
-     // Send email notification to recipient
-     try {
-       const recipientData = await entities.User.filter({ id: receiverId });
-       if (recipientData?.length > 0) {
-         await sendNewMessageNotification(recipientData[0], {
-           senderName: user.full_name,
-           productTitle: prodTitle,
-           messagePreview: newMessage || "📎 Pièce jointe"
-         });
-       }
-     } catch (err) {
-       console.error("Failed to send message notification email:", err);
-     }
-
-     setNewMessage("");
-     setAttachments([]);
-     setSelectedConv(convId);
-     queryClient.invalidateQueries({ queryKey: ["all-messages"] });
-   } catch (err) {
-     console.error("Message send error:", err);
-   } finally {
-     setSending(false);
-     sendingRef.current = false;
-   }
+    loadConversations();
+    setSending(false);
   };
 
-  const activeConv = selectedConv ? conversations[selectedConv] : null;
-  const isNewConv = toUserId && !activeConv;
+  const getOtherParticipant = (conv) => {
+    const otherId = conv.participant_1 === user?.id ? conv.participant_2 : conv.participant_1;
+    return profiles[otherId];
+  };
+
+  const getDisplayName = (profile) => {
+    return profile?.shop_name || profile?.full_name || "Utilisateur";
+  };
+
+  const formatTime = (ts) => {
+    const d = new Date(ts);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 60000) return "À l'instant";
+    if (diff < 3600000) return `${Math.floor(diff/60000)}min`;
+    if (diff < 86400000) return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+  };
 
   if (!user) return null;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Messages</h1>
-
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ height: "calc(100vh - 250px)" }}>
-        <div className="flex h-full">
-          {/* Conversations list */}
-          <div className={`w-full md:w-80 border-r ${(selectedConv || isNewConv) ? "hidden md:block" : "block"}`}>
-            <div className="p-4 border-b">
-              <p className="font-medium text-sm text-gray-500">{convList.length} conversation{convList.length !== 1 ? "s" : ""}</p>
-            </div>
-            <div className="overflow-y-auto h-full">
-              {convList.length === 0 && !isNewConv ? (
-                <div className="p-8 text-center text-gray-400 text-sm">Aucun message</div>
-              ) : (
-                convList.map(conv => {
-                  const lastMsg = conv.messages[conv.messages.length - 1];
-                  const product = productMap[conv.productId];
-                  moment.locale("fr");
-                  return (
-                    <button
-                      key={conv.id}
-                      onClick={() => setSelectedConv(conv.id)}
-                      className={`w-full text-left p-4 hover:bg-gray-50 transition-colors border-b ${selectedConv === conv.id ? "bg-green-50" : ""}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        {product?.photos?.[0] ? (
-                          <img
-                            src={product.photos[0]}
-                            alt={conv.productTitle}
-                            className="w-12 h-12 rounded-lg object-cover shrink-0"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-[#1B5E20] flex items-center justify-center shrink-0">
-                            <span className="text-white text-sm font-medium">{conv.otherUser.name?.[0] || "?"}</span>
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <p className="font-medium text-sm text-[#1B5E20] truncate">{conv.otherUser.name || "Utilisateur"}</p>
-                            <span className="text-[10px] text-gray-400 flex items-center gap-1 shrink-0">
-                              <Clock className="w-3 h-3" />
-                              {moment(lastMsg.created_date).fromNow()}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 truncate">{lastMsg.content}</p>
-                          {conv.productTitle && (
-                            <p className="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5 truncate">
-                              <Package className="w-3 h-3" /> {conv.productTitle}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* Chat area */}
-          <div className={`flex-1 flex flex-col ${!selectedConv && !isNewConv ? "hidden md:flex" : "flex"}`}>
-            {activeConv || isNewConv ? (
-              <>
-                <div className="p-4 border-b flex items-center gap-3">
-                  <button onClick={() => setSelectedConv(null)} className="md:hidden">
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
-                  <div className="w-8 h-8 rounded-full bg-[#1B5E20] flex items-center justify-center">
-                    <span className="text-white text-sm">
-                      {(activeConv?.otherUser?.name || newConvMeta.receiverName)?.[0] || "?"}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-[#1B5E20]">
-                      {activeConv?.otherUser?.name || newConvMeta.receiverName || "Nouveau message"}
-                    </p>
-                    {(activeConv?.productTitle || newConvMeta.productTitle) && (
-                      <p className="text-xs text-gray-400 flex items-center gap-1">
-                        <Package className="w-3 h-3" />
-                        {activeConv?.productTitle || newConvMeta.productTitle}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {activeConv ? activeConv.messages
-                    .filter(msg => {
-                      // Only show messages for this specific conversation
-                      const msgConvId = msg.conversation_id || [msg.sender_id, msg.receiver_id].sort().join("_");
-                      return msgConvId === selectedConv;
-                    })
-                    .map(m => {
-                    // Parse message for attachments
-                    const imageMatches = m.content.match(/\[Image: (.*?)\]/g) || [];
-                    const videoMatches = m.content.match(/\[Video: (.*?)\]/g) || [];
-                    const textContent = m.content
-                      .replace(/\[Image: .*?\]/g, "")
-                      .replace(/\[Video: .*?\]/g, "")
-                      .trim();
-                    const images = imageMatches.map(match => match.match(/\[Image: (.*?)\]/)[1]);
-                    const videos = videoMatches.map(match => match.match(/\[Video: (.*?)\]/)[1]);
-
-                    return (
-                      <div key={m.id} className={`flex ${m.sender_id === user.id ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[70%] rounded-2xl text-sm ${
-                          m.sender_id === user.id
-                            ? "bg-[#1B5E20] text-white rounded-br-md"
-                            : "bg-gray-100 text-gray-900 rounded-bl-md"
-                        }`}>
-                          {textContent && (
-                            <div className="px-4 py-2.5">
-                              {textContent}
-                            </div>
-                          )}
-                          {images.length > 0 && (
-                            <div className="px-2 pb-2 pt-1 space-y-2">
-                              {images.map((url, i) => (
-                                <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                                  <img src={url} alt="Pièce jointe" className="rounded-lg max-w-full hover:opacity-90 transition-opacity" />
-                                </a>
-                              ))}
-                            </div>
-                          )}
-                          {videos.length > 0 && (
-                            <div className="px-2 pb-2 pt-1 space-y-2">
-                              {videos.map((url, i) => (
-                                <video key={i} src={url} controls className="rounded-lg max-w-full" />
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  }) : isNewConv ? (
-                    <div className="text-center text-sm text-gray-400 py-8">
-                      Démarrez la conversation avec le vendeur
-                    </div>
-                  ) : null}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                <div className="p-4 border-t">
-                  {attachments.length > 0 && (
-                    <div className="mb-3 flex flex-wrap gap-2">
-                      {attachments.map((att, i) => (
-                        <div key={i} className="relative group">
-                          {att.type === "image" ? (
-                            <img src={att.url} alt={att.name} className="w-20 h-20 object-cover rounded-lg" />
-                          ) : (
-                            <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <Video className="w-8 h-8 text-gray-400" />
-                            </div>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(i)}
-                            className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <form onSubmit={(e) => { e.preventDefault(); if (!sending && !sendingRef.current) sendMessage(); }} className="flex gap-2 items-end">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileSelect}
-                      accept="image/*,video/*"
-                      multiple
-                      className="hidden"
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                      variant="outline"
-                      size="icon"
-                      className="rounded-full shrink-0"
-                    >
-                      {uploading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <ImageIcon className="w-4 h-4" />
-                      )}
-                    </Button>
-                    <Input
-                      value={newMessage}
-                      onChange={e => setNewMessage(e.target.value)}
-                      placeholder="Votre message..."
-                      className="rounded-full flex-1 text-gray-900"
-                    />
-                    <Button type="submit" disabled={sending || (!newMessage.trim() && attachments.length === 0)} size="icon" className="rounded-full bg-[#1B5E20] hover:bg-[#2E7D32] shrink-0">
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </form>
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
-                Sélectionnez une conversation
-              </div>
-            )}
-          </div>
+    <div className="h-[calc(100vh-64px)] flex bg-gray-50">
+      {/* Sidebar conversations */}
+      <div className={`w-full md:w-80 lg:w-96 border-r border-gray-200 bg-white flex flex-col ${selectedConv ? "hidden md:flex" : "flex"}`}>
+        <div className="p-4 border-b border-gray-100">
+          <h1 className="text-xl font-bold text-gray-900">Messages</h1>
+          <p className="text-sm text-gray-500">{conversations.length} conversation{conversations.length !== 1 ? "s" : ""}</p>
         </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {conversations.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-8">
+              <MessageCircle className="w-12 h-12 text-gray-200 mb-3" />
+              <p className="text-gray-400 text-sm">Aucune conversation</p>
+              <p className="text-gray-300 text-xs mt-1">Contactez un vendeur depuis une annonce</p>
+            </div>
+          ) : (
+            conversations.map(conv => {
+              const other = getOtherParticipant(conv);
+              const product = conv.product_id ? products[conv.product_id] : null;
+              const isSelected = selectedConv?.id === conv.id;
+              return (
+                <button
+                  key={conv.id}
+                  onClick={() => selectConversation(conv)}
+                  className={`w-full text-left p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors ${isSelected ? "bg-[#F0F7F0] border-l-4 border-l-[#1B5E20]" : ""}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#1B5E20] flex items-center justify-center text-white font-bold shrink-0">
+                      {getDisplayName(other)?.[0]?.toUpperCase() || "?"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="font-semibold text-sm text-gray-900 truncate">{getDisplayName(other)}</p>
+                        <span className="text-xs text-gray-400 shrink-0 ml-2">{formatTime(conv.last_message_at)}</span>
+                      </div>
+                      {product && (
+                        <p className="text-xs text-[#1B5E20] truncate flex items-center gap-1 mt-0.5">
+                          <Package className="w-3 h-3 shrink-0" />{product.title}
+                        </p>
+                      )}
+                      {conv.last_message && (
+                        <p className="text-xs text-gray-500 truncate mt-0.5">{conv.last_message}</p>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Chat area */}
+      <div className={`flex-1 flex flex-col ${!selectedConv ? "hidden md:flex" : "flex"}`}>
+        {!selectedConv ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+            <MessageCircle className="w-16 h-16 text-gray-200 mb-4" />
+            <p className="text-gray-400 font-medium">Sélectionnez une conversation</p>
+          </div>
+        ) : (
+          <>
+            {/* Header */}
+            <div className="bg-white border-b border-gray-200 p-4 flex items-center gap-3">
+              <button onClick={() => setSelectedConv(null)} className="md:hidden p-1 rounded-lg hover:bg-gray-100">
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              {(() => {
+                const other = getOtherParticipant(selectedConv);
+                const product = selectedConv.product_id ? products[selectedConv.product_id] : null;
+                return (
+                  <>
+                    <div className="w-9 h-9 rounded-full bg-[#1B5E20] flex items-center justify-center text-white font-bold text-sm">
+                      {getDisplayName(other)?.[0]?.toUpperCase() || "?"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900">{getDisplayName(other)}</p>
+                      {product && (
+                        <p className="text-xs text-gray-500 truncate flex items-center gap-1">
+                          <Package className="w-3 h-3" />{product.title}
+                        </p>
+                      )}
+                    </div>
+                    {product && (
+                      <Link to={createPageUrl("ProductDetail") + `?id=${selectedConv.product_id}`} className="shrink-0">
+                        {product.images?.[0] && (
+                          <img src={product.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover border border-gray-200" />
+                        )}
+                      </Link>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {messages.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-gray-400 text-sm">Commencez la conversation !</p>
+                </div>
+              )}
+              {messages.map(msg => {
+                const isMine = msg.sender_id === user.id;
+                return (
+                  <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isMine ? "bg-[#1B5E20] text-white rounded-br-sm" : "bg-white text-gray-900 border border-gray-200 rounded-bl-sm shadow-sm"}`}>
+                      <p>{msg.content}</p>
+                      <p className={`text-xs mt-1 ${isMine ? "text-green-200" : "text-gray-400"}`}>{formatTime(msg.created_at)}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input */}
+            <div className="bg-white border-t border-gray-200 p-4">
+              <div className="flex gap-2">
+                <Input
+                  value={newMessage}
+                  onChange={e => setNewMessage(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                  placeholder="Écrivez un message..."
+                  className="flex-1 rounded-full bg-gray-50 border-gray-200"
+                />
+                <Button
+                  onClick={sendMessage}
+                  disabled={!newMessage.trim() || sending}
+                  className="bg-[#1B5E20] hover:bg-[#145218] text-white rounded-full w-10 h-10 p-0 shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
