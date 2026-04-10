@@ -52,28 +52,7 @@ function CategoryItem({ cat }) {
 }
 
 
-// Hook pour compter les messages non lus
-function useUnreadMessages() {
-  const [unread, setUnread] = React.useState(0);
-  React.useEffect(() => {
-    let interval;
-    const checkUnread = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
-        const uid = session.user.id;
-        const { data: convs } = await supabase.from('conversations').select('id').or(`participant_1.eq.${uid},participant_2.eq.${uid}`);
-        if (!convs?.length) return;
-        const { count } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('read', false).neq('sender_id', uid).in('conversation_id', convs.map(c => c.id));
-        setUnread(count || 0);
-      } catch (e) {}
-    };
-    checkUnread();
-    interval = setInterval(checkUnread, 15000);
-    return () => clearInterval(interval);
-  }, []);
-  return unread;
-}
+
 
 export default function Navbar() {
   const { language, changeLanguage, t } = useTranslate();
@@ -149,14 +128,7 @@ export default function Navbar() {
                   </Button>
                 </Link>
                 <Link to={createPageUrl("Favorites")} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20]"><Heart className="w-5 h-5" /></Link>
-                <Link to={createPageUrl(t("nav.messages"))} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20] relative">
-                  <MessageCircle className="w-5 h-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </Link>
+                <Link to={createPageUrl(t("nav.messages"))} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20]"><MessageCircle className="w-5 h-5" /></Link>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="p-1">
