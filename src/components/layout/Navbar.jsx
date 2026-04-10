@@ -173,8 +173,8 @@ export default function Navbar() {
                     </button>
                   ))}
                 </div>
-                <Button variant="outline" size="sm" onClick={() => window.location.href = createPageUrl("Login")}
-                  className="rounded-full border-[#1B5E20] text-[#1B5E20] hover:bg-[#1B5E20] hover:text-white text-xs px-3">{t("common.login")}</Button>
+                <Button size="sm" onClick={() => window.location.href = createPageUrl("Login")}
+                  className="rounded-full bg-[#1B5E20] text-white hover:bg-[#2E7D32] text-xs px-3">{t("common.login")}</Button>
                 <Button size="sm" onClick={() => window.location.href = createPageUrl("Login")}
                   className="rounded-full bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-xs px-3">{t("common.sell")}</Button>
               </div>
