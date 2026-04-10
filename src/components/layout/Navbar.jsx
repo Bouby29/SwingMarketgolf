@@ -63,7 +63,6 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const unreadCount = useUnreadMessages();
   const [mobileOpenCategory, setMobileOpenCategory] = useState(null);
 
   useEffect(() => {
