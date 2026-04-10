@@ -65,6 +65,12 @@ export default function Checkout() {
       });
       if (orderError) { console.error("ORDER ERROR:", orderError); alert("Erreur: " + orderError.message); setPlacing(false); return; }
       await supabase.from("products").update({ status: "reserved" }).eq("id", product.id);
+      // Emails transactionnels
+      const { data: sellerProfile } = await supabase.from("profiles").select("*").eq("id", product.seller_id).single();
+      if (sellerProfile) {
+        sendNewOrderSeller(sellerProfile, orderData, product);
+        sendOrderConfirmationBuyer(user, orderData, product, sellerProfile);
+      }
       setStep(2);
     } catch (e) {
       alert("Une erreur est survenue. Veuillez réessayer.");

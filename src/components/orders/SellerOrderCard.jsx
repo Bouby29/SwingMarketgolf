@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase, entities, auth } from "@/lib/supabase";
+import { useEmailService } from "../email/useEmailService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import OrderStatusBadge from "./OrderStatusBadge";
@@ -23,8 +24,14 @@ export default function SellerOrderCard({ order }) {
     },
   });
 
-  const handleValidate = () => {
-    update.mutate({ status: "preparing" });
+  const { sendOrderPreparing } = useEmailService();
+
+  const handleValidate = async () => {
+    await supabase.from("orders").update({ status: "preparing" }).eq("id", order.id);
+    queryClient.invalidateQueries({ queryKey: ["my-sales"] });
+    // Email à l'acheteur
+    const { data: buyerProfile } = await supabase.from("profiles").select("*").eq("id", order.buyer_id).single();
+    if (buyerProfile) sendOrderPreparing(buyerProfile, order, { title: order.product_title });
   };
 
   const handleShipped = () => {
