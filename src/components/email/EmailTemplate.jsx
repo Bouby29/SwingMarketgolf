@@ -93,7 +93,11 @@ export const generateEmailHTML = (templateType, data = {}) => {
       ${header}
       <h2 style="margin:0 0 20px; color:#1B5E20; font-size:22px; font-weight:800;">Votre annonce est en ligne ✅</h2>
       <p>Bonjour <strong>${data.firstName}</strong>,</p>
-      <p>Votre annonce a été publiée avec succès et est désormais visible par des milliers de golfeurs sur SwingMarket.</p>
+      <p>Bonjour <strong>${data.firstName}</strong>,</p>
+      <p>Votre annonce <strong>"${data.productTitle}"</strong> est désormais en ligne sur SwingMarketGolf !</p>
+      <p>N'hésitez pas à partager votre annonce avec vos proches pour maximiser vos chances de vente.</p>
+      <p>Nous vous remercions de votre confiance.</p>
+      <p style="color:#6b7280; font-style:italic;">L'équipe SwingMarketGolf</p>
       ${infoBox(`
         <strong>Produit :</strong> ${data.productTitle}<br>
         <strong>Prix affiché :</strong> ${data.price} €<br>
