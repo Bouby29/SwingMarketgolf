@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useEmailService } from "../components/email/useEmailService";
 import { supabase, entities } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -76,12 +77,18 @@ export default function CreateListing() {
       if (error) throw error;
       setCreatedProductId(data.id);
       setPublished(true);
+      // Email confirmation annonce publiée
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", currentUser.id).single();
+      if (profile) sendListingPublished(profile, data);
     } catch (error) {
       console.error("Erreur:", error);
       alert("Erreur lors de la publication : " + error.message);
     }
     setSaving(false);
   };
+
+  const { sendListingPublished } = useEmailService();
 
   const isStepValid = () => {
     switch (currentStep) {
