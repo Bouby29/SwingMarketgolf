@@ -44,6 +44,8 @@ export default function CreateListing() {
     init();
   }, []);
 
+  const { sendListingPublished } = useEmailService();
+
   const handleSubmit = async () => {
     if (!user) return;
     setSaving(true);
@@ -97,8 +99,6 @@ export default function CreateListing() {
     setSaving(false);
   };
 
-
-  const { sendListingPublished } = useEmailService();
 
   const isStepValid = () => {
     switch (currentStep) {
