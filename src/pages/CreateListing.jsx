@@ -77,12 +77,19 @@ export default function CreateListing() {
       if (error) throw error;
       setCreatedProductId(data.id);
       setPublished(true);
-      // Email confirmation annonce publiée
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", currentUser.id).single();
-      console.log("EMAIL DEBUG - currentUser:", currentUser?.id, "profile:", profile?.email);
-      if (profile) sendListingPublished(profile, data);
-      else console.log("EMAIL DEBUG - profil non trouvé, pas d email envoyé");
+      // Email confirmation annonce publiée (hors try/catch)
+      try {
+        const authResp = await supabase.auth.getUser();
+        const currentUser = authResp.data?.user;
+        console.log("EMAIL DEBUG - currentUser:", currentUser?.id);
+        if (currentUser) {
+          const { data: profile } = await supabase.from("profiles").select("*").eq("id", currentUser.id).single();
+          console.log("EMAIL DEBUG - profile:", profile?.email);
+          if (profile) sendListingPublished(profile, data);
+        }
+      } catch (emailErr) {
+        console.error("EMAIL ERROR:", emailErr);
+      }
     } catch (error) {
       console.error("Erreur:", error);
       alert("Erreur lors de la publication : " + error.message);
