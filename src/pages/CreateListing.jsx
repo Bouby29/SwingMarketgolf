@@ -97,6 +97,7 @@ export default function CreateListing() {
     setSaving(false);
   };
 
+
   const { sendListingPublished } = useEmailService();
 
   const isStepValid = () => {
