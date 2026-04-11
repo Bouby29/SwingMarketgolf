@@ -80,7 +80,9 @@ export default function CreateListing() {
       // Email confirmation annonce publiée
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       const { data: profile } = await supabase.from("profiles").select("*").eq("id", currentUser.id).single();
+      console.log("EMAIL DEBUG - currentUser:", currentUser?.id, "profile:", profile?.email);
       if (profile) sendListingPublished(profile, data);
+      else console.log("EMAIL DEBUG - profil non trouvé, pas d email envoyé");
     } catch (error) {
       console.error("Erreur:", error);
       alert("Erreur lors de la publication : " + error.message);
