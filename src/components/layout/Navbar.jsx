@@ -61,6 +61,17 @@ export default function Navbar() {
   const [user, setUser] = useState(null);
   const unreadCount = useUnreadMessages();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleVendre = async (e, navigate) => {
+    e.preventDefault();
+    if (!user) { window.location.href = "/Login"; return; }
+    const { data: profile } = await supabase.from("profiles").select("seller_onboarding_completed").eq("id", user.id).single();
+    if (profile?.seller_onboarding_completed) {
+      window.location.href = "/CreateListing";
+    } else {
+      window.location.href = "/SellerOnboarding";
+    }
+  };
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileOpenCategory, setMobileOpenCategory] = useState(null);
@@ -124,7 +135,7 @@ export default function Navbar() {
 
             {isLoggedIn ? (
               <>
-                <Link to={createPageUrl("CreateListing")} className="hidden sm:block">
+                <a href="#" onClick={handleVendre} className="hidden sm:block">
                   <Button size="sm" className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full gap-1.5 text-xs px-3">
                     <Plus className="w-3.5 h-3.5" /> Vendre
                   </Button>
@@ -224,7 +235,7 @@ export default function Navbar() {
               </div>
               <Link to={createPageUrl("CreateListing")} onClick={() => setMobileOpen(false)}>
                 <Button size="sm" className="bg-[#1B5E20] text-white rounded-full gap-1 text-xs"><Plus className="w-3.5 h-3.5" /> Vendre</Button>
-              </Link>
+              </a>
             </div>
           )}
 
