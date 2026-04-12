@@ -32,6 +32,7 @@ export default function SellerOnboarding() {
 
   const handleFinish = async () => {
     setSaving(true);
+    console.log("USER ID:", user?.id, "USER EMAIL:", user?.email);
     if (!user) { setSaving(false); return; }
     const { error } = await supabase.from("profiles").update({
       seller_onboarding_completed: true,
