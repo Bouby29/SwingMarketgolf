@@ -42,7 +42,7 @@ export default function SellerOnboarding() {
       city: form.city,
       iban: form.iban,
       account_type: form.account_type,
-    }).eq("id", user.id);
+    }).eq("email", user.email);
     console.log("Onboarding update error:", error);
     setSaving(false);
     navigate("/CreateListing");
