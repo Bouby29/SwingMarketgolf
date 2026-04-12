@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckCircle, Upload } from "lucide-react";
 
 export default function SellerOnboarding() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -30,8 +32,8 @@ export default function SellerOnboarding() {
 
   const handleFinish = async () => {
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from("profiles").update({
+    if (!user) { setSaving(false); return; }
+    const { error } = await supabase.from("profiles").update({
       seller_onboarding_completed: true,
       phone: form.phone,
       address: form.address,
@@ -40,6 +42,7 @@ export default function SellerOnboarding() {
       iban: form.iban,
       account_type: form.account_type,
     }).eq("id", user.id);
+    console.log("Onboarding update error:", error);
     setSaving(false);
     navigate("/CreateListing");
   };
