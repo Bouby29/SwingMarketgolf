@@ -139,7 +139,7 @@ export default function Navbar() {
                   <Button size="sm" className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full gap-1.5 text-xs px-3">
                     <Plus className="w-3.5 h-3.5" /> Vendre
                   </Button>
-                </Link>
+                </a>
                 <Link to={createPageUrl("Favorites")} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20]"><Heart className="w-5 h-5" /></Link>
                 <Link to={createPageUrl(t("nav.messages"))} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20] relative">
                   <MessageCircle className="w-5 h-5" />
