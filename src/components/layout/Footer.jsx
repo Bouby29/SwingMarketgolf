@@ -50,7 +50,10 @@ export default function Footer() {
               <Link to={createPageUrl("Marketplace") + "?category=Balles de golf"} className="block hover:text-white transition-colors">Balles de golf</Link>
               <Link to={createPageUrl("Marketplace") + "?category=Sacs de golf"} className="block hover:text-white transition-colors">Sacs de golf</Link>
               <Link to={createPageUrl("Marketplace") + "?category=Vêtements"} className="block hover:text-white transition-colors">Vêtements golf</Link>
-              <Link to={createPageUrl("ProfessionnelsSellers")} className="block hover:text-white transition-colors">Vendeurs pro</Link>
+              <Link to={createPageUrl("ProfessionnelsSellers")} className="block hover:text-white transition-colors">Vendeurs pro
+              </Link>
+              <Link to="/Abonnements" className="text-gray-400 hover:text-white text-sm transition-colors">
+                Abonnements pro</Link>
             </div>
           </div>
 
