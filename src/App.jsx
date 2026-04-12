@@ -15,6 +15,7 @@ import Setup from './pages/Setup';
 import Contact from './pages/Contact';
 import CGS from './pages/CGS';
 import CGSPro from './pages/CGSPro';
+import SellerOnboarding from './pages/SellerOnboarding';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -92,6 +93,7 @@ const AuthenticatedApp = () => {
         </LayoutWrapper>
       } />
       <Route path="/Admin" element={<AdminDashboard />} />
+      <Route path="/SellerOnboarding" element={<SellerOnboarding />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -126,6 +128,7 @@ function App() {
           <WelcomePopup />
           <Routes>
             <Route path="/Admin" element={<AdminDashboard />} />
+      <Route path="/SellerOnboarding" element={<SellerOnboarding />} />
             <Route path="/*" element={<AuthenticatedApp />} />
           </Routes>
         </Router>
