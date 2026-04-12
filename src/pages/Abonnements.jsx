@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, Zap, Star, Trophy, Sparkles } from "lucide-react";
+import { Check } from "lucide-react";
 
 const plans = [
   {
@@ -11,15 +11,9 @@ const plans = [
     annual: 0,
     annualTotal: 0,
     discount: 0,
-    color: "gray",
-    features: [
-      "5 annonces par mois",
-      "Fonctionnalités de base",
-      "Support standard",
-    ],
+    features: ["5 annonces par mois", "Fonctionnalités de base", "Support standard"],
     cta: "S'inscrire gratuitement",
-    ctaLink: "/Login",
-    highlight: false,
+    style: "free",
   },
   {
     name: "Pro",
@@ -29,16 +23,9 @@ const plans = [
     annual: 199,
     annualTotal: 228,
     discount: 13,
-    color: "green",
-    features: [
-      "30 annonces par mois",
-      "Service client standard",
-      "Statistiques de base",
-      "Badge Vendeur Pro",
-    ],
+    features: ["30 annonces par mois", "Service client standard", "Statistiques de base", "Badge Vendeur Pro"],
     cta: "Commencer",
-    ctaLink: "/Login",
-    highlight: false,
+    style: "pro",
   },
   {
     name: "Premium",
@@ -48,19 +35,10 @@ const plans = [
     annual: 399,
     annualTotal: 468,
     discount: 15,
-    color: "gold",
-    features: [
-      "Annonces illimitées",
-      "Rapports analytiques avancés",
-      "Vitrine personnalisée",
-      "1 mise en avant auto/mois",
-      "Service client prioritaire",
-      "Badge Pro vérifié",
-      "URL dédiée",
-    ],
+    features: ["Annonces illimitées", "Rapports analytiques avancés", "Vitrine personnalisée", "1 mise en avant auto/mois", "Service client prioritaire", "Badge Pro vérifié", "URL dédiée"],
     cta: "Commencer",
-    ctaLink: "/Login",
-    highlight: true,
+    style: "premium",
+    popular: true,
   },
   {
     name: "Business",
@@ -70,92 +48,78 @@ const plans = [
     annual: 950,
     annualTotal: 1188,
     discount: 20,
-    color: "dark",
-    features: [
-      "Annonces illimitées",
-      "Rapports analytiques complets",
-      "Vitrine ultra-personnalisée",
-      "URL Vitrine premium + SEO",
-      "4 mises en avant auto/mois",
-      "Remise de 15% sur les boosters",
-      "Consultant dédié",
-      "Badge Business 🏆",
-      "Newsletter dédiée",
-    ],
+    features: ["Annonces illimitées", "Rapports analytiques complets", "Vitrine ultra-personnalisée", "URL Vitrine premium + SEO", "4 mises en avant auto/mois", "Remise de 15% sur les boosters", "Consultant dédié", "Badge Business 🏆", "Newsletter dédiée"],
     cta: "Commencer",
-    ctaLink: "/Login",
-    highlight: false,
+    style: "business",
   },
 ];
 
-const cardStyles = {
-  gray: {
-    bg: "bg-white",
-    border: "border-gray-200",
-    badge: "bg-gray-100 text-gray-600",
-    btn: "bg-gray-100 hover:bg-gray-200 text-gray-800",
-    check: "text-gray-400",
-    icon: "bg-gray-100",
-  },
-  green: {
-    bg: "bg-white",
-    border: "border-[#1B5E20]/30",
-    badge: "bg-[#1B5E20]/10 text-[#1B5E20]",
-    btn: "bg-[#1B5E20] hover:bg-[#2E7D32] text-white",
-    check: "text-[#1B5E20]",
-    icon: "bg-[#1B5E20]/10",
-  },
-  gold: {
-    bg: "bg-gradient-to-b from-[#0A2E1A] to-[#1B5E20]",
-    border: "border-[#C5A028]",
-    badge: "bg-[#C5A028] text-white",
-    btn: "bg-[#C5A028] hover:bg-[#B8920F] text-white",
-    check: "text-[#C5A028]",
-    icon: "bg-[#C5A028]/20",
-    text: "text-white",
-    subtext: "text-green-200",
-    price: "text-white",
-    feature: "text-green-100",
-  },
-  dark: {
-    bg: "bg-[#0A1628]",
-    border: "border-[#1B3A6B]",
-    badge: "bg-blue-900 text-blue-200",
-    btn: "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white",
-    check: "text-blue-400",
-    icon: "bg-blue-900/50",
-    text: "text-white",
-    subtext: "text-gray-400",
-    price: "text-white",
-    feature: "text-gray-300",
-  },
-};
-
 export default function Abonnements() {
   const [annual, setAnnual] = useState(false);
+
+  const getCardClass = (style, popular) => {
+    if (style === "premium") return "bg-[#0A2E1A] border-[#C5A028] border-2 shadow-2xl";
+    if (style === "business") return "bg-[#0F1F12] border-[#2E5C2E] border-2 shadow-xl";
+    return "bg-white border-gray-200 border shadow-md";
+  };
+
+  const getTextClass = (style) => {
+    if (style === "premium" || style === "business") return "text-white";
+    return "text-gray-900";
+  };
+
+  const getSubTextClass = (style) => {
+    if (style === "premium") return "text-green-300";
+    if (style === "business") return "text-gray-400";
+    return "text-gray-500";
+  };
+
+  const getBtnClass = (style) => {
+    if (style === "premium") return "bg-[#C5A028] hover:bg-[#B8920F] text-white";
+    if (style === "business") return "bg-[#1B5E20] hover:bg-[#2E7D32] text-white";
+    if (style === "free") return "bg-gray-100 hover:bg-gray-200 text-gray-700";
+    return "bg-[#1B5E20] hover:bg-[#2E7D32] text-white";
+  };
+
+  const getCheckClass = (style) => {
+    if (style === "premium") return "text-[#C5A028]";
+    if (style === "business") return "text-[#4CAF50]";
+    return "text-[#1B5E20]";
+  };
+
+  const getFeatureClass = (style) => {
+    if (style === "premium") return "text-green-100";
+    if (style === "business") return "text-gray-300";
+    return "text-gray-600";
+  };
+
+  const getDividerClass = (style) => {
+    if (style === "premium") return "bg-white/10";
+    if (style === "business") return "bg-white/10";
+    return "bg-gray-100";
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
       <div className="relative bg-gradient-to-br from-[#051A0E] via-[#0A2E1A] to-[#1B5E20] py-20 px-4 text-center overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="absolute rounded-full bg-white" style={{
-              width: 200 + i * 80, height: 200 + i * 80,
-              top: -50 + i * 10 + "%", left: -10 + i * 15 + "%",
-              opacity: 0.03 + i * 0.01
+        <div className="absolute inset-0">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="absolute rounded-full bg-white/5" style={{
+              width: 300 + i * 100, height: 300 + i * 100,
+              top: -100 + i * 30 + "px", left: -50 + i * 20 + "%",
             }} />
           ))}
         </div>
-        <div className="relative z-10">
-          <span className="inline-block bg-[#C5A028]/20 text-[#C5A028] text-xs font-bold px-4 py-1.5 rounded-full mb-4 border border-[#C5A028]/30">
-            🏌️ POUR LES PROFESSIONNELS DU GOLF
+        <div className="relative z-10 max-w-2xl mx-auto">
+          <span className="inline-block bg-[#C5A028]/20 text-[#C5A028] text-xs font-bold px-4 py-1.5 rounded-full mb-5 border border-[#C5A028]/40 tracking-widest uppercase">
+            🏌️ Vendeurs Professionnels
           </span>
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
             Vendez plus.<br />
             <span className="text-[#C5A028]">Gagnez plus.</span>
           </h1>
-          <p className="text-green-200 max-w-xl mx-auto text-base">
+          <p className="text-green-200 text-base">
             Choisissez l'offre adaptée à votre activité et rejoignez les professionnels qui font confiance à SwingMarketGolf.
           </p>
         </div>
@@ -163,17 +127,13 @@ export default function Abonnements() {
 
       {/* Toggle */}
       <div className="flex justify-center mt-10 mb-10">
-        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-full p-1.5 shadow-md">
-          <button
-            onClick={() => setAnnual(false)}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${!annual ? "bg-[#1B5E20] text-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
+        <div className="inline-flex items-center bg-white border border-gray-200 rounded-full p-1.5 shadow-md">
+          <button onClick={() => setAnnual(false)}
+            className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${!annual ? "bg-[#1B5E20] text-white shadow" : "text-gray-500 hover:text-gray-700"}`}>
             Mensuel
           </button>
-          <button
-            onClick={() => setAnnual(true)}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${annual ? "bg-[#1B5E20] text-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
+          <button onClick={() => setAnnual(true)}
+            className={`px-6 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${annual ? "bg-[#1B5E20] text-white shadow" : "text-gray-500 hover:text-gray-700"}`}>
             Annuel
             <span className="bg-[#C5A028] text-white text-xs font-black px-2 py-0.5 rounded-full">-20%</span>
           </button>
@@ -182,70 +142,66 @@ export default function Abonnements() {
 
       {/* Plans */}
       <div className="max-w-6xl mx-auto px-4 pb-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
-          {plans.map((plan) => {
-            const s = cardStyles[plan.color];
-            return (
-              <div key={plan.name} className={`relative rounded-2xl border-2 flex flex-col overflow-hidden transition-transform hover:-translate-y-1 ${s.bg} ${s.border} ${plan.highlight ? "shadow-2xl lg:-mt-4 lg:mb-4" : "shadow-md"}`}>
-                {plan.highlight && (
-                  <div className={`text-center py-2 text-xs font-black tracking-wide ${s.badge}`}>
-                    ⭐ LE PLUS POPULAIRE
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 items-center">
+          {plans.map((plan) => (
+            <div key={plan.name}
+              className={`relative rounded-2xl flex flex-col overflow-hidden transition-all duration-200 hover:-translate-y-1 ${getCardClass(plan.style, plan.popular)} ${plan.popular ? "lg:scale-105" : ""}`}>
+              {plan.popular && (
+                <div className="bg-[#C5A028] text-white text-center py-2 text-xs font-black tracking-widest uppercase">
+                  ⭐ Le plus populaire
+                </div>
+              )}
+              <div className="p-6 flex-1">
+                <div className={`text-2xl mb-3`}>{plan.icon}</div>
+                <h2 className={`text-xl font-black mb-1 ${getTextClass(plan.style)}`}>{plan.name}</h2>
+                <p className={`text-xs mb-5 ${getSubTextClass(plan.style)}`}>{plan.desc}</p>
+
+                {plan.monthly === 0 ? (
+                  <div className="mb-5">
+                    <p className={`text-4xl font-black ${getTextClass(plan.style)}`}>Gratuit</p>
+                    <p className={`text-xs mt-1 ${getSubTextClass(plan.style)}`}>Aucun moyen de paiement requis</p>
+                  </div>
+                ) : annual ? (
+                  <div className="mb-5">
+                    <p className={`text-xs line-through ${getSubTextClass(plan.style)}`}>{plan.annualTotal} €</p>
+                    <div className="flex items-end gap-1">
+                      <span className={`text-4xl font-black ${getTextClass(plan.style)}`}>{plan.annual}</span>
+                      <span className={`text-sm mb-1 ${getSubTextClass(plan.style)}`}>€ HT/an</span>
+                    </div>
+                    <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full mt-1 ${plan.style === "premium" ? "bg-[#C5A028]/20 text-[#C5A028]" : "bg-green-100 text-[#1B5E20]"}`}>
+                      Économisez {plan.annualTotal - plan.annual} €
+                    </span>
+                  </div>
+                ) : (
+                  <div className="mb-5">
+                    <div className="flex items-end gap-1">
+                      <span className={`text-4xl font-black ${getTextClass(plan.style)}`}>{plan.monthly}</span>
+                      <span className={`text-sm mb-1 ${getSubTextClass(plan.style)}`}>€ HT/mois</span>
+                    </div>
                   </div>
                 )}
-                <div className="p-6 flex-1">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-3 ${s.icon}`}>
-                    {plan.icon}
-                  </div>
-                  <h2 className={`text-xl font-black mb-1 ${s.text || "text-gray-900"}`}>{plan.name}</h2>
-                  <p className={`text-xs mb-5 ${s.subtext || "text-gray-500"}`}>{plan.desc}</p>
 
-                  {plan.monthly === 0 ? (
-                    <div className="mb-5">
-                      <p className={`text-4xl font-black ${s.price || "text-gray-900"}`}>Gratuit</p>
-                      <p className={`text-xs mt-1 ${s.subtext || "text-gray-400"}`}>Aucun moyen de paiement requis</p>
-                    </div>
-                  ) : annual ? (
-                    <div className="mb-5">
-                      <p className={`text-xs line-through ${s.subtext || "text-gray-400"}`}>{plan.annualTotal} €</p>
-                      <div className="flex items-end gap-1">
-                        <span className={`text-4xl font-black ${s.price || "text-gray-900"}`}>{plan.annual}</span>
-                        <span className={`text-sm mb-1 ${s.subtext || "text-gray-500"}`}>€ HT/an</span>
-                      </div>
-                      <span className="inline-block bg-green-100 text-[#1B5E20] text-xs font-bold px-2 py-0.5 rounded-full mt-1">
-                        Économisez {plan.annualTotal - plan.annual} €
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="mb-5">
-                      <div className="flex items-end gap-1">
-                        <span className={`text-4xl font-black ${s.price || "text-gray-900"}`}>{plan.monthly}</span>
-                        <span className={`text-sm mb-1 ${s.subtext || "text-gray-500"}`}>€ HT/mois</span>
-                      </div>
-                    </div>
-                  )}
+                <div className={`w-full h-px mb-4 ${getDividerClass(plan.style)}`} />
 
-                  <div className={`w-full h-px mb-4 ${plan.color === "gold" ? "bg-white/20" : plan.color === "dark" ? "bg-white/10" : "bg-gray-100"}`} />
-
-                  <ul className="space-y-2.5">
-                    {plan.features.map((f) => (
-                      <li key={f} className={`flex items-start gap-2 text-xs ${s.feature || "text-gray-700"}`}>
-                        <Check className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${s.check}`} />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="p-5 pt-2">
-                  <Link to={plan.ctaLink}>
-                    <button className={`w-full rounded-xl py-3 text-sm font-bold transition-all ${s.btn}`}>
-                      {plan.cta}
-                    </button>
-                  </Link>
-                </div>
+                <ul className="space-y-2.5">
+                  {plan.features.map((f) => (
+                    <li key={f} className={`flex items-start gap-2 text-xs ${getFeatureClass(plan.style)}`}>
+                      <Check className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${getCheckClass(plan.style)}`} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
               </div>
-            );
-          })}
+
+              <div className="p-5 pt-2">
+                <Link to="/Login">
+                  <button className={`w-full rounded-xl py-3 text-sm font-bold transition-all ${getBtnClass(plan.style)}`}>
+                    {plan.cta}
+                  </button>
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Reassurance */}
@@ -264,8 +220,8 @@ export default function Abonnements() {
         </div>
 
         {/* CTA final */}
-        <div className="mt-10 bg-gradient-to-r from-[#0A2E1A] to-[#1B5E20] rounded-2xl p-8 text-center text-white">
-          <h3 className="text-2xl font-black mb-2">Prêt à développer votre activité ?</h3>
+        <div className="mt-10 bg-gradient-to-r from-[#051A0E] to-[#1B5E20] rounded-2xl p-8 text-center">
+          <h3 className="text-2xl font-black text-white mb-2">Prêt à développer votre activité ?</h3>
           <p className="text-green-200 text-sm mb-6">Rejoignez les vendeurs professionnels de SwingMarketGolf dès aujourd'hui.</p>
           <Link to="/Login">
             <button className="bg-[#C5A028] hover:bg-[#B8920F] text-white font-bold px-8 py-3 rounded-full transition-all shadow-lg hover:shadow-xl">
@@ -274,7 +230,7 @@ export default function Abonnements() {
           </Link>
           <p className="text-green-300 text-xs mt-4">
             Des questions ?{" "}
-            <a href="mailto:contact@swingmarketgolf.com" className="underline">
+            <a href="mailto:contact@swingmarketgolf.com" className="underline hover:text-white">
               Contactez notre équipe
             </a>
           </p>
