@@ -233,7 +233,7 @@ export default function Navbar() {
                   <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
               </div>
-              <Link to={createPageUrl("CreateListing")} onClick={() => setMobileOpen(false)}>
+              <a href="#" onClick={handleVendre}>
                 <Button size="sm" className="bg-[#1B5E20] text-white rounded-full gap-1 text-xs"><Plus className="w-3.5 h-3.5" /> Vendre</Button>
               </a>
             </div>
