@@ -32,9 +32,9 @@ export default function SellerOnboarding() {
 
   const handleFinish = async () => {
     setSaving(true);
-    console.log("USER ID:", user?.id, "USER EMAIL:", user?.email);
     if (!user) { setSaving(false); return; }
-    const { error } = await supabase.from("profiles").update({
+    // Sauvegarder en base
+    await supabase.from("profiles").update({
       seller_onboarding_completed: true,
       phone: form.phone,
       address: form.address,
@@ -43,7 +43,8 @@ export default function SellerOnboarding() {
       iban: form.iban,
       account_type: form.account_type,
     }).eq("email", user.email);
-    console.log("Onboarding update error:", error);
+    // Sauvegarder aussi en localStorage comme backup
+    localStorage.setItem("seller_onboarding_" + user.email, "true");
     setSaving(false);
     navigate("/CreateListing");
   };

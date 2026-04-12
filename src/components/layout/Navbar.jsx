@@ -62,11 +62,16 @@ export default function Navbar() {
   const unreadCount = useUnreadMessages();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleVendre = async (e, navigate) => {
+  const handleVendre = async (e) => {
     e.preventDefault();
     if (!user) { window.location.href = "/Login"; return; }
-    const { data: profile } = await supabase.from("profiles").select("seller_onboarding_completed").eq("id", user.id).single();
+    // Vérifier localStorage d'abord
+    const localDone = localStorage.getItem("seller_onboarding_" + user.email);
+    if (localDone === "true") { window.location.href = "/CreateListing"; return; }
+    // Sinon vérifier en base
+    const { data: profile } = await supabase.from("profiles").select("seller_onboarding_completed").eq("email", user.email).single();
     if (profile?.seller_onboarding_completed) {
+      localStorage.setItem("seller_onboarding_" + user.email, "true");
       window.location.href = "/CreateListing";
     } else {
       window.location.href = "/SellerOnboarding";
