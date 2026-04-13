@@ -179,6 +179,7 @@ export default function AdminDashboard() {
       address: editUser.address,
       postal_code: editUser.postal_code,
       seller_onboarding_completed: editUser.seller_onboarding_completed,
+      plan: editUser.plan || "basique",
     }).eq("id", editUser.id);
     setEditUser(null);
     saveMsg("Utilisateur mis a jour !");
@@ -513,7 +514,7 @@ export default function AdminDashboard() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "#fafafa" }}>
-                    {["Nom", "Email", "Téléphone", "Ville", "Onboarding", "Inscrit le", "Actions"].map(h => (
+                    {["Nom", "Email", "Téléphone", "Ville", "Plan", "Onboarding", "Inscrit le", "Actions"].map(h => (
                       <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", color: "#888", fontWeight: 600, fontSize: "0.8rem", borderBottom: "1px solid #f0f0f0" }}>{h}</th>
                     ))}
                   </tr>
@@ -525,6 +526,15 @@ export default function AdminDashboard() {
                       <td style={{ padding: "0.75rem 1rem", fontSize: "0.82rem", color: "#555" }}>{u.email}</td>
                       <td style={{ padding: "0.75rem 1rem", fontSize: "0.82rem" }}>{u.phone || "—"}</td>
                       <td style={{ padding: "0.75rem 1rem", fontSize: "0.82rem" }}>{u.city || "—"}</td>
+                      <td style={{ padding: "0.75rem 1rem" }}>
+                        <span style={{
+                          background: u.plan === "business" ? "#1a2332" : u.plan === "premium" ? "#fff8e1" : u.plan === "pro" ? "#e3f2fd" : "#f5f5f5",
+                          color: u.plan === "business" ? "#C5A028" : u.plan === "premium" ? "#C5A028" : u.plan === "pro" ? "#1565c0" : "#888",
+                          padding: "3px 10px", borderRadius: 20, fontSize: "0.75rem", fontWeight: 700, textTransform: "capitalize"
+                        }}>
+                          {u.plan === "business" ? "🏆 Business" : u.plan === "premium" ? "⭐ Premium" : u.plan === "pro" ? "💎 Pro" : "Basique"}
+                        </span>
+                      </td>
                       <td style={{ padding: "0.75rem 1rem" }}>
                         <span style={{ background: u.seller_onboarding_completed ? "#e8f5e9" : "#fff8e1", color: u.seller_onboarding_completed ? "#2e7d32" : "#f57f17", padding: "3px 10px", borderRadius: 20, fontSize: "0.75rem", fontWeight: 600 }}>
                           {u.seller_onboarding_completed ? "✓ Complété" : "En attente"}
@@ -882,6 +892,13 @@ export default function AdminDashboard() {
             <input style={inputStyle} value={editUser.postal_code || ""} onChange={e => setEditUser({...editUser, postal_code: e.target.value})} />
             <label style={labelStyle}>Ville</label>
             <input style={inputStyle} value={editUser.city || ""} onChange={e => setEditUser({...editUser, city: e.target.value})} />
+            <label style={labelStyle}>Plan abonnement</label>
+            <select style={inputStyle} value={editUser.plan || "basique"} onChange={e => setEditUser({...editUser, plan: e.target.value})}>
+              <option value="basique">Basique (gratuit) — 5 annonces/mois</option>
+              <option value="pro">Pro (19€/mois) — 30 annonces/mois</option>
+              <option value="premium">Premium (39€/mois) — Illimité</option>
+              <option value="business">Business (99€/mois) — Illimité</option>
+            </select>
             <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 8 }}>
               <input type="checkbox" checked={editUser.seller_onboarding_completed || false} onChange={e => setEditUser({...editUser, seller_onboarding_completed: e.target.checked})} />
               Onboarding vendeur complété
