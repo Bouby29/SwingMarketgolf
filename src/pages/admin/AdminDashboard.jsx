@@ -16,6 +16,7 @@ const NAV = [
   { id: "finance", label: "Finance", icon: "💰" },
   { id: "commissions", label: "Commissions", icon: "%" },
   { id: "carriers", label: "Transporteurs", icon: "🚚" },
+  { id: "blog", label: "Blog", icon: "✏️" },
 ];
 
 const STATUS_COLORS = {
@@ -64,6 +65,12 @@ export default function AdminDashboard() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [editProduct, setEditProduct] = useState(null);
+  const [editUser, setEditUser] = useState(null);
+  const [editOrder, setEditOrder] = useState(null);
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [editBlog, setEditBlog] = useState(null);
+  const [newBlog, setNewBlog] = useState({ title: "", content: "", excerpt: "", slug: "", published: false });
   const [saved, setSaved] = useState("");
   const [commissions, setCommissions] = useState([
     { label: "0 - 99 EUR", min: 0, max: 99, rate: 10, fixed: 0.70 },
@@ -118,6 +125,9 @@ export default function AdminDashboard() {
       days.push({ label, value });
     }
     setChartData(days);
+    // Blog
+    const { data: bp } = await supabaseAdmin.from("blog_posts").select("*").order("created_at", { ascending: false });
+    setBlogPosts(bp || []);
     setLoading(false);
   };
 
@@ -129,6 +139,105 @@ export default function AdminDashboard() {
   };
 
   const saveMsg = (msg) => { setSaved(msg); setTimeout(() => setSaved(""), 3000); };
+
+  const saveProduct = async () => {
+    await supabaseAdmin.from("products").update({
+      title: editProduct.title,
+      description: editProduct.description,
+      price: parseFloat(editProduct.price),
+      condition: editProduct.condition,
+      brand: editProduct.brand,
+      category: editProduct.category,
+      status: editProduct.status,
+    }).eq("id", editProduct.id);
+    setEditProduct(null);
+    saveMsg("Annonce mise a jour !");
+    loadData();
+  };
+
+  const saveUser = async () => {
+    await supabaseAdmin.from("profiles").update({
+      full_name: editUser.full_name,
+      email: editUser.email,
+      phone: editUser.phone,
+      city: editUser.city,
+      address: editUser.address,
+      postal_code: editUser.postal_code,
+      seller_onboarding_completed: editUser.seller_onboarding_completed,
+    }).eq("id", editUser.id);
+    setEditUser(null);
+    saveMsg("Utilisateur mis a jour !");
+    loadData();
+  };
+
+  const saveOrder = async () => {
+    await supabaseAdmin.from("orders").update({
+      status: editOrder.status,
+      tracking_number: editOrder.tracking_number,
+    }).eq("id", editOrder.id);
+    setEditOrder(null);
+    saveMsg("Commande mise a jour !");
+    loadData();
+  };
+
+  const saveBlog = async () => {
+    if (editBlog.id) {
+      await supabaseAdmin.from("blog_posts").update({
+        title: editBlog.title,
+        content: editBlog.content,
+        excerpt: editBlog.excerpt,
+        slug: editBlog.slug,
+        published: editBlog.published,
+      }).eq("id", editBlog.id);
+    } else {
+      await supabaseAdmin.from("blog_posts").insert({
+        title: editBlog.title,
+        content: editBlog.content,
+        excerpt: editBlog.excerpt,
+        slug: editBlog.slug || editBlog.title.toLowerCase().replace(/\s+/g, "-"),
+        published: editBlog.published,
+      });
+    }
+    setEditBlog(null);
+    saveMsg("Article sauvegarde !");
+    loadData();
+  };
+
+  const deleteBlog = async (id) => {
+    if (!confirm("Supprimer cet article ?")) return;
+    await supabaseAdmin.from("blog_posts").delete().eq("id", id);
+    saveMsg("Article supprime !");
+    loadData();
+  };
+
+  const deleteProduct = async (id) => {
+    if (!confirm("Supprimer cette annonce ?")) return;
+    await supabaseAdmin.from("products").delete().eq("id", id);
+    saveMsg("Annonce supprimee !");
+    loadData();
+  };
+
+  const modalStyle = {
+    position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+    background: "rgba(0,0,0,0.5)", zIndex: 1000,
+    display: "flex", alignItems: "center", justifyContent: "center",
+  };
+
+  const modalBoxStyle = {
+    background: "white", borderRadius: 16, padding: "2rem",
+    width: "90%", maxWidth: 600, maxHeight: "80vh", overflowY: "auto",
+    boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+  };
+
+  const inputStyle = {
+    width: "100%", padding: "0.6rem 0.8rem", borderRadius: 8,
+    border: "1.5px solid #e0e0e0", fontSize: "0.9rem",
+    marginBottom: "0.75rem", boxSizing: "border-box",
+  };
+
+  const labelStyle = { fontSize: "0.8rem", fontWeight: 600, color: "#555", marginBottom: 4, display: "block" };
+
+
 
   if (!authed) return (
     <div style={{ minHeight: "100vh", background: "#1B5E20", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -297,7 +406,7 @@ export default function AdminDashboard() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "#fafafa" }}>
-                    {["ID", "Acheteur", "Vendeur", "Montant", "Commission", "Statut", "Date"].map(h => (
+                    {["ID", "Acheteur", "Vendeur", "Montant", "Commission", "Statut", "Date", "Actions"].map(h => (
                       <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", color: "#888", fontWeight: 600, fontSize: "0.8rem", borderBottom: "1px solid #f0f0f0" }}>{h}</th>
                     ))}
                   </tr>
@@ -312,6 +421,9 @@ export default function AdminDashboard() {
                       <td style={{ padding: "0.75rem 1rem", fontSize: "0.82rem", color: "#1B5E20" }}>{(o.commission || 0).toFixed(2)} EUR</td>
                       <td style={{ padding: "0.75rem 1rem" }}><Badge status={o.status} /></td>
                       <td style={{ padding: "0.75rem 1rem", fontSize: "0.78rem", color: "#888" }}>{new Date(o.created_at).toLocaleDateString("fr-FR")}</td>
+                      <td style={{ padding: "0.75rem 1rem" }}>
+                        <button onClick={() => setEditOrder({...o})} style={{ background: "#1B5E20", color: "white", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem" }}>Modifier</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -330,7 +442,7 @@ export default function AdminDashboard() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "#fafafa" }}>
-                    {["Titre", "Prix", "Catégorie", "Marque", "Condition", "Statut", "Date"].map(h => (
+                    {["Titre", "Prix", "Catégorie", "Marque", "Condition", "Statut", "Date", "Actions"].map(h => (
                       <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", color: "#888", fontWeight: 600, fontSize: "0.8rem", borderBottom: "1px solid #f0f0f0" }}>{h}</th>
                     ))}
                   </tr>
@@ -347,6 +459,10 @@ export default function AdminDashboard() {
                       <td style={{ padding: "0.75rem 1rem", fontSize: "0.82rem" }}>{p.condition}</td>
                       <td style={{ padding: "0.75rem 1rem" }}><Badge status={p.status} /></td>
                       <td style={{ padding: "0.75rem 1rem", fontSize: "0.78rem", color: "#888" }}>{new Date(p.created_at).toLocaleDateString("fr-FR")}</td>
+                      <td style={{ padding: "0.75rem 1rem" }}>
+                        <button onClick={() => setEditProduct({...p})} style={{ background: "#1B5E20", color: "white", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem", marginRight: 4 }}>Modifier</button>
+                        <button onClick={() => deleteProduct(p.id)} style={{ background: "#ffebee", color: "#c62828", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem" }}>Supprimer</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -365,7 +481,7 @@ export default function AdminDashboard() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "#fafafa" }}>
-                    {["Nom", "Email", "Téléphone", "Ville", "Onboarding", "Inscrit le"].map(h => (
+                    {["Nom", "Email", "Téléphone", "Ville", "Onboarding", "Inscrit le", "Actions"].map(h => (
                       <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", color: "#888", fontWeight: 600, fontSize: "0.8rem", borderBottom: "1px solid #f0f0f0" }}>{h}</th>
                     ))}
                   </tr>
@@ -383,6 +499,9 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td style={{ padding: "0.75rem 1rem", fontSize: "0.78rem", color: "#888" }}>{new Date(u.created_at).toLocaleDateString("fr-FR")}</td>
+                      <td style={{ padding: "0.75rem 1rem" }}>
+                        <button onClick={() => setEditUser({...u})} style={{ background: "#1B5E20", color: "white", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem" }}>Modifier</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -482,8 +601,160 @@ export default function AdminDashboard() {
             </div>
           )}
 
+
+          {/* BLOG */}
+          {section === "blog" && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h3 style={{ margin: 0, fontWeight: 700 }}>Articles de blog</h3>
+                <button onClick={() => setEditBlog({ title: "", content: "", excerpt: "", slug: "", published: false })}
+                  style={{ background: "#1B5E20", color: "white", border: "none", borderRadius: 8, padding: "0.5rem 1rem", cursor: "pointer", fontWeight: 600 }}>
+                  + Nouvel article
+                </button>
+              </div>
+              <div style={{ background: "white", borderRadius: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ background: "#fafafa" }}>
+                      {["Titre", "Slug", "Statut", "Date", "Actions"].map(h => (
+                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", color: "#888", fontWeight: 600, fontSize: "0.8rem", borderBottom: "1px solid #f0f0f0" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {blogPosts.map(bp => (
+                      <tr key={bp.id} style={{ borderBottom: "1px solid #fafafa" }}>
+                        <td style={{ padding: "0.75rem 1rem", fontWeight: 600, fontSize: "0.85rem" }}>{bp.title}</td>
+                        <td style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#888" }}>{bp.slug}</td>
+                        <td style={{ padding: "0.75rem 1rem" }}>
+                          <span style={{ background: bp.published ? "#e8f5e9" : "#fff8e1", color: bp.published ? "#2e7d32" : "#f57f17", padding: "3px 10px", borderRadius: 20, fontSize: "0.75rem", fontWeight: 600 }}>
+                            {bp.published ? "Publié" : "Brouillon"}
+                          </span>
+                        </td>
+                        <td style={{ padding: "0.75rem 1rem", fontSize: "0.78rem", color: "#888" }}>{new Date(bp.created_at).toLocaleDateString("fr-FR")}</td>
+                        <td style={{ padding: "0.75rem 1rem" }}>
+                          <button onClick={() => setEditBlog({...bp})} style={{ background: "#1B5E20", color: "white", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem", marginRight: 4 }}>Modifier</button>
+                          <button onClick={() => deleteBlog(bp.id)} style={{ background: "#ffebee", color: "#c62828", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem" }}>Supprimer</button>
+                        </td>
+                      </tr>
+                    ))}
+                    {blogPosts.length === 0 && (
+                      <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#aaa" }}>Aucun article pour l instant</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
         </div>
       </main>
+
+      {/* MODAL MODIFIER ANNONCE */}
+      {editProduct && (
+        <div style={modalStyle} onClick={() => setEditProduct(null)}>
+          <div style={modalBoxStyle} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 1.5rem", fontWeight: 800 }}>Modifier l annonce</h3>
+            <label style={labelStyle}>Titre</label>
+            <input style={inputStyle} value={editProduct.title || ""} onChange={e => setEditProduct({...editProduct, title: e.target.value})} />
+            <label style={labelStyle}>Prix (EUR)</label>
+            <input style={inputStyle} type="number" value={editProduct.price || ""} onChange={e => setEditProduct({...editProduct, price: e.target.value})} />
+            <label style={labelStyle}>Description</label>
+            <textarea style={{...inputStyle, minHeight: 100, resize: "vertical"}} value={editProduct.description || ""} onChange={e => setEditProduct({...editProduct, description: e.target.value})} />
+            <label style={labelStyle}>Marque</label>
+            <input style={inputStyle} value={editProduct.brand || ""} onChange={e => setEditProduct({...editProduct, brand: e.target.value})} />
+            <label style={labelStyle}>Catégorie</label>
+            <input style={inputStyle} value={editProduct.category || ""} onChange={e => setEditProduct({...editProduct, category: e.target.value})} />
+            <label style={labelStyle}>Condition</label>
+            <select style={inputStyle} value={editProduct.condition || ""} onChange={e => setEditProduct({...editProduct, condition: e.target.value})}>
+              {["Neuf", "Comme neuf", "Très bon état", "Bon état", "État correct"].map(c => <option key={c}>{c}</option>)}
+            </select>
+            <label style={labelStyle}>Statut</label>
+            <select style={inputStyle} value={editProduct.status || "active"} onChange={e => setEditProduct({...editProduct, status: e.target.value})}>
+              {["active", "sold", "reserved", "pending"].map(s => <option key={s}>{s}</option>)}
+            </select>
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <button onClick={saveProduct} style={{ flex: 1, background: "#1B5E20", color: "white", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 700 }}>Sauvegarder</button>
+              <button onClick={() => setEditProduct(null)} style={{ flex: 1, background: "#f5f5f5", color: "#333", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 600 }}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL MODIFIER UTILISATEUR */}
+      {editUser && (
+        <div style={modalStyle} onClick={() => setEditUser(null)}>
+          <div style={modalBoxStyle} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 1.5rem", fontWeight: 800 }}>Modifier l utilisateur</h3>
+            <label style={labelStyle}>Nom complet</label>
+            <input style={inputStyle} value={editUser.full_name || ""} onChange={e => setEditUser({...editUser, full_name: e.target.value})} />
+            <label style={labelStyle}>Email</label>
+            <input style={inputStyle} value={editUser.email || ""} onChange={e => setEditUser({...editUser, email: e.target.value})} />
+            <label style={labelStyle}>Téléphone</label>
+            <input style={inputStyle} value={editUser.phone || ""} onChange={e => setEditUser({...editUser, phone: e.target.value})} />
+            <label style={labelStyle}>Adresse</label>
+            <input style={inputStyle} value={editUser.address || ""} onChange={e => setEditUser({...editUser, address: e.target.value})} />
+            <label style={labelStyle}>Code postal</label>
+            <input style={inputStyle} value={editUser.postal_code || ""} onChange={e => setEditUser({...editUser, postal_code: e.target.value})} />
+            <label style={labelStyle}>Ville</label>
+            <input style={inputStyle} value={editUser.city || ""} onChange={e => setEditUser({...editUser, city: e.target.value})} />
+            <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 8 }}>
+              <input type="checkbox" checked={editUser.seller_onboarding_completed || false} onChange={e => setEditUser({...editUser, seller_onboarding_completed: e.target.checked})} />
+              Onboarding vendeur complété
+            </label>
+            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+              <button onClick={saveUser} style={{ flex: 1, background: "#1B5E20", color: "white", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 700 }}>Sauvegarder</button>
+              <button onClick={() => setEditUser(null)} style={{ flex: 1, background: "#f5f5f5", color: "#333", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 600 }}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL MODIFIER COMMANDE */}
+      {editOrder && (
+        <div style={modalStyle} onClick={() => setEditOrder(null)}>
+          <div style={modalBoxStyle} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 1.5rem", fontWeight: 800 }}>Modifier la commande</h3>
+            <p style={{ color: "#888", fontSize: "0.85rem", marginBottom: 16 }}>ID: {editOrder.id}</p>
+            <label style={labelStyle}>Statut</label>
+            <select style={inputStyle} value={editOrder.status || "pending"} onChange={e => setEditOrder({...editOrder, status: e.target.value})}>
+              {["pending", "preparing", "shipped", "delivered", "cancelled"].map(s => <option key={s}>{s}</option>)}
+            </select>
+            <label style={labelStyle}>Numéro de suivi</label>
+            <input style={inputStyle} value={editOrder.tracking_number || ""} onChange={e => setEditOrder({...editOrder, tracking_number: e.target.value})} placeholder="Ex: 1Z999AA10123456784" />
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <button onClick={saveOrder} style={{ flex: 1, background: "#1B5E20", color: "white", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 700 }}>Sauvegarder</button>
+              <button onClick={() => setEditOrder(null)} style={{ flex: 1, background: "#f5f5f5", color: "#333", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 600 }}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL BLOG */}
+      {editBlog && (
+        <div style={modalStyle} onClick={() => setEditBlog(null)}>
+          <div style={modalBoxStyle} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 1.5rem", fontWeight: 800 }}>{editBlog.id ? "Modifier l article" : "Nouvel article"}</h3>
+            <label style={labelStyle}>Titre</label>
+            <input style={inputStyle} value={editBlog.title || ""} onChange={e => setEditBlog({...editBlog, title: e.target.value})} placeholder="Titre de l article" />
+            <label style={labelStyle}>Slug (URL)</label>
+            <input style={inputStyle} value={editBlog.slug || ""} onChange={e => setEditBlog({...editBlog, slug: e.target.value})} placeholder="mon-article-de-blog" />
+            <label style={labelStyle}>Extrait</label>
+            <textarea style={{...inputStyle, minHeight: 60}} value={editBlog.excerpt || ""} onChange={e => setEditBlog({...editBlog, excerpt: e.target.value})} placeholder="Courte description visible en apercu..." />
+            <label style={labelStyle}>Contenu</label>
+            <textarea style={{...inputStyle, minHeight: 200, resize: "vertical"}} value={editBlog.content || ""} onChange={e => setEditBlog({...editBlog, content: e.target.value})} placeholder="Contenu complet de l article..." />
+            <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+              <input type="checkbox" checked={editBlog.published || false} onChange={e => setEditBlog({...editBlog, published: e.target.checked})} />
+              Publier immédiatement
+            </label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={saveBlog} style={{ flex: 1, background: "#1B5E20", color: "white", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 700 }}>Sauvegarder</button>
+              <button onClick={() => setEditBlog(null)} style={{ flex: 1, background: "#f5f5f5", color: "#333", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 600 }}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
