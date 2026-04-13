@@ -6,6 +6,7 @@ const supabaseAdmin = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaGl1aWZlam5ua2xiZnBqbWRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzY5MDc4NSwiZXhwIjoyMDg5MjY2Nzg1fQ.pdIrv8cLFbTEJATtDVAqgAODYEJKHS7n_g6BE4ft0qU"
 );
 
+const ADMIN_LOGIN = "admin@swingmarketgolf.com";
 const ADMIN_PASSWORD = "swingadmin2024";
 
 const NAV = [
@@ -56,6 +57,7 @@ function MiniBar({ data, color = "#1B5E20" }) {
 
 export default function AdminDashboard() {
   const [authed, setAuthed] = useState(false);
+  const [login, setLogin] = useState("");
   const [pwd, setPwd] = useState("");
   const [section, setSection] = useState("overview");
   const [stats, setStats] = useState({ users: 0, products: 0, orders: 0, revenue: 0, commissions: 0, avgCart: 0 });
@@ -133,8 +135,8 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
-  const login = () => {
-    if (pwd === ADMIN_PASSWORD) {
+  const doLogin = () => {
+    if (pwd === ADMIN_PASSWORD && login === ADMIN_LOGIN) {
       sessionStorage.setItem("admin_authed", "1");
       setAuthed(true);
     }
@@ -258,10 +260,13 @@ export default function AdminDashboard() {
           <h1 style={{ fontWeight: 800, fontSize: "1.4rem", color: "#1B5E20", margin: 0 }}>SwingMarketGolf</h1>
           <p style={{ color: "#888", fontSize: "0.85rem", margin: "4px 0 0" }}>Administration</p>
         </div>
-        <input type="password" placeholder="Mot de passe admin" value={pwd}
-          onChange={e => setPwd(e.target.value)} onKeyDown={e => e.key === "Enter" && login()}
+        <input type="email" placeholder="Identifiant (email)" value={login}
+          onChange={e => setLogin(e.target.value)} onKeyDown={e => e.key === "Enter" && doLogin()}
           style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: 10, border: "1.5px solid #ddd", fontSize: "0.95rem", marginBottom: "1rem", boxSizing: "border-box" }} />
-        <button onClick={login} style={{ width: "100%", background: "#1B5E20", color: "white", border: "none", borderRadius: 10, padding: "0.75rem", fontWeight: 700, fontSize: "1rem", cursor: "pointer" }}>
+        <input type="password" placeholder="Mot de passe" value={pwd}
+          onChange={e => setPwd(e.target.value)} onKeyDown={e => e.key === "Enter" && doLogin()}
+          style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: 10, border: "1.5px solid #ddd", fontSize: "0.95rem", marginBottom: "1rem", boxSizing: "border-box" }} />
+        <button onClick={doLogin} style={{ width: "100%", background: "#1B5E20", color: "white", border: "none", borderRadius: 10, padding: "0.75rem", fontWeight: 700, fontSize: "1rem", cursor: "pointer" }}>
           Se connecter
         </button>
       </div>
