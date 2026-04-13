@@ -70,6 +70,7 @@ export default function AdminDashboard() {
   const [editOrder, setEditOrder] = useState(null);
   const [blogPosts, setBlogPosts] = useState([]);
   const [editBlog, setEditBlog] = useState(null);
+  const [newCarrier, setNewCarrier] = useState({ name: "", price: "", delay: "" });
   const [newBlog, setNewBlog] = useState({ title: "", content: "", excerpt: "", slug: "", published: false });
   const [saved, setSaved] = useState("");
   const [commissions, setCommissions] = useState([
@@ -598,6 +599,42 @@ export default function AdminDashboard() {
               <button onClick={() => saveMsg("Transporteurs sauvegardés")} style={{ marginTop: 16, background: "#1B5E20", color: "white", border: "none", borderRadius: 10, padding: "0.6rem 1.5rem", cursor: "pointer", fontWeight: 700 }}>
                 Sauvegarder
               </button>
+              <div style={{ marginTop: 24, borderTop: "1px solid #f0f0f0", paddingTop: 20 }}>
+                <h4 style={{ margin: "0 0 12px", fontSize: "0.9rem", fontWeight: 700 }}>Ajouter un transporteur</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: 8, alignItems: "end" }}>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#888", display: "block", marginBottom: 4 }}>Nom</label>
+                    <input value={newCarrier.name} onChange={e => setNewCarrier({...newCarrier, name: e.target.value})} placeholder="Ex: DHL"
+                      style={{ width: "100%", padding: "0.5rem 0.7rem", borderRadius: 8, border: "1.5px solid #e0e0e0", fontSize: "0.85rem", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#888", display: "block", marginBottom: 4 }}>Prix (EUR)</label>
+                    <input type="number" step="0.01" value={newCarrier.price} onChange={e => setNewCarrier({...newCarrier, price: e.target.value})} placeholder="7.90"
+                      style={{ width: "100%", padding: "0.5rem 0.7rem", borderRadius: 8, border: "1.5px solid #e0e0e0", fontSize: "0.85rem", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#888", display: "block", marginBottom: 4 }}>Délai</label>
+                    <input value={newCarrier.delay} onChange={e => setNewCarrier({...newCarrier, delay: e.target.value})} placeholder="2-3 jours"
+                      style={{ width: "100%", padding: "0.5rem 0.7rem", borderRadius: 8, border: "1.5px solid #e0e0e0", fontSize: "0.85rem", boxSizing: "border-box" }} />
+                  </div>
+                  <button onClick={() => {
+                    if (!newCarrier.name || !newCarrier.price) return;
+                    setCarriers([...carriers, { name: newCarrier.name, price: parseFloat(newCarrier.price), delay: newCarrier.delay }]);
+                    setNewCarrier({ name: "", price: "", delay: "" });
+                    saveMsg("Transporteur ajouté !");
+                  }} style={{ background: "#1B5E20", color: "white", border: "none", borderRadius: 8, padding: "0.5rem 1rem", cursor: "pointer", fontWeight: 700, fontSize: "0.85rem", whiteSpace: "nowrap" }}>
+                    + Ajouter
+                  </button>
+                </div>
+              </div>
+              <div style={{ marginTop: 12 }}>
+                {carriers.map((c, i) => (
+                  <button key={i} onClick={() => { setCarriers(carriers.filter((_, j) => j !== i)); saveMsg("Transporteur supprimé"); }}
+                    style={{ background: "#ffebee", color: "#c62828", border: "none", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: "0.75rem", marginRight: 6, marginBottom: 4 }}>
+                    ✕ {c.name}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
