@@ -94,7 +94,7 @@ const AuthenticatedApp = () => {
           <CGSPro />
         </LayoutWrapper>
       } />
-      <Route path="/Admin" element={<AdminDashboard />} />
+      <Route path="/Admin" element={window.location.hostname === "admin.swingmarketgolf.com" || window.location.hostname === "localhost" ? <AdminDashboard /> : <PageNotFound />} />
       <Route path="/SellerOnboarding" element={<SellerOnboarding />} />
       <Route path="/Abonnements" element={<Abonnements />} />
       <Route path="*" element={<PageNotFound />} />
@@ -131,7 +131,7 @@ function App() {
           <GolfBallScroll />
           <WelcomePopup />
           <Routes>
-            <Route path="/Admin" element={<AdminDashboard />} />
+            <Route path="/Admin" element={window.location.hostname === "admin.swingmarketgolf.com" || window.location.hostname === "localhost" ? <AdminDashboard /> : <PageNotFound />} />
       <Route path="/SellerOnboarding" element={<SellerOnboarding />} />
       <Route path="/Abonnements" element={<Abonnements />} />
             <Route path="/*" element={<AuthenticatedApp />} />
