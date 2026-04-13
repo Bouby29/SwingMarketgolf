@@ -18,6 +18,7 @@ const NAV = [
   { id: "commissions", label: "Commissions", icon: "%" },
   { id: "carriers", label: "Transporteurs", icon: "🚚" },
   { id: "blog", label: "Blog", icon: "✏️" },
+  { id: "admins", label: "Administrateurs", icon: "🔐" },
 ];
 
 const STATUS_COLORS = {
@@ -74,6 +75,8 @@ export default function AdminDashboard() {
   const [blogPosts, setBlogPosts] = useState([]);
   const [editBlog, setEditBlog] = useState(null);
   const [newCarrier, setNewCarrier] = useState({ name: "", price: "", delay: "" });
+  const [admins, setAdmins] = useState([{ email: "admin@swingmarketgolf.com", role: "Super Admin", createdAt: "2026-04-01" }]);
+  const [newAdmin, setNewAdmin] = useState({ email: "", password: "", role: "Admin" });
   const [userHistory, setUserHistory] = useState(null);
   const [newBlog, setNewBlog] = useState({ title: "", content: "", excerpt: "", slug: "", published: false });
   const [saved, setSaved] = useState("");
@@ -137,7 +140,9 @@ export default function AdminDashboard() {
   };
 
   const doLogin = () => {
-    if (pwd === ADMIN_PASSWORD && login === ADMIN_LOGIN) {
+    const isMainAdmin = pwd === ADMIN_PASSWORD && login === ADMIN_LOGIN;
+    const isOtherAdmin = admins.some(a => a.email === login && a.password === pwd && a.role !== "Super Admin");
+    if (isMainAdmin || isOtherAdmin) {
       sessionStorage.setItem("admin_authed", "1");
       setAuthed(true);
     }
@@ -661,6 +666,94 @@ export default function AdminDashboard() {
             </div>
           )}
 
+
+          {/* ADMINISTRATEURS */}
+          {section === "admins" && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h3 style={{ margin: 0, fontWeight: 700 }}>Gestion des administrateurs</h3>
+              </div>
+
+              {/* Liste admins */}
+              <div style={{ background: "white", borderRadius: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", marginBottom: 20 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ background: "#fafafa" }}>
+                      {["Email", "Rôle", "Créé le", "Actions"].map(h => (
+                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", color: "#888", fontWeight: 600, fontSize: "0.8rem", borderBottom: "1px solid #f0f0f0" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {admins.map((a, i) => (
+                      <tr key={i} style={{ borderBottom: "1px solid #fafafa" }}>
+                        <td style={{ padding: "0.75rem 1rem", fontWeight: 600, fontSize: "0.85rem" }}>{a.email}</td>
+                        <td style={{ padding: "0.75rem 1rem" }}>
+                          <span style={{ background: a.role === "Super Admin" ? "#e8f5e9" : "#e3f2fd", color: a.role === "Super Admin" ? "#2e7d32" : "#1565c0", padding: "3px 10px", borderRadius: 20, fontSize: "0.75rem", fontWeight: 600 }}>
+                            {a.role}
+                          </span>
+                        </td>
+                        <td style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#888" }}>{a.createdAt}</td>
+                        <td style={{ padding: "0.75rem 1rem" }}>
+                          {a.role !== "Super Admin" && (
+                            <button onClick={() => {
+                              if (!confirm("Supprimer cet administrateur ?")) return;
+                              setAdmins(admins.filter((_, j) => j !== i));
+                              saveMsg("Administrateur supprimé");
+                            }} style={{ background: "#ffebee", color: "#c62828", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem" }}>
+                              Supprimer
+                            </button>
+                          )}
+                          {a.role === "Super Admin" && <span style={{ color: "#aaa", fontSize: "0.75rem" }}>—</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Ajouter admin */}
+              <div style={{ background: "white", borderRadius: 12, padding: "1.5rem", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+                <h4 style={{ margin: "0 0 1rem", fontWeight: 700, fontSize: "0.95rem" }}>Ajouter un administrateur</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 12, alignItems: "end" }}>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#888", display: "block", marginBottom: 4 }}>Email</label>
+                    <input type="email" value={newAdmin.email} onChange={e => setNewAdmin({...newAdmin, email: e.target.value})}
+                      placeholder="email@exemple.com"
+                      style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: 8, border: "1.5px solid #e0e0e0", fontSize: "0.85rem", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#888", display: "block", marginBottom: 4 }}>Mot de passe</label>
+                    <input type="password" value={newAdmin.password} onChange={e => setNewAdmin({...newAdmin, password: e.target.value})}
+                      placeholder="Mot de passe"
+                      style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: 8, border: "1.5px solid #e0e0e0", fontSize: "0.85rem", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#888", display: "block", marginBottom: 4 }}>Rôle</label>
+                    <select value={newAdmin.role} onChange={e => setNewAdmin({...newAdmin, role: e.target.value})}
+                      style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: 8, border: "1.5px solid #e0e0e0", fontSize: "0.85rem" }}>
+                      <option>Admin</option>
+                      <option>Modérateur</option>
+                      <option>Support</option>
+                    </select>
+                  </div>
+                  <button onClick={() => {
+                    if (!newAdmin.email || !newAdmin.password) { alert("Email et mot de passe requis"); return; }
+                    if (admins.find(a => a.email === newAdmin.email)) { alert("Cet email existe déjà"); return; }
+                    const today = new Date().toISOString().split("T")[0];
+                    setAdmins([...admins, { email: newAdmin.email, password: newAdmin.password, role: newAdmin.role, createdAt: today }]);
+                    setNewAdmin({ email: "", password: "", role: "Admin" });
+                    saveMsg("Administrateur ajouté !");
+                  }} style={{ background: "#1B5E20", color: "white", border: "none", borderRadius: 8, padding: "0.6rem 1.2rem", cursor: "pointer", fontWeight: 700, fontSize: "0.85rem", whiteSpace: "nowrap" }}>
+                    + Ajouter
+                  </button>
+                </div>
+                <p style={{ margin: "1rem 0 0", fontSize: "0.75rem", color: "#aaa" }}>
+                  ⚠️ Les administrateurs ajoutés peuvent se connecter avec leurs identifiants sur admin.swingmarketgolf.com
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* BLOG */}
           {section === "blog" && (
