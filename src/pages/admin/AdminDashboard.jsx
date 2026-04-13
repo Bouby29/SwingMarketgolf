@@ -151,6 +151,7 @@ export default function AdminDashboard() {
       brand: editProduct.brand,
       category: editProduct.category,
       status: editProduct.status,
+      images: editProduct.images,
     }).eq("id", editProduct.id);
     setEditProduct(null);
     saveMsg("Annonce mise a jour !");
@@ -720,6 +721,31 @@ export default function AdminDashboard() {
             <select style={inputStyle} value={editProduct.status || "active"} onChange={e => setEditProduct({...editProduct, status: e.target.value})}>
               {["active", "sold", "reserved", "pending"].map(s => <option key={s}>{s}</option>)}
             </select>
+            <label style={labelStyle}>Photos actuelles</label>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+              {(editProduct.images || []).map((img, i) => (
+                <div key={i} style={{ position: "relative" }}>
+                  <img src={img} alt="" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #e0e0e0" }} />
+                  <button onClick={() => setEditProduct({...editProduct, images: editProduct.images.filter((_, j) => j !== i)})}
+                    style={{ position: "absolute", top: -6, right: -6, background: "#c62828", color: "white", border: "none", borderRadius: "50%", width: 20, height: 20, cursor: "pointer", fontSize: "0.7rem", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                </div>
+              ))}
+            </div>
+            <label style={labelStyle}>Ajouter une photo</label>
+            <input type="file" accept="image/*" multiple onChange={async (e) => {
+              const files = Array.from(e.target.files);
+              const urls = [];
+              for (const file of files) {
+                const ext = file.name.split(".").pop();
+                const path = `products/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+                const { error } = await supabaseAdmin.storage.from("products").upload(path, file);
+                if (!error) {
+                  const { data: { publicUrl } } = supabaseAdmin.storage.from("products").getPublicUrl(path);
+                  urls.push(publicUrl);
+                }
+              }
+              setEditProduct({...editProduct, images: [...(editProduct.images || []), ...urls]});
+            }} style={{ ...inputStyle, padding: "0.4rem" }} />
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <button onClick={saveProduct} style={{ flex: 1, background: "#1B5E20", color: "white", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 700 }}>Sauvegarder</button>
               <button onClick={() => setEditProduct(null)} style={{ flex: 1, background: "#f5f5f5", color: "#333", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 600 }}>Annuler</button>
