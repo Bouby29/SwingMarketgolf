@@ -77,6 +77,7 @@ export default function AdminDashboard() {
   const [newCarrier, setNewCarrier] = useState({ name: "", price: "", delay: "" });
   const [admins, setAdmins] = useState([]);
   const [newAdmin, setNewAdmin] = useState({ email: "", password: "", role: "Admin" });
+  const [editAdmin, setEditAdmin] = useState(null);
   const [userHistory, setUserHistory] = useState(null);
   const [newBlog, setNewBlog] = useState({ title: "", content: "", excerpt: "", slug: "", published: false });
   const [saved, setSaved] = useState("");
@@ -970,6 +971,41 @@ export default function AdminDashboard() {
               </table>
             )}
             <button onClick={() => setUserHistory(null)} style={{ width: "100%", background: "#f5f5f5", color: "#333", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 600 }}>Fermer</button>
+          </div>
+        </div>
+      )}
+
+
+      {/* MODAL MODIFIER ADMIN */}
+      {editAdmin && (
+        <div style={modalStyle} onClick={() => setEditAdmin(null)}>
+          <div style={modalBoxStyle} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 1.5rem", fontWeight: 800 }}>Modifier l administrateur</h3>
+            <label style={labelStyle}>Email</label>
+            <input style={inputStyle} type="email" value={editAdmin.email} onChange={e => setEditAdmin({...editAdmin, email: e.target.value})} />
+            <label style={labelStyle}>Nouveau mot de passe (laisser vide pour ne pas changer)</label>
+            <input style={inputStyle} type="password" placeholder="Nouveau mot de passe" value={editAdmin.newPassword || ""} onChange={e => setEditAdmin({...editAdmin, newPassword: e.target.value})} />
+            <label style={labelStyle}>Rôle</label>
+            <select style={inputStyle} value={editAdmin.role} onChange={e => setEditAdmin({...editAdmin, role: e.target.value})}>
+              <option>Admin</option>
+              <option>Modérateur</option>
+              <option>Support</option>
+            </select>
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <button onClick={async () => {
+                const updates = { email: editAdmin.email, role: editAdmin.role };
+                if (editAdmin.newPassword) updates.password = editAdmin.newPassword;
+                await supabaseAdmin.from("admin_users").update(updates).eq("id", editAdmin.id);
+                setEditAdmin(null);
+                saveMsg("Administrateur mis a jour !");
+                loadData();
+              }} style={{ flex: 1, background: "#1B5E20", color: "white", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 700 }}>
+                Sauvegarder
+              </button>
+              <button onClick={() => setEditAdmin(null)} style={{ flex: 1, background: "#f5f5f5", color: "#333", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 600 }}>
+                Annuler
+              </button>
+            </div>
           </div>
         </div>
       )}
