@@ -136,9 +136,6 @@ export default function AdminDashboard() {
     // Admins
     const { data: adminList } = await supabaseAdmin.from("admin_users").select("*").order("created_at", { ascending: true });
     setAdmins(adminList || []);
-    // Admins
-    const { data: adminList } = await supabaseAdmin.from("admin_users").select("*").order("created_at", { ascending: true });
-    setAdmins(adminList || []);
     // Blog
     const { data: bp } = await supabaseAdmin.from("blog_posts").select("*").order("created_at", { ascending: false });
     setBlogPosts(bp || []);
