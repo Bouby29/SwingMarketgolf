@@ -134,11 +134,11 @@ export default function AdminDashboard() {
     }
     setChartData(days);
     // Admins
-    const { data: adminData } = await supabaseAdmin.from("admin_users").select("*").order("created_at", { ascending: true });
-    setAdmins(adminData || []);
+    const { data: adminList } = await supabaseAdmin.from("admin_users").select("*").order("created_at", { ascending: true });
+    setAdmins(adminList || []);
     // Admins
-    const { data: adminData } = await supabaseAdmin.from("admin_users").select("*").order("created_at", { ascending: true });
-    setAdmins(adminData || []);
+    const { data: adminList } = await supabaseAdmin.from("admin_users").select("*").order("created_at", { ascending: true });
+    setAdmins(adminList || []);
     // Blog
     const { data: bp } = await supabaseAdmin.from("blog_posts").select("*").order("created_at", { ascending: false });
     setBlogPosts(bp || []);
@@ -702,7 +702,7 @@ export default function AdminDashboard() {
                         <td style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#888" }}>{a.created_at ? new Date(a.created_at).toLocaleDateString("fr-FR") : "—"}</td>
                         <td style={{ padding: "0.75rem 1rem" }}>
                           {a.role !== "Super Admin" && (
-                            <button onClick={() => {
+                            <button onClick={async () => {
                               if (!confirm("Supprimer cet administrateur ?")) return;
                               await supabaseAdmin.from("admin_users").delete().eq("id", a.id);
                               saveMsg("Administrateur supprimé");
@@ -744,7 +744,7 @@ export default function AdminDashboard() {
                       <option>Support</option>
                     </select>
                   </div>
-                  <button onClick={() => {
+                  <button onClick={async () => {
                     if (!newAdmin.email || !newAdmin.password) { alert("Email et mot de passe requis"); return; }
                     if (admins.find(a => a.email === newAdmin.email)) { alert("Cet email existe déjà"); return; }
                     const { error } = await supabaseAdmin.from("admin_users").insert({ email: newAdmin.email, password: newAdmin.password, role: newAdmin.role });
