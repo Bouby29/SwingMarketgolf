@@ -75,7 +75,7 @@ export default function AdminDashboard() {
   const [blogPosts, setBlogPosts] = useState([]);
   const [editBlog, setEditBlog] = useState(null);
   const [newCarrier, setNewCarrier] = useState({ name: "", price: "", delay: "" });
-  const [admins, setAdmins] = useState([{ email: "admin@swingmarketgolf.com", role: "Super Admin", createdAt: "2026-04-01" }]);
+  const [admins, setAdmins] = useState([]);
   const [newAdmin, setNewAdmin] = useState({ email: "", password: "", role: "Admin" });
   const [userHistory, setUserHistory] = useState(null);
   const [newBlog, setNewBlog] = useState({ title: "", content: "", excerpt: "", slug: "", published: false });
@@ -133,16 +133,19 @@ export default function AdminDashboard() {
       days.push({ label, value });
     }
     setChartData(days);
+    // Admins
+    const { data: adminData } = await supabaseAdmin.from("admin_users").select("*").order("created_at", { ascending: true });
+    setAdmins(adminData || []);
     // Blog
     const { data: bp } = await supabaseAdmin.from("blog_posts").select("*").order("created_at", { ascending: false });
     setBlogPosts(bp || []);
     setLoading(false);
   };
 
-  const doLogin = () => {
+  const doLogin = async () => {
     const isMainAdmin = pwd === ADMIN_PASSWORD && login === ADMIN_LOGIN;
-    const isOtherAdmin = admins.some(a => a.email === login && a.password === pwd && a.role !== "Super Admin");
-    if (isMainAdmin || isOtherAdmin) {
+    const { data: dbAdmin } = await supabaseAdmin.from("admin_users").select("*").eq("email", login).eq("password", pwd).single();
+    if (isMainAdmin || dbAdmin) {
       sessionStorage.setItem("admin_authed", "1");
       setAuthed(true);
     }
@@ -693,13 +696,14 @@ export default function AdminDashboard() {
                             {a.role}
                           </span>
                         </td>
-                        <td style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#888" }}>{a.createdAt}</td>
+                        <td style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#888" }}>{a.created_at ? new Date(a.created_at).toLocaleDateString("fr-FR") : "—"}</td>
                         <td style={{ padding: "0.75rem 1rem" }}>
                           {a.role !== "Super Admin" && (
                             <button onClick={() => {
                               if (!confirm("Supprimer cet administrateur ?")) return;
-                              setAdmins(admins.filter((_, j) => j !== i));
+                              await supabaseAdmin.from("admin_users").delete().eq("id", a.id);
                               saveMsg("Administrateur supprimé");
+                              loadData();
                             }} style={{ background: "#ffebee", color: "#c62828", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem" }}>
                               Supprimer
                             </button>
@@ -740,10 +744,11 @@ export default function AdminDashboard() {
                   <button onClick={() => {
                     if (!newAdmin.email || !newAdmin.password) { alert("Email et mot de passe requis"); return; }
                     if (admins.find(a => a.email === newAdmin.email)) { alert("Cet email existe déjà"); return; }
-                    const today = new Date().toISOString().split("T")[0];
-                    setAdmins([...admins, { email: newAdmin.email, password: newAdmin.password, role: newAdmin.role, createdAt: today }]);
+                    const { error } = await supabaseAdmin.from("admin_users").insert({ email: newAdmin.email, password: newAdmin.password, role: newAdmin.role });
+                    if (error) { alert("Erreur: " + error.message); return; }
                     setNewAdmin({ email: "", password: "", role: "Admin" });
                     saveMsg("Administrateur ajouté !");
+                    loadData();
                   }} style={{ background: "#1B5E20", color: "white", border: "none", borderRadius: 8, padding: "0.6rem 1.2rem", cursor: "pointer", fontWeight: 700, fontSize: "0.85rem", whiteSpace: "nowrap" }}>
                     + Ajouter
                   </button>
