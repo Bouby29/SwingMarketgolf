@@ -71,6 +71,7 @@ export default function AdminDashboard() {
   const [blogPosts, setBlogPosts] = useState([]);
   const [editBlog, setEditBlog] = useState(null);
   const [newCarrier, setNewCarrier] = useState({ name: "", price: "", delay: "" });
+  const [userHistory, setUserHistory] = useState(null);
   const [newBlog, setNewBlog] = useState({ title: "", content: "", excerpt: "", slug: "", published: false });
   const [saved, setSaved] = useState("");
   const [commissions, setCommissions] = useState([
@@ -209,6 +210,14 @@ export default function AdminDashboard() {
     await supabaseAdmin.from("blog_posts").delete().eq("id", id);
     saveMsg("Article supprime !");
     loadData();
+  };
+
+  const loadUserHistory = async (user) => {
+    const [{ data: listings }, { data: purchases }] = await Promise.all([
+      supabaseAdmin.from("products").select("*").eq("seller_id", user.id).order("created_at", { ascending: false }),
+      supabaseAdmin.from("orders").select("*").eq("buyer_id", user.id).order("created_at", { ascending: false }),
+    ]);
+    setUserHistory({ user, listings: listings || [], purchases: purchases || [] });
   };
 
   const deleteProduct = async (id) => {
@@ -501,7 +510,8 @@ export default function AdminDashboard() {
                       </td>
                       <td style={{ padding: "0.75rem 1rem", fontSize: "0.78rem", color: "#888" }}>{new Date(u.created_at).toLocaleDateString("fr-FR")}</td>
                       <td style={{ padding: "0.75rem 1rem" }}>
-                        <button onClick={() => setEditUser({...u})} style={{ background: "#1B5E20", color: "white", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem" }}>Modifier</button>
+                        <button onClick={() => setEditUser({...u})} style={{ background: "#1B5E20", color: "white", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem", marginRight: 4 }}>Modifier</button>
+                        <button onClick={() => loadUserHistory(u)} style={{ background: "#e3f2fd", color: "#1565c0", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem" }}>Historique</button>
                       </td>
                     </tr>
                   ))}
@@ -763,6 +773,67 @@ export default function AdminDashboard() {
               <button onClick={saveOrder} style={{ flex: 1, background: "#1B5E20", color: "white", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 700 }}>Sauvegarder</button>
               <button onClick={() => setEditOrder(null)} style={{ flex: 1, background: "#f5f5f5", color: "#333", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 600 }}>Annuler</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL HISTORIQUE UTILISATEUR */}
+      {userHistory && (
+        <div style={modalStyle} onClick={() => setUserHistory(null)}>
+          <div style={{...modalBoxStyle, maxWidth: 700}} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 4px", fontWeight: 800 }}>Historique — {userHistory.user.full_name || userHistory.user.email}</h3>
+            <p style={{ color: "#888", fontSize: "0.85rem", marginBottom: 20 }}>{userHistory.user.email}</p>
+
+            <h4 style={{ margin: "0 0 10px", fontWeight: 700, color: "#1B5E20" }}>📦 Annonces postées ({userHistory.listings.length})</h4>
+            {userHistory.listings.length === 0 ? (
+              <p style={{ color: "#aaa", fontSize: "0.85rem", marginBottom: 16 }}>Aucune annonce</p>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 20 }}>
+                <thead>
+                  <tr style={{ background: "#f9f9f9" }}>
+                    {["Titre", "Prix", "Statut", "Date"].map(h => (
+                      <th key={h} style={{ padding: "0.5rem 0.75rem", textAlign: "left", fontSize: "0.75rem", color: "#888", fontWeight: 600, borderBottom: "1px solid #f0f0f0" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {userHistory.listings.map(l => (
+                    <tr key={l.id} style={{ borderBottom: "1px solid #fafafa" }}>
+                      <td style={{ padding: "0.5rem 0.75rem", fontSize: "0.82rem", fontWeight: 600 }}>{l.title}</td>
+                      <td style={{ padding: "0.5rem 0.75rem", fontSize: "0.82rem" }}>{l.price} EUR</td>
+                      <td style={{ padding: "0.5rem 0.75rem" }}><Badge status={l.status} /></td>
+                      <td style={{ padding: "0.5rem 0.75rem", fontSize: "0.78rem", color: "#888" }}>{new Date(l.created_at).toLocaleDateString("fr-FR")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            <h4 style={{ margin: "0 0 10px", fontWeight: 700, color: "#0097a7" }}>🛒 Achats ({userHistory.purchases.length})</h4>
+            {userHistory.purchases.length === 0 ? (
+              <p style={{ color: "#aaa", fontSize: "0.85rem", marginBottom: 16 }}>Aucun achat</p>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 20 }}>
+                <thead>
+                  <tr style={{ background: "#f9f9f9" }}>
+                    {["ID commande", "Montant", "Statut", "Date"].map(h => (
+                      <th key={h} style={{ padding: "0.5rem 0.75rem", textAlign: "left", fontSize: "0.75rem", color: "#888", fontWeight: 600, borderBottom: "1px solid #f0f0f0" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {userHistory.purchases.map(p => (
+                    <tr key={p.id} style={{ borderBottom: "1px solid #fafafa" }}>
+                      <td style={{ padding: "0.5rem 0.75rem", fontSize: "0.78rem", color: "#888", fontFamily: "monospace" }}>#{p.id?.slice(0,8)}</td>
+                      <td style={{ padding: "0.5rem 0.75rem", fontSize: "0.82rem", fontWeight: 700 }}>{p.price} EUR</td>
+                      <td style={{ padding: "0.5rem 0.75rem" }}><Badge status={p.status} /></td>
+                      <td style={{ padding: "0.5rem 0.75rem", fontSize: "0.78rem", color: "#888" }}>{new Date(p.created_at).toLocaleDateString("fr-FR")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            <button onClick={() => setUserHistory(null)} style={{ width: "100%", background: "#f5f5f5", color: "#333", border: "none", borderRadius: 10, padding: "0.65rem", cursor: "pointer", fontWeight: 600 }}>Fermer</button>
           </div>
         </div>
       )}
