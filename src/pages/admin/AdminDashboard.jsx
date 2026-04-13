@@ -58,6 +58,7 @@ function MiniBar({ data, color = "#1B5E20" }) {
 export default function AdminDashboard() {
   const [authed, setAuthed] = useState(false);
   const [login, setLogin] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
   const [pwd, setPwd] = useState("");
   const [section, setSection] = useState("overview");
   const [stats, setStats] = useState({ users: 0, products: 0, orders: 0, revenue: 0, commissions: 0, avgCart: 0 });
@@ -263,9 +264,15 @@ export default function AdminDashboard() {
         <input type="email" placeholder="Identifiant (email)" value={login}
           onChange={e => setLogin(e.target.value)} onKeyDown={e => e.key === "Enter" && doLogin()}
           style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: 10, border: "1.5px solid #ddd", fontSize: "0.95rem", marginBottom: "1rem", boxSizing: "border-box" }} />
-        <input type="password" placeholder="Mot de passe" value={pwd}
-          onChange={e => setPwd(e.target.value)} onKeyDown={e => e.key === "Enter" && doLogin()}
-          style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: 10, border: "1.5px solid #ddd", fontSize: "0.95rem", marginBottom: "1rem", boxSizing: "border-box" }} />
+        <div style={{ position: "relative", marginBottom: "1rem" }}>
+          <input type={showPwd ? "text" : "password"} placeholder="Mot de passe" value={pwd}
+            onChange={e => setPwd(e.target.value)} onKeyDown={e => e.key === "Enter" && doLogin()}
+            style={{ width: "100%", padding: "0.75rem 2.5rem 0.75rem 1rem", borderRadius: 10, border: "1.5px solid #ddd", fontSize: "0.95rem", boxSizing: "border-box" }} />
+          <button type="button" onClick={() => setShowPwd(!showPwd)}
+            style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem", color: "#888" }}>
+            {showPwd ? "🙈" : "👁️"}
+          </button>
+        </div>
         <button onClick={doLogin} style={{ width: "100%", background: "#1B5E20", color: "white", border: "none", borderRadius: 10, padding: "0.75rem", fontWeight: 700, fontSize: "1rem", cursor: "pointer" }}>
           Se connecter
         </button>
