@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import AccountInfoSection from "../components/dashboard/AccountInfoSection";
 import AddressesSection from "../components/dashboard/AddressesSection";
 import SellerProfileSection from "../components/dashboard/SellerProfileSection";
-import CustomizeShopSection from "../components/dashboard/CustomizeShopSection";
 import ShippingOptionsSection from "../components/dashboard/ShippingOptionsSection";
 import VacationModeSection from "../components/dashboard/VacationModeSection";
 import SellerStatsSection from "../components/dashboard/SellerStatsSection";
@@ -26,7 +25,6 @@ const NAV = [
   { group: "Espace Vendeur", items: [
     { id: "sell", label: "Vendre un produit", icon: "➕" },
     { id: "seller-profile", label: "Mon profil", icon: "🏪" },
-    { id: "customize-shop", label: "Personnaliser ma boutique", icon: "🎨" },
     { id: "products", label: "Gérer mes produits", icon: "📦" },
     { id: "auctions", label: "Mes enchères", icon: "🔨" },
     { id: "sales", label: "Mes ventes", icon: "💰" },
