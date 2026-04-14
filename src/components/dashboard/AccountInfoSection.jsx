@@ -5,17 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 
-export default function AccountInfoSection({ user, onUserUpdate }) {
+export default function AccountInfoSection({ user, profile, onUpdate, onUserUpdate }) {
   const [formData, setFormData] = useState({
-    full_name: user?.full_name || "",
+    full_name: profile?.full_name || "",
     email: user?.email || "",
     newPassword: "",
-    birthDate: user?.birthDate || "",
-    newsletter: user?.newsletter || false,
-    address: user?.address || "",
-    postal_code: user?.postal_code || "",
-    city: user?.city || "",
-    phone: user?.phone || "",
+    birthDate: profile?.birthDate || "",
+    newsletter: profile?.newsletter || false,
+    address: profile?.address || "",
+    postal_code: profile?.postal_code || "",
+    city: profile?.city || "",
+    phone: profile?.phone || "",
   });
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -24,19 +24,19 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
 
   // Sync formData when user prop changes (e.g. after parent refresh)
   useEffect(() => {
-    if (user) {
+    if (profile) {
       setFormData(prev => ({
         ...prev,
-        full_name: user.full_name || "",
-        birthDate: user.birthDate || "",
-        newsletter: user.newsletter || false,
-        address: user.address || "",
-        postal_code: user.postal_code || "",
-        city: user.city || "",
-        phone: user.phone || "",
+        full_name: profile.full_name || "",
+        birthDate: profile.birthDate || "",
+        newsletter: profile.newsletter || false,
+        address: profile.address || "",
+        postal_code: profile.postal_code || "",
+        city: profile.city || "",
+        phone: profile.phone || "",
       }));
     }
-  }, [user]);
+  }, [profile]);
 
   const checkPasswordStrength = (pwd) => {
     let strength = 0;
@@ -81,7 +81,7 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
         await supabase.auth.updateUser({ password: formData.newPassword });
       }
       setSuccessMsg("Informations mises à jour avec succès !");
-      if (onUserUpdate) await onUserUpdate();
+      if (onUpdate) await onUpdate(); else if (onUserUpdate) await onUserUpdate();
       setTimeout(() => setSuccessMsg(""), 4000);
     } catch (err) {
       setErrorMsg("Erreur lors de la sauvegarde. Veuillez ressayer.");
