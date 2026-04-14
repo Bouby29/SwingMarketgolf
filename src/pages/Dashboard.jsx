@@ -29,7 +29,6 @@ const NAV = [
     { id: "sales", label: "Mes ventes", icon: "💰" },
     { id: "shipping", label: "Options d envoi", icon: "🚚" },
     { id: "vacation", label: "Mode vacances", icon: "🌴" },
-    { id: "stats", label: "Statistiques", icon: "📊" },
   ]},
   { group: "Porte-monnaie", items: [
     { id: "wallet", label: "Mon porte-monnaie", icon: "💵" },
