@@ -327,7 +327,7 @@ export default function Dashboard() {
           )}
         </div>
       );
-      case "auctions": return <MyAuctionsSection user={user} />;
+      case "auctions": return <MyAuctionsSection myProducts={products} />;
       case "sales": return (
         <div>
           <div className="dash-stat-grid">
