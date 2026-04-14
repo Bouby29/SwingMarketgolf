@@ -6,7 +6,6 @@ import AddressesSection from "../components/dashboard/AddressesSection";
 import SellerProfileSection from "../components/dashboard/SellerProfileSection";
 import ShippingOptionsSection from "../components/dashboard/ShippingOptionsSection";
 import VacationModeSection from "../components/dashboard/VacationModeSection";
-import SellerStatsSection from "../components/dashboard/SellerStatsSection";
 import WalletSection from "../components/dashboard/WalletSection";
 import StripeKYCSection from "../components/dashboard/StripeKYCSection";
 import BankAccountsSection from "../components/dashboard/BankAccountsSection";
@@ -359,7 +358,7 @@ export default function Dashboard() {
       );
       case "shipping": return <ShippingOptionsSection user={user} />;
       case "vacation": return <VacationModeSection user={user} profile={profile} onUpdate={() => loadProfile(user?.id)} />;
-      case "stats": return <SellerStatsSection mySales={orders || []} myProducts={products || []} myReviews={[]} />;
+      
       case "wallet": return <WalletSection user={user} profile={profile} />;
       case "stripe-kyc": return <StripeKYCSection user={user} />;
       case "bank": return <BankAccountsSection user={user} />;
