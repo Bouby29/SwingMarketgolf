@@ -189,6 +189,12 @@ const styles = `
   .dash-empty-title { font-weight: 700; font-size: 1rem; color: #333; margin-bottom: 6px; }
   .dash-empty-sub { color: #888; font-size: 0.85rem; }
   
+  input, textarea, select {
+    color: #1a2332 !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #9ca3af !important;
+  }
   @media (max-width: 768px) {
     .dash-sidebar { transform: translateX(-100%); transition: transform 0.3s; }
     .dash-sidebar.open { transform: translateX(0); }
