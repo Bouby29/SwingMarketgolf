@@ -289,7 +289,7 @@ export default function Dashboard() {
       );
       case "sell": navigate("/CreateListing"); return null;
       case "seller-profile": return <SellerProfileSection user={user} profile={profile} onUpdate={() => loadProfile(user?.id)} />;
-      case "customize-shop": return <CustomizeShopSection user={user} profile={profile} />;
+
       case "products": return (
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
