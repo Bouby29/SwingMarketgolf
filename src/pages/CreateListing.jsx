@@ -19,6 +19,8 @@ export default function CreateListing() {
   const [authChecked, setAuthChecked] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [userPlanInfo, setUserPlanInfo] = useState(null);
   const [published, setPublished] = useState(false);
   const [createdProductId, setCreatedProductId] = useState(null);
 
@@ -60,8 +62,8 @@ export default function CreateListing() {
     let annCount = monthChanged ? 0 : (planProfile?.plan_annonces_count || 0);
     if (monthChanged) await supabase.from("profiles").update({ plan_annonces_count: 0, plan_reset_date: today }).eq("id", user.id);
     if (annCount >= planLimit) {
-      const labels = { basique: "5 (Basique)", pro: "30 (Pro)", premium: "illimitees", business: "illimitees" };
-      alert("Limite atteinte : " + labels[userPlan] + " annonces/mois. Passez a un abonnement superieur.");
+      setUserPlanInfo({ plan: userPlan, limit: planLimit });
+      setShowLimitModal(true);
       setSaving(false);
       return;
     }
@@ -168,6 +170,27 @@ export default function CreateListing() {
   ];
 
   return (
+    <div>
+    {showLimitModal && (
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ background: "white", borderRadius: 20, padding: "2.5rem", maxWidth: 420, width: "90%", textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🏌️</div>
+          <h2 style={{ fontWeight: 800, fontSize: "1.3rem", color: "#1a2332", marginBottom: "0.5rem" }}>Limite atteinte !</h2>
+          <p style={{ color: "#666", fontSize: "0.9rem", marginBottom: "1.5rem", lineHeight: 1.5 }}>
+            Vous avez utilisé vos <strong>{userPlanInfo?.limit} annonces</strong> du mois avec le plan <strong style={{ textTransform: "capitalize" }}>{userPlanInfo?.plan}</strong>.<br/>
+            Passez à un abonnement supérieur pour continuer à vendre sans limite.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <a href="/Abonnements" style={{ display: "block", background: "#1B5E20", color: "white", padding: "0.8rem", borderRadius: 12, fontWeight: 700, textDecoration: "none", fontSize: "0.95rem" }}>
+              🚀 Voir les abonnements
+            </a>
+            <button onClick={() => setShowLimitModal(false)} style={{ background: "#f5f5f5", color: "#666", border: "none", borderRadius: 12, padding: "0.7rem", cursor: "pointer", fontWeight: 600, fontSize: "0.9rem" }}>
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <div className="max-w-3xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Créer une annonce</h1>
       <p className="text-gray-500 text-sm mb-8">Vendez votre matériel de golf en quelques minutes</p>
@@ -202,5 +225,6 @@ export default function CreateListing() {
         </div>
       </form>
     </div>
+  </div>
   );
 }
