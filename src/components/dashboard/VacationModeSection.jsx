@@ -140,11 +140,40 @@ export default function VacationModeSection({ user, profile, onUpdate }) {
         style={{
           width: "100%", padding: "0.85rem", borderRadius: 50, border: "none",
           background: saving ? "#ccc" : "#1B5E20", color: "white",
-          fontWeight: 700, fontSize: "0.95rem", cursor: saving ? "not-allowed" : "pointer"
+          fontWeight: 700, fontSize: "0.95rem", cursor: saving ? "not-allowed" : "pointer",
+          marginBottom: 10
         }}
       >
         {saving ? "Enregistrement..." : saved ? "Enregistre !" : "Enregistrer"}
       </button>
+
+      {(isActive || isCurrentlyOnVacation) && (
+        <button
+          onClick={async () => {
+            setSaving(true);
+            setIsActive(false);
+            setStartDate("");
+            setEndDate("");
+            await supabase.from("profiles").update({
+              vacation_mode: false,
+              vacation_start: null,
+              vacation_end: null,
+            }).eq("id", user.id);
+            await supabase.from("products").update({ status: "active" }).eq("seller_id", user.id).eq("status", "vacation");
+            setSaving(false);
+            setSaved(true);
+            setTimeout(() => setSaved(false), 3000);
+            if (onUpdate) onUpdate();
+          }}
+          style={{
+            width: "100%", padding: "0.85rem", borderRadius: 50,
+            border: "2px solid #c62828", background: "white", color: "#c62828",
+            fontWeight: 700, fontSize: "0.95rem", cursor: "pointer"
+          }}
+        >
+          Desactiver le mode vacances — Remettre mes annonces en ligne
+        </button>
+      )}
     </div>
   );
 }
