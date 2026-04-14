@@ -24,12 +24,10 @@ export default function AccountInfoSection({ user, profile, onUpdate, onUserUpda
 
   // Sync formData when user prop changes (e.g. after parent refresh)
   useEffect(() => {
-    if (profile) {
+    if (profile && profile.id) {
       setFormData(prev => ({
         ...prev,
         full_name: profile.full_name || "",
-        birthDate: profile.birthDate || "",
-        newsletter: profile.newsletter || false,
         address: profile.address || "",
         postal_code: profile.postal_code || "",
         city: profile.city || "",
