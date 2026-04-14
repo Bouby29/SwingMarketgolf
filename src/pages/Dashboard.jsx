@@ -359,7 +359,7 @@ export default function Dashboard() {
       );
       case "shipping": return <ShippingOptionsSection user={user} />;
       case "vacation": return <VacationModeSection user={user} profile={profile} onUpdate={() => loadProfile(user?.id)} />;
-      case "stats": return <SellerStatsSection user={user} />;
+      case "stats": return <SellerStatsSection mySales={orders || []} myProducts={products || []} myReviews={[]} />;
       case "wallet": return <WalletSection user={user} profile={profile} />;
       case "stripe-kyc": return <StripeKYCSection user={user} />;
       case "bank": return <BankAccountsSection user={user} />;
