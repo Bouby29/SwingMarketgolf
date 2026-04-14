@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase, entities, auth } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -67,15 +67,19 @@ export default function AccountInfoSection({ user, onUserUpdate }) {
     setSuccessMsg("");
     setErrorMsg("");
     try {
-      await auth.updateMe({
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) throw new Error("Non connecte");
+      const { error } = await supabase.from("profiles").update({
         full_name: formData.full_name,
-        birthDate: formData.birthDate,
-        newsletter: formData.newsletter,
         address: formData.address,
         postal_code: formData.postal_code,
         city: formData.city,
         phone: formData.phone,
-      });
+      }).eq("id", currentUser.id);
+      if (error) throw error;
+      if (formData.newPassword && formData.newPassword.length >= 8) {
+        await supabase.auth.updateUser({ password: formData.newPassword });
+      }
       setSuccessMsg("Informations mises  jour avec succs !");
       if (onUserUpdate) await onUserUpdate();
       setTimeout(() => setSuccessMsg(""), 4000);
