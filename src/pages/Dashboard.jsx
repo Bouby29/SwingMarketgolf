@@ -415,7 +415,7 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        <main className="dash-main">
+        <main className="dash-main" style={{ color: "#1a2332" }}>
           <h1 className="dash-page-title">{sectionTitle}</h1>
           {renderSection()}
           {editingProduct && (
