@@ -362,13 +362,7 @@ export default function Dashboard() {
       case "stripe-kyc": return <StripeKYCSection user={user} />;
       case "bank": return <BankAccountsSection user={user} />;
       case "legal": return <LegalDocumentsSection user={user} />;
-      case "messages": return (
-        <div className="dash-card"><div className="dash-empty">
-          <div className="dash-empty-icon">💬</div>
-          <div className="dash-empty-title">Messagerie</div>
-          <div className="dash-empty-sub">Bientôt disponible — restez connecté !</div>
-        </div></div>
-      );
+case "messages": navigate("/Messaging"); return null;
       default: return null;
     }
   };
@@ -399,7 +393,7 @@ export default function Dashboard() {
                 {group.items.map(item => (
                   <button key={item.id}
                     className={`dash-nav-btn${section === item.id ? " active" : ""}`}
-                    onClick={() => { if (item.id === "sell") { navigate("/CreateListing"); } else { setSection(item.id); } }}>
+                    onClick={() => { if (item.id === "sell") { navigate("/CreateListing"); } else if (item.id === "messages") { navigate("/Messaging"); } else { setSection(item.id); } }}>
                     <span className="dash-nav-icon">{item.icon}</span>
                     {item.label}
                   </button>
