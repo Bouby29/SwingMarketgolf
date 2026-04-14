@@ -49,6 +49,25 @@ export default function CreateListing() {
   const handleSubmit = async () => {
     if (!user) return;
     setSaving(true);
+    // Verification plan abonnement
+    const PLAN_LIMITS = { basique: 5, pro: 30, premium: 999999, business: 999999 };
+    try {
+      const { data: planProfile } = await supabase.from("profiles").select("plan, plan_annonces_count, plan_reset_date").eq("id", user.id).single();
+      const userPlan = planProfile?.plan || "basique";
+      const planLimit = PLAN_LIMITS[userPlan];
+      const today = new Date().toISOString().split("T")[0];
+      const resetDate = planProfile?.plan_reset_date;
+      const monthChanged = !resetDate || new Date(resetDate).getMonth() !== new Date(today).getMonth() || new Date(resetDate).getFullYear() !== new Date(today).getFullYear();
+      let annCount = monthChanged ? 0 : (planProfile?.plan_annonces_count || 0);
+      if (monthChanged) await supabase.from("profiles").update({ plan_annonces_count: 0, plan_reset_date: today }).eq("id", user.id);
+      if (annCount >= planLimit) {
+        const labels = { basique: "5 (Basique)", pro: "30 (Pro)", premium: "illimitees", business: "illimitees" };
+        alert("Limite atteinte : " + labels[userPlan] + " annonces/mois. Passez a un abonnement superieur sur swingmarketgolf.com/Abonnements");
+        setSaving(false);
+        return;
+      }
+      await supabase.from("profiles").update({ plan_annonces_count: annCount + 1 }).eq("id", user.id);
+    } catch (planErr) { console.error("Plan check error:", planErr); }
     try {
       const isAuction = form.sale_type === 'auction';
       const auctionDays = parseInt(form.auction_duration || '7');
