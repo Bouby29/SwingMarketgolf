@@ -58,7 +58,7 @@ const styles = `
   .dash-root { display: flex; min-height: 100vh; background: #f0f2f5; font-family: "DM Sans", sans-serif; }
   
   .dash-sidebar {
-    width: 260px; background: #0d1f0f;
+    width: 260px; background: #1a2e1c;
     position: fixed; top: 0; left: 0; height: 100vh;
     overflow-y: auto; z-index: 100;
     display: flex; flex-direction: column;
@@ -89,7 +89,7 @@ const styles = `
   }
   
   .dash-user-name { font-weight: 700; font-size: 0.82rem; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
-  .dash-user-email { font-size: 0.68rem; color: rgba(255,255,255,0.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+  .dash-user-email { font-size: 0.68rem; color: rgba(255,255,255,0.65); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
   
   .dash-plan-badge {
     display: inline-flex; align-items: center; gap: 4px;
@@ -101,18 +101,18 @@ const styles = `
   
   .dash-nav { flex: 1; padding: 0.5rem 0; }
   
-  .dash-nav-group { font-size: 0.62rem; font-weight: 700; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 1.5px; padding: 0.75rem 1.25rem 0.3rem; }
+  .dash-nav-group { font-size: 0.62rem; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1.5px; padding: 0.75rem 1.25rem 0.3rem; }
   
   .dash-nav-btn {
     width: 100%; display: flex; align-items: center; gap: 9px;
     padding: 0.52rem 1.25rem; border: none; cursor: pointer;
-    background: transparent; color: rgba(255,255,255,0.55);
+    background: transparent; color: rgba(255,255,255,0.85);
     font-weight: 500; font-size: 0.83rem; text-align: left;
     border-left: 2px solid transparent;
     transition: all 0.15s; font-family: "DM Sans", sans-serif;
   }
   
-  .dash-nav-btn:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.85); }
+  .dash-nav-btn:hover { background: rgba(255,255,255,0.08); color: white; }
   
   .dash-nav-btn.active {
     background: rgba(27,94,32,0.25);
