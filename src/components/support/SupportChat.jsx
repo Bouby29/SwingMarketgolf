@@ -27,10 +27,10 @@ export default function SupportChat() {
     setLoading(true);
     try {
       if (!GROQ_API_KEY) { setMessages(prev => [...prev, { role: "assistant", content: "Service temporairement indisponible. Contacte-nous a support@swingmarketgolf.com" }]); setLoading(false); return; }
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + GROQ_API_KEY },
-        body: JSON.stringify({ model: "llama3-8b-8192", messages: [{ role: "system", content: SYSTEM_PROMPT }, ...newMessages], max_tokens: 500, temperature: 0.7 })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [{ role: "system", content: SYSTEM_PROMPT }, ...newMessages] })
       });
       const data = await res.json();
       console.log("Groq response:", JSON.stringify(data));
