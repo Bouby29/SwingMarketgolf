@@ -56,7 +56,7 @@ export default function SupportChat() {
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: 0, right: 0, zIndex: 9997, pointerEvents: 'none', width: 0, height: 0 }} />
+    <>
       <div onClick={() => setOpen(!open)} style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999, width: 60, height: 60, borderRadius: "50%", background: "linear-gradient(135deg, #1B5E20, #2E7D32)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 20px rgba(27,94,32,0.4)", transition: "transform 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
         {open ? <span style={{ color: "white", fontSize: "1.4rem" }}>x</span> : <span style={{ fontSize: "1.6rem" }}>&#127948;</span>}
         {!open && unread > 0 && <div style={{ position: "absolute", top: -4, right: -4, background: "#e53935", color: "white", borderRadius: "50%", width: 20, height: 20, fontSize: "0.7rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{unread}</div>}
