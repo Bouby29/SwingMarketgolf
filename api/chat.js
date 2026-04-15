@@ -24,6 +24,8 @@ export default async function handler(req, res) {
         .from('products')
         .select('id, title, price, condition, category')
         .eq('status', 'active')
+        .neq('status', 'vacation')
+        .not('title', 'ilike', '%test%')
         .limit(5);
 
       if (products && products.length > 0) {
