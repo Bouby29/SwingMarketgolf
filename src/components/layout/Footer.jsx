@@ -46,6 +46,7 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4 text-[#C5A028]">Marketplace</h4>
             <div className="space-y-2 text-sm text-gray-400">
+              <Link to="/SearchRequest" className="block hover:text-white transition-colors">🔍 Poster une recherche</Link>
               <Link to={createPageUrl("Marketplace") + "?category=Clubs de golf"} className="block hover:text-white transition-colors">Clubs de golf</Link>
               <Link to={createPageUrl("Marketplace") + "?category=Balles de golf"} className="block hover:text-white transition-colors">Balles de golf</Link>
               <Link to={createPageUrl("Marketplace") + "?category=Sacs de golf"} className="block hover:text-white transition-colors">Sacs de golf</Link>

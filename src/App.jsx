@@ -6,6 +6,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { pagesConfig } from './pages.config'
+import SearchRequest from './pages/SearchRequest';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -97,6 +98,7 @@ const AuthenticatedApp = () => {
       <Route path="/Admin" element={window.location.hostname === "admin.swingmarketgolf.com" || window.location.hostname === "localhost" ? <AdminDashboard /> : <PageNotFound />} />
       <Route path="/SellerOnboarding" element={<SellerOnboarding />} />
       <Route path="/Abonnements" element={<Abonnements />} />
+      <Route path="/SearchRequest" element={<SearchRequest />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
