@@ -42,6 +42,9 @@ export default async function handler(req, res) {
             p.title + ' - ' + p.price + 'EUR - ' + (p.condition || '') + ' - Lien: https://swingmarketgolf.com/ProductDetail?id=' + p.id
           ).join('\n');
       }
+      else {
+        productsContext = 'IMPORTANT: Aucune annonce disponible dans cette categorie. Reponds exactement: Je n ai pas de materiel disponible en ce moment dans cette categorie sur SwingMarketGolf. Reviens regulierement, de nouvelles annonces sont ajoutees chaque jour ! Tu peux aussi poster ta recherche ici pour alerter les vendeurs : https://swingmarketgolf.com/CreateListing'
+      }
     }
 
     const systemPrompt = 'Tu es Alexandre, membre de l equipe SwingMarketGolf, marketplace francaise de materiel de golf d occasion. Tu as deux roles : 1) SUPPORT : reponds aux questions sur la plateforme (paiement Stripe, livraison Sendcloud, compte, annonces). 2) COACH GOLF : quand l utilisateur cherche du materiel, recommande UNIQUEMENT les produits de la liste ci-dessous avec leur lien exact. Ne jamais inventer de produits. Toujours en francais, tutoiement, reponses courtes.\n\n' + productsContext;
