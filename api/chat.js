@@ -15,18 +15,26 @@ export default async function handler(req, res) {
   try {
     const { messages } = req.body;
 
-    // Chercher des produits pertinents dans Supabase
-    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+    // Detecter la categorie demandee
+    const allUserText = messages.filter(m => m.role === 'user').map(m => m.content.toLowerCase()).join(' ');
+    let categoryFilter = null;
+    if (allUserText.match(/driver|bois|wood/)) categoryFilter = 'Clubs de golf';
+    else if (allUserText.match(/fer|iron|wedge|putter|club/)) categoryFilter = 'Clubs de golf';
+    else if (allUserText.match(/balle|ball/)) categoryFilter = 'Balles de golf';
+    else if (allUserText.match(/sac|bag|trolley/)) categoryFilter = 'Sacs de golf';
+    else if (allUserText.match(/chariot|caddy|cart/)) categoryFilter = 'Chariots';
+    else if (allUserText.match(/vetement|chaussure|gant|casquette|textile/)) categoryFilter = 'Vetements';
+    else if (allUserText.match(/accessoire|tee|marqueur/)) categoryFilter = 'Accessoires';
+
     let productsContext = '';
-    if (lastUserMsg) {
-      const keywords = lastUserMsg.content.toLowerCase();
-      const { data: products } = await supabase
+    if (true) {
+      let query = supabase
         .from('products')
         .select('id, title, price, condition, category')
         .eq('status', 'active')
-        .neq('status', 'vacation')
-        .not('title', 'ilike', '%test%')
-        .limit(5);
+        .not('title', 'ilike', '%test%');
+      if (categoryFilter) query = query.eq('category', categoryFilter);
+      const { data: products } = await query.limit(5);
 
       if (products && products.length > 0) {
         productsContext = 'Voici les produits disponibles sur SwingMarketGolf en ce moment:\n' +
