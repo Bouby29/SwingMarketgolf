@@ -13,7 +13,7 @@ export default function SupportChat() {
   const [loading, setLoading] = useState(false);
   const [unread, setUnread] = useState(1);
   const [quickReplies, setQuickReplies] = useState([
-    "Je cherche un driver",
+    "Je cherche un driver 🏌️",
     "Comment fonctionne la livraison ?",
     "Le paiement est-il securise ?",
     "Je veux vendre du materiel",
@@ -45,9 +45,9 @@ export default function SupportChat() {
       const replyLower = reply.toLowerCase();
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
       if (replyLower.includes('niveau') || replyLower.includes('debutant') || replyLower.includes('intermediaire')) {
-        setQuickReplies(['Debutant', 'Intermediaire', 'Avance']);
+        setQuickReplies(['Debutant 🟢', 'Intermediaire 🟡', 'Avance 🔴']);
       } else if (replyLower.includes('budget')) {
-        setQuickReplies(['Moins de 100 EUR', '100-300 EUR', '300-500 EUR', 'Plus de 500 EUR']);
+        setQuickReplies(['- de 100 EUR', '100 a 300 EUR', '300 a 500 EUR', '+ de 500 EUR']);
       } else if (replyLower.includes('type') || replyLower.includes('quel materiel')) {
         setQuickReplies(['Driver', 'Fers', 'Wedge', 'Putter', 'Sac de golf']);
       } else {
@@ -108,9 +108,9 @@ export default function SupportChat() {
                     // Quick replies contextuelles selon la reponse du bot
       const repLower = rep.toLowerCase();
       if (repLower.includes('niveau') || repLower.includes('debutant') || repLower.includes('intermediaire')) {
-        setQuickReplies(['Debutant', 'Intermediaire', 'Avance']);
+        setQuickReplies(['Debutant 🟢', 'Intermediaire 🟡', 'Avance 🔴']);
       } else if (repLower.includes('budget')) {
-        setQuickReplies(['Moins de 100 EUR', '100-300 EUR', '300-500 EUR', 'Plus de 500 EUR']);
+        setQuickReplies(['- de 100 EUR', '100 a 300 EUR', '300 a 500 EUR', '+ de 500 EUR']);
       } else if (repLower.includes('type') || repLower.includes('quel materiel') || repLower.includes('categorie')) {
         setQuickReplies(['Driver', 'Fers', 'Wedge', 'Putter', 'Sac de golf', 'Chaussures']);
       } else if (repLower.includes('paiement') || repLower.includes('livraison') || repLower.includes('stripe')) {
