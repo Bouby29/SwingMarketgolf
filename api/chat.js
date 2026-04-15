@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + process.env.VITE_GROQ_API_KEY },
-      body: JSON.stringify({ model: 'llama3-8b-8192', messages, max_tokens: 500, temperature: 0.7 })
+      body: JSON.stringify({ model: 'llama-3.1-8b-instant', messages, max_tokens: 500, temperature: 0.7 })
     });
     const data = await response.json();
     return res.status(200).json(data);
