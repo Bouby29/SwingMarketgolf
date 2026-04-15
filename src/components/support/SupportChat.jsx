@@ -73,7 +73,11 @@ export default function SupportChat() {
           <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: 10 }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                <div style={{ maxWidth: "80%", padding: "0.65rem 0.9rem", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#1B5E20" : "#f5f7fa", color: msg.role === "user" ? "white" : "#1a2332", fontSize: "0.85rem", lineHeight: 1.5 }}>{msg.content}</div>
+                <div style={{ maxWidth: "80%", padding: "0.65rem 0.9rem", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#1B5E20" : "#f5f7fa", color: msg.role === "user" ? "white" : "#1a2332", fontSize: "0.85rem", lineHeight: 1.5 }}>{msg.content.split(/(https?:\/\/[^\s]+)/g).map((part, j) =>
+                      /^https?:\/\//.test(part)
+                        ? <a key={j} href={part} target="_blank" rel="noopener noreferrer" style={{ color: msg.role === "user" ? "#a5d6a7" : "#1B5E20", textDecoration: "underline", fontWeight: 600, wordBreak: "break-all" }}>{part}</a>
+                        : part
+                    )}</div>
               </div>
             ))}
             {loading && <div style={{ display: "flex", justifyContent: "flex-start" }}><div style={{ background: "#f5f7fa", borderRadius: "16px 16px 16px 4px", padding: "0.65rem 0.9rem" }}><span style={{ display: "inline-flex", gap: 4 }}>{[0,1,2].map(i => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#1B5E20", animation: "bounce 1s infinite", animationDelay: i*0.2+"s" }}/>)}</span></div></div>}
