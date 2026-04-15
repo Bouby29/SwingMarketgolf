@@ -33,7 +33,9 @@ export default function SupportChat() {
         body: JSON.stringify({ model: "llama3-8b-8192", messages: [{ role: "system", content: SYSTEM_PROMPT }, ...newMessages], max_tokens: 500, temperature: 0.7 })
       });
       const data = await res.json();
-      setMessages(prev => [...prev, { role: "assistant", content: data.choices[0].message.content }]);
+      console.log("Groq response:", JSON.stringify(data));
+      const reply = data?.choices?.[0]?.message?.content || "Desolee, je n ai pas pu repondre. Contacte support@swingmarketgolf.com";
+      setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
       setMessages(prev => [...prev, { role: "assistant", content: "Desolee, une erreur est survenue. Reessaie dans un instant !" }]);
     }
