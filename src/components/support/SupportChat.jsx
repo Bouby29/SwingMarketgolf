@@ -42,13 +42,17 @@ export default function SupportChat() {
       const data = await res.json();
       console.log("Groq response:", JSON.stringify(data));
       const reply = data?.choices?.[0]?.message?.content || "Desolee, je n ai pas pu repondre. Contacte support@swingmarketgolf.com";
+      const replyLower = reply.toLowerCase();
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
-      setQuickReplies([
-        "Merci !",
-        "Autre question",
-        "Je cherche des clubs",
-        "Comment vendre ?",
-      ]);
+      if (replyLower.includes('niveau') || replyLower.includes('debutant') || replyLower.includes('intermediaire')) {
+        setQuickReplies(['Debutant', 'Intermediaire', 'Avance']);
+      } else if (replyLower.includes('budget')) {
+        setQuickReplies(['Moins de 100 EUR', '100-300 EUR', '300-500 EUR', 'Plus de 500 EUR']);
+      } else if (replyLower.includes('type') || replyLower.includes('quel materiel')) {
+        setQuickReplies(['Driver', 'Fers', 'Wedge', 'Putter', 'Sac de golf']);
+      } else {
+        setQuickReplies(['Je cherche des clubs', 'Comment vendre ?', 'Autre question', 'Merci !']);
+      }
     } catch (err) {
       setMessages(prev => [...prev, { role: "assistant", content: "Desolee, une erreur est survenue. Reessaie dans un instant !" }]);
     }
@@ -101,7 +105,19 @@ export default function SupportChat() {
                     const data = await res.json();
                     const rep = data?.choices?.[0]?.message?.content || "Contacte-nous a support@swingmarketgolf.com";
                     setMessages(prev => [...prev, { role: "assistant", content: rep }]);
-                    setQuickReplies(["Je cherche des clubs", "Comment vendre ?", "Autre question"]);
+                    // Quick replies contextuelles selon la reponse du bot
+      const repLower = rep.toLowerCase();
+      if (repLower.includes('niveau') || repLower.includes('debutant') || repLower.includes('intermediaire')) {
+        setQuickReplies(['Debutant', 'Intermediaire', 'Avance']);
+      } else if (repLower.includes('budget')) {
+        setQuickReplies(['Moins de 100 EUR', '100-300 EUR', '300-500 EUR', 'Plus de 500 EUR']);
+      } else if (repLower.includes('type') || repLower.includes('quel materiel') || repLower.includes('categorie')) {
+        setQuickReplies(['Driver', 'Fers', 'Wedge', 'Putter', 'Sac de golf', 'Chaussures']);
+      } else if (repLower.includes('paiement') || repLower.includes('livraison') || repLower.includes('stripe')) {
+        setQuickReplies(['Autre question', 'Je cherche du materiel', 'Comment vendre ?']);
+      } else {
+        setQuickReplies(['Je cherche des clubs', 'Comment vendre ?', 'Autre question', 'Merci !']);
+      }
                   } catch { setMessages(prev => [...prev, { role: "assistant", content: "Erreur, reessaie !" }]); }
                   setLoading(false);
                 }} style={{
