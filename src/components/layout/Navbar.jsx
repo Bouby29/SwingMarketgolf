@@ -140,6 +140,7 @@ export default function Navbar() {
 
             {isLoggedIn ? (
               <>
+                <a href="/SearchRequestsList" className="hidden sm:block text-xs font-medium text-[#C5A028] hover:underline px-3 py-2 whitespace-nowrap">📋 Demandes acheteurs</a>
                 <a href="/SearchRequest" className="hidden sm:block text-xs font-medium text-[#1B5E20] hover:underline px-3 py-2 whitespace-nowrap">🔍 Poster une recherche</a>
                 <a href="#" onClick={handleVendre} className="hidden sm:block">
                   <Button size="sm" className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full gap-1.5 text-xs px-3">
@@ -247,7 +248,8 @@ export default function Navbar() {
 
           <div className="px-4 py-2 border-b flex gap-2">
             <Link to={createPageUrl("Marketplace")} onClick={() => setMobileOpen(false)} className="flex-1 text-center py-2 text-sm font-medium text-[#1B5E20] bg-green-50 rounded-lg">Toutes les annonces</Link>
-            <a href="/SearchRequest" onClick={() => setMobileOpen(false)} className="flex-1 text-center py-2 text-sm font-medium text-[#C5A028] bg-yellow-50 rounded-lg">🔍 Poster une recherche</a>
+            <a href="/SearchRequestsList" onClick={() => setMobileOpen(false)} className="flex-1 text-center py-2 text-sm font-medium text-[#C5A028] bg-yellow-50 rounded-lg">📋 Demandes</a>
+            <a href="/SearchRequest" onClick={() => setMobileOpen(false)} className="flex-1 text-center py-2 text-sm font-medium text-[#1B5E20] bg-green-50 rounded-lg">🔍 Poster</a>
             <Link to={createPageUrl("Blog")} onClick={() => setMobileOpen(false)} className="flex-1 text-center py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg">Blog</Link>
           </div>
 

@@ -40,9 +40,10 @@ export default function SearchRequest() {
         <p style={{ color: "#6b7280", marginBottom: 24, lineHeight: 1.6 }}>
           Nous avons bien recu ta demande. Tu seras notifie par email des qu une annonce correspondante est publiee sur SwingMarketGolf.
         </p>
-        <a href="/" style={{ display: "inline-block", background: "#1B5E20", color: "white", padding: "0.75rem 2rem", borderRadius: 50, fontWeight: 700, textDecoration: "none" }}>
-          Retour a l accueil
-        </a>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <a href="/" style={{ display: "inline-block", background: "#f0f7f0", color: "#1B5E20", padding: "0.75rem 2rem", borderRadius: 50, fontWeight: 700, textDecoration: "none" }}>Retour a l accueil</a>
+          <a href="/SearchRequestsList" style={{ display: "inline-block", background: "#1B5E20", color: "white", padding: "0.75rem 2rem", borderRadius: 50, fontWeight: 700, textDecoration: "none" }}>Voir toutes les demandes →</a>
+        </div>
       </div>
     </div>
   );

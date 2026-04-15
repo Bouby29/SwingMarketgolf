@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { pagesConfig } from './pages.config'
 import SearchRequest from './pages/SearchRequest';
+import SearchRequestsList from './pages/SearchRequestsList';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -99,6 +100,7 @@ const AuthenticatedApp = () => {
       <Route path="/SellerOnboarding" element={<SellerOnboarding />} />
       <Route path="/Abonnements" element={<Abonnements />} />
       <Route path="/SearchRequest" element={<SearchRequest />} />
+      <Route path="/SearchRequestsList" element={<SearchRequestsList />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
