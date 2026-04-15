@@ -26,6 +26,7 @@ export default function SupportChat() {
     setInput("");
     setLoading(true);
     try {
+      if (!GROQ_API_KEY) { setMessages(prev => [...prev, { role: "assistant", content: "Service temporairement indisponible. Contacte-nous a support@swingmarketgolf.com" }]); setLoading(false); return; }
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + GROQ_API_KEY },
