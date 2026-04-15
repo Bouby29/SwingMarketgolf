@@ -12,6 +12,13 @@ export default function SupportChat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [unread, setUnread] = useState(1);
+  const [quickReplies, setQuickReplies] = useState([
+    "Je cherche un driver",
+    "Comment fonctionne la livraison ?",
+    "Le paiement est-il securise ?",
+    "Je veux vendre du materiel",
+    "Je cherche des fers pour debutant",
+  ]);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -36,6 +43,12 @@ export default function SupportChat() {
       console.log("Groq response:", JSON.stringify(data));
       const reply = data?.choices?.[0]?.message?.content || "Desolee, je n ai pas pu repondre. Contacte support@swingmarketgolf.com";
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+      setQuickReplies([
+        "Merci !",
+        "Autre question",
+        "Je cherche des clubs",
+        "Comment vendre ?",
+      ]);
     } catch (err) {
       setMessages(prev => [...prev, { role: "assistant", content: "Desolee, une erreur est survenue. Reessaie dans un instant !" }]);
     }
@@ -66,8 +79,25 @@ export default function SupportChat() {
             {loading && <div style={{ display: "flex", justifyContent: "flex-start" }}><div style={{ background: "#f5f7fa", borderRadius: "16px 16px 16px 4px", padding: "0.65rem 0.9rem" }}><span style={{ display: "inline-flex", gap: 4 }}>{[0,1,2].map(i => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#1B5E20", animation: "bounce 1s infinite", animationDelay: i*0.2+"s" }}/>)}</span></div></div>}
             <div ref={bottomRef} />
           </div>
+          {quickReplies.length > 0 && (
+            <div style={{ padding: "0.5rem 0.75rem 0", display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {quickReplies.map((reply, i) => (
+                <button key={i} onClick={() => {
+                  setInput(reply);
+                  setQuickReplies([]);
+                  setTimeout(() => {
+                    document.querySelector(".chatbot-input")?.focus();
+                  }, 50);
+                }} style={{
+                  padding: "0.35rem 0.75rem", borderRadius: 20, border: "1.5px solid #1B5E20",
+                  background: "white", color: "#1B5E20", fontSize: "0.75rem", fontWeight: 600,
+                  cursor: "pointer", whiteSpace: "nowrap"
+                }}>{reply}</button>
+              ))}
+            </div>
+          )}
           <div style={{ padding: "0.75rem", borderTop: "1px solid #f0f0f0", display: "flex", gap: 8 }}>
-            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder="Pose ta question..." style={{ flex: 1, padding: "0.6rem 0.9rem", borderRadius: 50, border: "1.5px solid #e0e0e0", fontSize: "0.85rem", outline: "none", color: "#1a2332" }} />
+            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder="Pose ta question..." className="chatbot-input" style={{ flex: 1, padding: "0.6rem 0.9rem", borderRadius: 50, border: "1.5px solid #e0e0e0", fontSize: "0.85rem", outline: "none", color: "#1a2332" }} />
             <button onClick={sendMessage} disabled={loading || !input.trim()} style={{ width: 38, height: 38, borderRadius: "50%", border: "none", background: loading || !input.trim() ? "#e0e0e0" : "#1B5E20", color: "white", cursor: loading || !input.trim() ? "not-allowed" : "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>&#10148;</button>
           </div>
         </div>
