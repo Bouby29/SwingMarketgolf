@@ -7,7 +7,7 @@ const SYSTEM_PROMPT = "Tu es Alexandre, membre de l equipe SwingMarketGolf, mark
 export default function SupportChat() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "assistant", content: "Salut ! Je suis Alexandre de l equipe SwingMarketGolf ! Je peux t aider a trouver du materiel ou repondre a tes questions. Comment je peux t aider ? " }
+    { role: "assistant", content: "Salut ! Je suis Alexandre de l'equipe SwingMarketGolf. Je peux t'aider a trouver du materiel ou repondre a tes questions. Comment puis-je t'aider ?" }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
