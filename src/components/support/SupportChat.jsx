@@ -82,12 +82,24 @@ export default function SupportChat() {
           {quickReplies.length > 0 && (
             <div style={{ padding: "0.5rem 0.75rem 0", display: "flex", flexWrap: "wrap", gap: 6 }}>
               {quickReplies.map((reply, i) => (
-                <button key={i} onClick={() => {
-                  setInput(reply);
+                <button key={i} onClick={async () => {
                   setQuickReplies([]);
-                  setTimeout(() => {
-                    document.querySelector(".chatbot-input")?.focus();
-                  }, 50);
+                  const userMsg = { role: "user", content: reply };
+                  const newMessages = [...messages, userMsg];
+                  setMessages(newMessages);
+                  setLoading(true);
+                  try {
+                    const res = await fetch("/api/chat", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ messages: [{ role: "system", content: SYSTEM_PROMPT }, ...newMessages] })
+                    });
+                    const data = await res.json();
+                    const rep = data?.choices?.[0]?.message?.content || "Contacte-nous a support@swingmarketgolf.com";
+                    setMessages(prev => [...prev, { role: "assistant", content: rep }]);
+                    setQuickReplies(["Je cherche des clubs", "Comment vendre ?", "Autre question"]);
+                  } catch { setMessages(prev => [...prev, { role: "assistant", content: "Erreur, reessaie !" }]); }
+                  setLoading(false);
                 }} style={{
                   padding: "0.35rem 0.75rem", borderRadius: 20, border: "1.5px solid #1B5E20",
                   background: "white", color: "#1B5E20", fontSize: "0.75rem", fontWeight: 600,
