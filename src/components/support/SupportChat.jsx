@@ -1,297 +1,75 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { MessageCircle, X, Send, ChevronRight } from "lucide-react";
-import { supabase, entities, auth } from "@/lib/supabase";
 
-const FAQ = [
-{
-  keywords: ["paiement", "sécurisé", "sécurité", "carte", "payer", "argent"],
-  question: "Le paiement est-il sécurisé ?",
-  answer: "Oui, toutes les transactions sont sécurisées via Stripe, leader mondial du paiement en ligne. Vos données sont cryptées et le vendeur ne reçoit l'argent qu'après confirmation de votre livraison. 🔒"
-},
-{
-  keywords: ["livraison", "livrer", "expédition", "expédier", "colis", "envoi", "recevoir"],
-  question: "Comment fonctionne la livraison ?",
-  answer: "Le vendeur génère une étiquette depuis son espace et expédie votre commande. Vous recevez un numéro de suivi par email dès l'envoi. Délai moyen : 2 à 5 jours ouvrés. 📦"
-},
-{
-  keywords: ["point relais", "relais", "mondial relay", "domicile"],
-  question: "Puis-je choisir un point relais ?",
-  answer: "Oui ! Lors du paiement, vous pouvez choisir entre une livraison à domicile (Colissimo, Chronopost) ou en point relais (Mondial Relay). 📍"
-},
-{
-  keywords: ["négocier", "négociation", "offre", "prix", "discount", "réduction"],
-  question: "Puis-je négocier le prix ?",
-  answer: "Oui, vous pouvez envoyer une offre directement au vendeur via le bouton \"Faire une offre\" sur la fiche produit. Le vendeur peut accepter, refuser ou contre-proposer. 💬"
-},
-{
-  keywords: ["enchère", "enchères", "enchérir", "bid", "auction"],
-  question: "Comment fonctionnent les enchères ?",
-  answer: "Certains articles sont en vente aux enchères. Vous placez une offre et le meilleur enchérisseur remporte l'article à la fin du temps imparti. Paiement sécurisé garanti. 🏆"
-},
-{
-  keywords: ["vendre", "vente", "annonce", "publier", "créer", "mettre en vente", "vendeur"],
-  question: "Comment vendre un article ?",
-  answer: "C'est simple et gratuit ! Créez un compte, cliquez sur \"Vendre mon matériel\", ajoutez vos photos et infos, et publiez votre annonce en quelques minutes. ⛳"
-},
-{
-  keywords: ["expédier", "étiquette", "envoi", "expédition"],
-  question: "Comment expédier mon produit vendu ?",
-  answer: "Après la vente, une étiquette d'expédition est générée automatiquement dans votre espace vendeur. Imprimez-la et déposez votre colis chez le transporteur. Tout est inclus ! 🏷️"
-},
-{
-  keywords: ["commission", "frais", "tarif", "combien", "coût"],
-  question: "Quelle est la commission ?",
-  answer: "La commission est dégressive : plus vous vendez, moins vous payez. Elle s'applique uniquement en cas de vente réussie. Pas de frais d'inscription ni de publication. ✅"
-},
-{
-  keywords: ["compte", "inscription", "inscrire", "créer un compte", "s'inscrire", "rejoindre"],
-  question: "Comment créer un compte ?",
-  answer: "Cliquez sur \"S'inscrire\" en haut de la page, entrez votre email et mot de passe. C'est gratuit et prend moins d'une minute ! 🎉"
-},
-{
-  keywords: ["litige", "problème", "arnaque", "pas reçu", "remboursement", "protection"],
-  question: "Que faire en cas de problème ?",
-  answer: "SwingMarket vous protège ! Ouvrez un litige depuis \"Mes commandes\" dans les 48h après réception. Notre équipe intervient rapidement pour résoudre chaque situation. 🛡️"
-},
-{
-  keywords: ["contact", "support", "aide", "équipe", "joindre"],
-  question: "Comment contacter le support ?",
-  answer: "Vous pouvez nous contacter via la page Contact. Notre équipe répond sous 24h ouvrées. 📧",
-  link: { label: "Aller à la page Contact", to: "/Contact" }
-},
-{
-  keywords: ["golf", "matériel", "club", "driver", "fer", "bois", "putter", "sac"],
-  question: "Quel type de matériel trouve-t-on ?",
-  answer: "Clubs (drivers, fers, putters, wedges), sacs, chaussures, vêtements, accessoires, chariots, balles… Tout le matériel de golf d'occasion certifié par des vendeurs vérifiés ! ⛳",
-  link: { label: "Parcourir les annonces", to: "/Marketplace" }
-}];
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 
-
-const SUGGESTIONS = [
-"Le paiement est-il sécurisé ?",
-"Comment fonctionne la livraison ?",
-"Comment vendre un article ?",
-"Puis-je négocier le prix ?",
-"Comment fonctionnent les enchères ?"];
-
-
-function findAnswer(query) {
-  const q = query.toLowerCase();
-  let best = null;
-  let bestScore = 0;
-  for (const item of FAQ) {
-    const score = item.keywords.filter((k) => q.includes(k)).length;
-    if (score > bestScore) {
-      bestScore = score;
-      best = item;
-    }
-  }
-  if (best && bestScore > 0) return best;
-  return null;
-}
-
-function MessageBubble({ msg, user }) {
-  const isUser = msg.role === "user";
-
-  const handleLinkClick = (e, to) => {
-    if (!user && (to === "/Contact" || to === "/Dashboard")) {
-      e.preventDefault();
-      window.location.href = "/Login";
-    }
-  };
-
-  return (
-    <div className={`flex gap-2 ${isUser ? "justify-end" : "justify-start"}`}>
-      {!isUser &&
-      <div className="w-7 h-7 rounded-full bg-[#1B5E20] flex items-center justify-center shrink-0 mt-0.5">
-          <span className="text-white text-xs font-bold">S</span>
-        </div>
-      }
-      <div className={`max-w-[82%] ${isUser ? "" : ""}`}>
-        <div
-          className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-          isUser ?
-          "bg-[#1B5E20] text-white rounded-br-sm" :
-          "bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-sm"}`
-          }>
-          
-          {msg.content}
-        </div>
-        {msg.link &&
-        <Link
-          to={msg.link.to}
-          onClick={(e) => handleLinkClick(e, msg.link.to)}
-          className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-[#1B5E20] font-medium hover:underline">
-          
-            <ChevronRight className="w-3 h-3" />
-            {msg.link.label}
-          </Link>
-        }
-      </div>
-    </div>);
-
-}
+const SYSTEM_PROMPT = "Tu es Alexandre, membre de l equipe SwingMarketGolf, marketplace francaise de materiel de golf d occasion. Tu as deux roles : 1) SUPPORT : reponds aux questions sur la plateforme (paiement Stripe, livraison Sendcloud, compte, annonces, abonnements). 2) COACH GOLF : quand l utilisateur cherche du materiel, agis comme un vendeur expert. Pose max 2-3 questions (niveau, budget, objectif), puis recommande des produits. Mets en avant le rapport qualite/prix de l occasion. Regles : toujours en francais, tutoiement decontracte, reponses courtes 3-4 lignes max, objectif mener vers l achat. Si tu ne sais pas : contacte-nous a support@swingmarketgolf.com";
 
 export default function SupportChat() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([
+    { role: "assistant", content: "Salut ! Je suis Alexandre de l equipe SwingMarketGolf ! Je peux t aider a trouver du materiel ou repondre a tes questions. Comment je peux t aider ? " }
+  ]);
   const [input, setInput] = useState("");
-  const [typing, setTyping] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(true);
-  const [currentUser, setCurrentUser] = useState(undefined);
-  const messagesEndRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [unread, setUnread] = useState(1);
+  const bottomRef = useRef(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setCurrentUser(data.session?.user || null));
-  }, []);
+    if (open) { setUnread(0); bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }
+  }, [open, messages]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, typing]);
-
-  const handleSend = (text) => {
-    const content = (text || input).trim();
-    if (!content || typing) return;
+  const sendMessage = async () => {
+    if (!input.trim() || loading) return;
+    const userMsg = { role: "user", content: input };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
     setInput("");
-    setShowSuggestions(false);
-
-    const userMsg = { role: "user", content };
-    setMessages((prev) => [...prev, userMsg]);
-    setTyping(true);
-
-    // Simulate thinking delay
-    setTimeout(() => {
-      const found = findAnswer(content);
-      let botMsg;
-      if (found) {
-        botMsg = { role: "bot", content: found.answer, link: found.link };
-      } else {
-        botMsg = {
-          role: "bot",
-          content:
-          "Je n'ai pas trouvé de réponse précise à votre question. Vous pouvez consulter notre FAQ complète ou contacter notre support qui répond sous 24h. 😊",
-          link: { label: "Contacter le support", to: "/Contact" }
-        };
-      }
-      setMessages((prev) => [...prev, botMsg]);
-      setTyping(false);
-    }, 700);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+    setLoading(true);
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + GROQ_API_KEY },
+        body: JSON.stringify({ model: "llama3-8b-8192", messages: [{ role: "system", content: SYSTEM_PROMPT }, ...newMessages], max_tokens: 500, temperature: 0.7 })
+      });
+      const data = await res.json();
+      setMessages(prev => [...prev, { role: "assistant", content: data.choices[0].message.content }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: "assistant", content: "Desolee, une erreur est survenue. Reessaie dans un instant !" }]);
     }
+    setLoading(false);
   };
 
   return (
     <>
-      {!open &&
-      <button
-        onClick={() => setOpen(true)} className="bg-[#1B5E20] text-white my-5 px-5 py-3 rounded-full fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 flex items-center gap-2.5 hover:bg-[#2E7D32] shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-
-        
-          <MessageCircle className="w-5 h-5" />
-          <span className="font-semibold text-sm">Besoin d'aide ?</span>
-        </button>
-      }
-
-      {open &&
-      <div
-        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-[360px] max-w-[calc(100vw-24px)] bg-gray-50 rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden"
-        style={{ height: "520px" }}>
-        
-          {/* Header */}
-          <div className="bg-[#1B5E20] px-4 py-3.5 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                <MessageCircle className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <p className="text-white font-semibold text-sm">Alexandre – SwingMarket</p>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-300 animate-pulse" />
-                  <span className="text-white/70 text-xs">En ligne · Répond instantanément</span>
-                </div>
-              </div>
+      <div onClick={() => setOpen(!open)} style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999, width: 60, height: 60, borderRadius: "50%", background: "linear-gradient(135deg, #1B5E20, #2E7D32)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 20px rgba(27,94,32,0.4)", transition: "transform 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+        {open ? <span style={{ color: "white", fontSize: "1.4rem" }}>x</span> : <span style={{ fontSize: "1.6rem" }}>&#127948;</span>}
+        {!open && unread > 0 && <div style={{ position: "absolute", top: -4, right: -4, background: "#e53935", color: "white", borderRadius: "50%", width: 20, height: 20, fontSize: "0.7rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{unread}</div>}
+      </div>
+      {open && (
+        <div style={{ position: "fixed", bottom: 96, right: 24, zIndex: 9998, width: 360, height: 500, borderRadius: 20, background: "white", boxShadow: "0 8px 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: "system-ui, sans-serif" }}>
+          <div style={{ background: "linear-gradient(135deg, #1B5E20, #2E7D32)", padding: "1rem 1.25rem", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.3rem" }}>&#127948;</div>
+            <div>
+              <div style={{ color: "white", fontWeight: 700, fontSize: "0.95rem" }}>Alexandre</div>
+              <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.75rem" }}><span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: "#69f0ae", marginRight: 5 }}/>Equipe SwingMarketGolf</div>
             </div>
-            <button onClick={() => setOpen(false)} className="text-white/70 hover:text-white transition-colors">
-              <X className="w-5 h-5" />
-            </button>
           </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {/* Welcome */}
-            <div className="flex gap-2 justify-start">
-              <div className="w-7 h-7 rounded-full bg-[#1B5E20] flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-white text-xs font-bold">S</span>
+          <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: 10 }}>
+            {messages.map((msg, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                <div style={{ maxWidth: "80%", padding: "0.65rem 0.9rem", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#1B5E20" : "#f5f7fa", color: msg.role === "user" ? "white" : "#1a2332", fontSize: "0.85rem", lineHeight: 1.5 }}>{msg.content}</div>
               </div>
-              <div className="max-w-[82%] bg-white border border-gray-100 shadow-sm rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm text-gray-800 leading-relaxed">
-                Bonjour 👋<br />Je suis Alexandre de SwingMarket, là pour vous aider.<br />N'hésitez pas à me poser votre question !
-              </div>
-            </div>
-
-            {messages.map((msg, i) =>
-          <MessageBubble key={i} msg={msg} user={currentUser} />
-          )}
-
-            {typing &&
-          <div className="flex gap-2 justify-start">
-                <div className="w-7 h-7 rounded-full bg-[#1B5E20] flex items-center justify-center shrink-0">
-                  <span className="text-white text-xs font-bold">S</span>
-                </div>
-                <div className="bg-white border border-gray-100 shadow-sm rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
-                </div>
-              </div>
-          }
-            <div ref={messagesEndRef} />
+            ))}
+            {loading && <div style={{ display: "flex", justifyContent: "flex-start" }}><div style={{ background: "#f5f7fa", borderRadius: "16px 16px 16px 4px", padding: "0.65rem 0.9rem" }}><span style={{ display: "inline-flex", gap: 4 }}>{[0,1,2].map(i => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#1B5E20", animation: "bounce 1s infinite", animationDelay: i*0.2+"s" }}/>)}</span></div></div>}
+            <div ref={bottomRef} />
           </div>
-
-          {/* Suggestions */}
-          {showSuggestions &&
-        <div className="px-3 py-2 border-t border-gray-100 bg-white shrink-0">
-              <p className="text-xs text-gray-400 mb-2 px-1">Questions fréquentes</p>
-              <div className="flex flex-col gap-1">
-                {SUGGESTIONS.slice(0, 3).map((s) =>
-            <button
-              key={s}
-              onClick={() => handleSend(s)}
-              className="text-left text-xs text-[#1B5E20] bg-green-50 hover:bg-green-100 rounded-lg px-3 py-2 flex items-center gap-2 transition-colors">
-              
-                    <ChevronRight className="w-3 h-3 shrink-0" />
-                    {s}
-                  </button>
-            )}
-              </div>
-            </div>
-        }
-
-          {/* Input */}
-          <div className="px-3 py-3 border-t border-gray-100 bg-white shrink-0 flex gap-2">
-            <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Posez votre question..."
-            className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#1B5E20]/30" />
-          
-            <button
-            onClick={() => handleSend()}
-            disabled={!input.trim() || typing}
-            className="w-9 h-9 rounded-full bg-[#1B5E20] hover:bg-[#2E7D32] disabled:opacity-40 flex items-center justify-center transition-colors shrink-0">
-            
-              <Send className="w-4 h-4 text-white" />
-            </button>
+          <div style={{ padding: "0.75rem", borderTop: "1px solid #f0f0f0", display: "flex", gap: 8 }}>
+            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder="Pose ta question..." style={{ flex: 1, padding: "0.6rem 0.9rem", borderRadius: 50, border: "1.5px solid #e0e0e0", fontSize: "0.85rem", outline: "none", color: "#1a2332" }} />
+            <button onClick={sendMessage} disabled={loading || !input.trim()} style={{ width: 38, height: 38, borderRadius: "50%", border: "none", background: loading || !input.trim() ? "#e0e0e0" : "#1B5E20", color: "white", cursor: loading || !input.trim() ? "not-allowed" : "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>&#10148;</button>
           </div>
         </div>
-      }
-    </>);
-
+      )}
+      <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }`}</style>
+    </>
+  );
 }
