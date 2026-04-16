@@ -216,11 +216,13 @@ function MySearchesSection({ user }) {
   const load = async () => {
     if (!user?.email) return;
     setLoading(true);
-    const { data } = await supabase.from("search_requests")
-      .select("*")
-      .eq("email", user.email)
-      .order("created_at", { ascending: false });
-    setRequests(data || []);
+    try {
+      const { data, error } = await supabase.from("search_requests")
+        .select("*")
+        .eq("email", user.email)
+        .order("created_at", { ascending: false });
+      if (!error) setRequests(data || []);
+    } catch(e) { console.error("search_requests load error:", e); }
     setLoading(false);
   };
 
@@ -228,8 +230,11 @@ function MySearchesSection({ user }) {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Supprimer cette recherche ?")) return;
-    await supabase.from("search_requests").delete().eq("id", id);
-    setRequests(prev => prev.filter(r => r.id !== id));
+    try {
+      const { error } = await supabase.from("search_requests").delete().eq("id", id);
+      if (!error) setRequests(prev => prev.filter(r => r.id !== id));
+      else alert("Erreur lors de la suppression. Reessaie.");
+    } catch(e) { console.error("delete error:", e); }
   };
 
   const handleEdit = (req) => {
@@ -239,9 +244,13 @@ function MySearchesSection({ user }) {
 
   const handleSave = async (id) => {
     setSaving(true);
-    await supabase.from("search_requests").update(editForm).eq("id", id);
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, ...editForm } : r));
-    setEditing(null);
+    try {
+      const { error } = await supabase.from("search_requests").update(editForm).eq("id", id);
+      if (!error) {
+        setRequests(prev => prev.map(r => r.id === id ? { ...r, ...editForm } : r));
+        setEditing(null);
+      } else alert("Erreur lors de la sauvegarde. Reessaie.");
+    } catch(e) { console.error("update error:", e); }
     setSaving(false);
   };
 
