@@ -71,7 +71,7 @@ export default function Messages() {
     // Load products
     const prodIds = [...new Set(data.map(c => c.product_id).filter(Boolean))];
     if (prodIds.length > 0) {
-      const { data: prods } = await supabase.from("products").select("id,title,images").in("id", prodIds);
+      const { data: prods } = await supabase.from("products").select("id,title,images,seller_id").in("id", prodIds);
       if (prods) {
         const map = {};
         prods.forEach(p => map[p.id] = p);
@@ -366,8 +366,7 @@ export default function Messages() {
               {messages.map(msg => {
                 const isMine = msg.sender_id === user.id;
                 const isOffer = msg.content?.startsWith("🏷️");
-                const amSeller = selectedConv?.seller_id === user?.id ||
-                  (selectedConv?.product_id && products[selectedConv.product_id]?.seller_id === user?.id);
+                const amSeller = !!(selectedConv?.product_id && products[selectedConv.product_id]?.seller_id === user?.id);
                 const alreadyActed = offerActions[msg.id];
                 const showActions = isOffer && !isMine && amSeller && !alreadyActed;
                 const showCounter = showActions && counterOfferInput[msg.id] !== undefined;
