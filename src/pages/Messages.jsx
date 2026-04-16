@@ -372,6 +372,17 @@ export default function Messages() {
                 const showCounter = showActions && counterOfferInput[msg.id] !== undefined;
 
                 return (
+                  {/* Bouton Acheter si le vendeur a accepté — visible pour l'acheteur */}
+                  {msg.content?.startsWith("✅ J'accepte") && !isMine && selectedConv?.product_id && (
+                    <div className="flex justify-start mb-1">
+                      
+                        href={`/Checkout?product=${selectedConv.product_id}`}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1B5E20] text-white text-sm font-bold hover:bg-[#2E7D32] transition-colors shadow-md"
+                      >
+                        🛒 Acheter maintenant au prix négocié
+                      </a>
+                    </div>
+                  )}
                   <div key={msg.id} className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}>
                     <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
                       isOffer
