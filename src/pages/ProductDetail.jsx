@@ -99,6 +99,7 @@ export default function ProductDetail() {
     window.location.href = createPageUrl("Messages") + `?to=${product.seller_id}&product=${product.id}`;
   };
   const handleOffer = () => {
+    if (!isLoggedIn) { window.location.href = "/Login"; return; }
     if (!offerAmount || isNaN(offerAmount) || Number(offerAmount) <= 0) return;
     window.location.href = createPageUrl("Messages") + `?to=${product.seller_id}&product=${product.id}&offer=${encodeURIComponent(offerAmount)}`;
   };
@@ -263,7 +264,7 @@ export default function ProductDetail() {
           {product.sale_type === 'auction' ? (
             <>
               <AuctionBidPanel product={product} currentUser={currentUser} isLoggedIn={isLoggedIn} />
-              <Button onClick={() => setShowOfferModal(true)} size="lg" className="w-full mb-3 rounded-full bg-[#C5A028] hover:bg-[#b8902a] text-white font-semibold">
+              <Button onClick={() => { if (!isLoggedIn) { window.location.href="/Login"; return; } setShowOfferModal(true); }} size="lg" className="w-full mb-3 rounded-full bg-[#C5A028] hover:bg-[#b8902a] text-white font-semibold">
                 💰 Faire une offre
               </Button>
               <Button onClick={handleContact} size="lg" variant="outline" className="w-full mb-6 rounded-full border-[#1B5E20] text-[#1B5E20] hover:bg-green-50 font-semibold">
