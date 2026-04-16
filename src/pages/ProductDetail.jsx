@@ -101,7 +101,7 @@ export default function ProductDetail() {
   const handleOffer = () => {
     if (!isLoggedIn) { window.location.href = "/Login"; return; }
     if (!offerAmount || isNaN(offerAmount) || Number(offerAmount) <= 0) return;
-    window.location.href = createPageUrl("Messages") + `?to=${product.seller_id}&product=${product.id}&offer=${encodeURIComponent(offerAmount)}`;
+    window.location.href = createPageUrl("Messages") + `?to=${product.seller_id}&product=${product.id}&offer=${encodeURIComponent(offerAmount)}&title=${encodeURIComponent(product.title)}`;
   };
 
   const handleBuy = () => {

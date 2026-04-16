@@ -20,7 +20,7 @@ export default function MakeOfferButton({ product, isLoggedIn, currentUser }) {
       alert("Veuillez saisir un montant valide");
       return;
     }
-    window.location.href = createPageUrl("Messages") + `?to=${product.seller_id}&product=${product.id}&offer=${encodeURIComponent(amount)}`;
+    window.location.href = createPageUrl("Messages") + `?to=${product.seller_id}&product=${product.id}&offer=${encodeURIComponent(amount)}&title=${encodeURIComponent(product.title)}`;
   };
 
   return (

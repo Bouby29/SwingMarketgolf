@@ -11,6 +11,7 @@ export default function Messages() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const offerPrice = params.get("offer");
+  const offerTitle = params.get("title");
   const toUserId = params.get("to");
   const productId = params.get("product");
 
@@ -96,7 +97,7 @@ export default function Messages() {
       setSelectedConv(existing[0]);
       loadMessages(existing[0].id);
       if (offerPrice) {
-        setNewMessage(`🏷️ Bonjour, je vous propose ${offerPrice} € pour cet article. Est-ce que ce prix vous convient ?`);
+        setNewMessage(`🏷️ Bonjour, je suis intéressé par "${offerTitle || "votre article"}". Je vous propose ${offerPrice} €. Est-ce que ce prix vous convient ?`);
       }
     } else {
       // Create new conversation
@@ -110,7 +111,7 @@ export default function Messages() {
         setMessages([]);
         loadConversations();
         if (offerPrice) {
-          setNewMessage(`🏷️ Bonjour, je vous propose ${offerPrice} € pour cet article. Est-ce que ce prix vous convient ?`);
+          setNewMessage(`🏷️ Bonjour, je suis intéressé par "${offerTitle || "votre article"}". Je vous propose ${offerPrice} €. Est-ce que ce prix vous convient ?`);
         }
       }
     }
