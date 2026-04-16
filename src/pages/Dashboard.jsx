@@ -39,6 +39,9 @@ const NAV = [
   { group: "Messagerie", items: [
     { id: "messages", label: "Ma messagerie", icon: "💬" },
   ]},
+  { group: "Mes recherches", items: [
+    { id: "my-searches", label: "Mes recherches", icon: "🔍" },
+  ]},
 ];
 
 const PLAN_CONFIG = {
@@ -198,6 +201,150 @@ const styles = `
     .dash-stat-grid { grid-template-columns: 1fr; }
   }
 `;
+
+
+const CATEGORIES = ["Clubs de golf", "Balles de golf", "Chariots", "Sacs de golf", "Accessoires", "Entrainement", "Vetements"];
+const BUDGETS = ["Moins de 100 EUR", "100 - 300 EUR", "300 - 500 EUR", "500 - 1000 EUR", "Plus de 1000 EUR"];
+
+function MySearchesSection({ user }) {
+  const [requests, setRequests] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [editing, setEditing] = React.useState(null);
+  const [editForm, setEditForm] = React.useState({});
+  const [saving, setSaving] = React.useState(false);
+
+  const load = async () => {
+    if (!user?.email) return;
+    setLoading(true);
+    const { data } = await supabase.from("search_requests")
+      .select("*")
+      .eq("email", user.email)
+      .order("created_at", { ascending: false });
+    setRequests(data || []);
+    setLoading(false);
+  };
+
+  React.useEffect(() => { load(); }, [user]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Supprimer cette recherche ?")) return;
+    await supabase.from("search_requests").delete().eq("id", id);
+    setRequests(prev => prev.filter(r => r.id !== id));
+  };
+
+  const handleEdit = (req) => {
+    setEditing(req.id);
+    setEditForm({ title: req.title, category: req.category, description: req.description || "", budget: req.budget || "" });
+  };
+
+  const handleSave = async (id) => {
+    setSaving(true);
+    await supabase.from("search_requests").update(editForm).eq("id", id);
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, ...editForm } : r));
+    setEditing(null);
+    setSaving(false);
+  };
+
+  const timeAgo = (d) => {
+    const days = Math.floor((Date.now() - new Date(d)) / 86400000);
+    if (days === 0) return "Aujourd hui";
+    if (days === 1) return "Hier";
+    if (days < 7) return `Il y a ${days} j`;
+    return `Il y a ${Math.floor(days/7)} sem`;
+  };
+
+  return (
+    <div style={{ padding: "1.5rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontWeight: 800, fontSize: "1.25rem", color: "#1a2332", margin: 0 }}>Mes recherches</h2>
+          <p style={{ color: "#6b7280", fontSize: "0.85rem", margin: "4px 0 0" }}>{requests.length} recherche(s) active(s)</p>
+        </div>
+        <a href="/SearchRequest" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#1B5E20", color: "white", padding: "0.65rem 1.25rem", borderRadius: 50, fontWeight: 700, fontSize: "0.85rem", textDecoration: "none" }}>
+          + Nouvelle recherche
+        </a>
+      </div>
+
+      {loading && <div style={{ color: "#9ca3af", textAlign: "center", padding: "2rem" }}>Chargement...</div>}
+
+      {!loading && requests.length === 0 && (
+        <div style={{ textAlign: "center", padding: "3rem", background: "white", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+          <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>🔍</div>
+          <p style={{ color: "#6b7280", fontWeight: 600, marginBottom: 16 }}>Aucune recherche pour l instant.</p>
+          <a href="/SearchRequest" style={{ background: "#1B5E20", color: "white", padding: "0.75rem 1.5rem", borderRadius: 50, textDecoration: "none", fontWeight: 700, fontSize: "0.9rem" }}>
+            Poster ma premiere recherche →
+          </a>
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {requests.map(req => (
+          <div key={req.id} style={{ background: "white", borderRadius: 14, padding: "1.25rem", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", border: "1px solid #f0f0f0" }}>
+            {editing === req.id ? (
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Categorie</label>
+                    <select value={editForm.category} onChange={e => setEditForm({...editForm, category: e.target.value})}
+                      style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: "0.85rem", color: "#1a2332", background: "white" }}>
+                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Budget</label>
+                    <select value={editForm.budget} onChange={e => setEditForm({...editForm, budget: e.target.value})}
+                      style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: "0.85rem", color: "#1a2332", background: "white" }}>
+                      <option value="">Aucun</option>
+                      {BUDGETS.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Ce que tu recherches</label>
+                  <input value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})}
+                    style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: "0.85rem", color: "#1a2332", outline: "none", boxSizing: "border-box" }} />
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Description</label>
+                  <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})}
+                    rows={2} style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: "0.85rem", color: "#1a2332", outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => handleSave(req.id)} disabled={saving} style={{ flex: 1, padding: "0.65rem", borderRadius: 50, border: "none", background: "#1B5E20", color: "white", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>
+                    {saving ? "Sauvegarde..." : "✓ Sauvegarder"}
+                  </button>
+                  <button onClick={() => setEditing(null)} style={{ padding: "0.65rem 1.1rem", borderRadius: 50, border: "1.5px solid #e5e7eb", background: "white", color: "#6b7280", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer" }}>
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#1a2332", marginBottom: 4 }}>{req.title}</div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: req.description ? 6 : 0 }}>
+                    <span style={{ fontSize: "0.75rem", background: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0", borderRadius: 20, padding: "0.15rem 0.6rem", fontWeight: 600 }}>{req.category}</span>
+                    {req.budget && <span style={{ fontSize: "0.75rem", background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", borderRadius: 20, padding: "0.15rem 0.6rem", fontWeight: 600 }}>💶 {req.budget}</span>}
+                    <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>{timeAgo(req.created_at)}</span>
+                  </div>
+                  {req.description && <p style={{ fontSize: "0.82rem", color: "#6b7280", margin: 0, lineHeight: 1.5 }}>{req.description}</p>}
+                </div>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                  <button onClick={() => handleEdit(req)} style={{ padding: "0.5rem 1rem", borderRadius: 50, border: "1.5px solid #1B5E20", background: "white", color: "#1B5E20", fontWeight: 600, fontSize: "0.8rem", cursor: "pointer" }}>
+                    ✏️ Modifier
+                  </button>
+                  <button onClick={() => handleDelete(req.id)} style={{ padding: "0.5rem 1rem", borderRadius: 50, border: "1.5px solid #ef4444", background: "white", color: "#ef4444", fontWeight: 600, fontSize: "0.8rem", cursor: "pointer" }}>
+                    🗑️ Supprimer
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const [section, setSection] = useState("info");
@@ -363,6 +510,7 @@ export default function Dashboard() {
       case "bank": return <BankAccountsSection user={user} />;
       case "legal": return <LegalDocumentsSection user={user} />;
 case "messages": navigate("/Messages"); return null;
+      case "my-searches": return <MySearchesSection user={user} />;
       default: return null;
     }
   };
