@@ -372,7 +372,6 @@ export default function ProductDetail() {
           </div>
         </section>
       )}
-    </div>
       {/* Modal Offre */}
       {showOfferModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
@@ -410,5 +409,6 @@ export default function ProductDetail() {
           </div>
         </div>
       )}
+    </div>
   );
 }
