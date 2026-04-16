@@ -16,8 +16,16 @@ export default function WelcomePopup() {
   };
   const [show, setShow] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(null);
 
   useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setIsLoggedIn(!!data.session);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (isLoggedIn !== false) return; // Ne pas afficher si connecte ou en cours de chargement
     if (sessionStorage.getItem("popup_closed")) return;
 
     const timer = setTimeout(() => openPopup(), 3000);
@@ -36,6 +44,8 @@ export default function WelcomePopup() {
     setTimeout(() => setShow(false), 300);
     sessionStorage.setItem("popup_closed", "1");
   };
+
+  if (isLoggedIn) return null;
 
   return (
     <>
