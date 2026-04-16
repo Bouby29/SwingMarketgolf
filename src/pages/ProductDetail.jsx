@@ -31,6 +31,8 @@ export default function ProductDetail() {
   const location = useLocation();
   const productId = new URLSearchParams(location.search).get("id");
   const [currentPhoto, setCurrentPhoto] = useState(0);
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  const [offerAmount, setOfferAmount] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -95,6 +97,10 @@ export default function ProductDetail() {
   const handleContact = () => {
     if (!isLoggedIn) { window.location.href='/login'; return; }
     window.location.href = createPageUrl("Messages") + `?to=${product.seller_id}&product=${product.id}`;
+  };
+  const handleOffer = () => {
+    if (!offerAmount || isNaN(offerAmount) || Number(offerAmount) <= 0) return;
+    window.location.href = createPageUrl("Messages") + `?to=${product.seller_id}&product=${product.id}&offer=${encodeURIComponent(offerAmount)}`;
   };
 
   const handleBuy = () => {
@@ -257,6 +263,9 @@ export default function ProductDetail() {
           {product.sale_type === 'auction' ? (
             <>
               <AuctionBidPanel product={product} currentUser={currentUser} isLoggedIn={isLoggedIn} />
+              <Button onClick={() => setShowOfferModal(true)} size="lg" className="w-full mb-3 rounded-full bg-[#C5A028] hover:bg-[#b8902a] text-white font-semibold">
+                💰 Faire une offre
+              </Button>
               <Button onClick={handleContact} size="lg" variant="outline" className="w-full mb-6 rounded-full border-[#1B5E20] text-[#1B5E20] hover:bg-green-50 font-semibold">
                 <MessageCircle className="w-4 h-4 mr-2" /> Contacter le vendeur
               </Button>
@@ -364,5 +373,42 @@ export default function ProductDetail() {
         </section>
       )}
     </div>
+      {/* Modal Offre */}
+      {showOfferModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "white", borderRadius: 20, padding: "2rem", maxWidth: 400, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <h3 style={{ fontWeight: 800, fontSize: "1.2rem", color: "#1a2332", marginBottom: 8 }}>💰 Faire une offre</h3>
+            <p style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: 20 }}>
+              Prix affiché : <strong>{product?.price} €</strong>. Proposez votre prix au vendeur.
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+              <input
+                type="number"
+                value={offerAmount}
+                onChange={e => setOfferAmount(e.target.value)}
+                placeholder="Ex: 150"
+                min="1"
+                style={{ flex: 1, padding: "0.85rem 1rem", borderRadius: 12, border: "2px solid #C5A028", fontSize: "1.1rem", fontWeight: 700, color: "#1a2332", outline: "none", textAlign: "center" }}
+                onKeyDown={e => e.key === "Enter" && handleOffer()}
+                autoFocus
+              />
+              <span style={{ fontSize: "1.1rem", fontWeight: 700, color: "#1a2332" }}>€</span>
+            </div>
+            <p style={{ fontSize: "0.78rem", color: "#9ca3af", marginBottom: 16, textAlign: "center" }}>
+              Votre offre sera envoyée via la messagerie. Le vendeur pourra accepter, refuser ou contre-proposer.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={handleOffer} disabled={!offerAmount || Number(offerAmount) <= 0}
+                style={{ flex: 1, padding: "0.85rem", borderRadius: 50, border: "none", background: offerAmount && Number(offerAmount) > 0 ? "#C5A028" : "#e5e7eb", color: "white", fontWeight: 700, fontSize: "1rem", cursor: offerAmount ? "pointer" : "not-allowed" }}>
+                Envoyer mon offre →
+              </button>
+              <button onClick={() => { setShowOfferModal(false); setOfferAmount(""); }}
+                style={{ padding: "0.85rem 1.25rem", borderRadius: 50, border: "1.5px solid #e5e7eb", background: "white", color: "#6b7280", fontWeight: 600, cursor: "pointer" }}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
   );
 }

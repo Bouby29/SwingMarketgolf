@@ -10,6 +10,7 @@ import { createPageUrl } from "@/utils";
 export default function Messages() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
+  const offerPrice = params.get("offer");
   const toUserId = params.get("to");
   const productId = params.get("product");
 
@@ -94,6 +95,9 @@ export default function Messages() {
     if (existing && existing.length > 0) {
       setSelectedConv(existing[0]);
       loadMessages(existing[0].id);
+      if (offerPrice) {
+        setNewMessage(`🏷️ Bonjour, je vous propose ${offerPrice} € pour cet article. Est-ce que ce prix vous convient ?`);
+      }
     } else {
       // Create new conversation
       const { data: newConv } = await supabase.from("conversations").insert({
@@ -105,6 +109,9 @@ export default function Messages() {
         setSelectedConv(newConv);
         setMessages([]);
         loadConversations();
+        if (offerPrice) {
+          setNewMessage(`🏷️ Bonjour, je vous propose ${offerPrice} € pour cet article. Est-ce que ce prix vous convient ?`);
+        }
       }
     }
   };
