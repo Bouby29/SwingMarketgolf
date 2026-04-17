@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-import { useAuth } from "@/lib/AuthContext";
 import AnnouncementTicker from "./AnnouncementTicker";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Search, Menu, X, Heart, MessageCircle, User, LogOut,
-  ShoppingBag, Plus, ChevronDown, ChevronRight
+  ShoppingBag, Plus, ChevronDown, ChevronRight, Home, LayoutGrid
 } from "lucide-react";
 import { useTranslate, AVAILABLE_LANGUAGES } from "../providers/TranslationProvider";
 
@@ -52,8 +51,99 @@ function CategoryItem({ cat }) {
   );
 }
 
+// Menu déroulant mobile (slide depuis le haut)
+function MobileMenu({ open, onClose, isLoggedIn, user, unreadCount, handleVendre, handleLogout, t, mobileOpenCategory, setMobileOpenCategory }) {
+  if (!open) return null;
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/40 z-[9998]" onClick={onClose} />
+      <div className="fixed top-0 left-0 right-0 bg-white z-[9999] max-h-[85vh] overflow-y-auto shadow-2xl rounded-b-2xl">
+        {/* Header du menu */}
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <span className="font-bold text-[#1B5E20] text-base">SwingMarket<span className="text-[#C5A028]">Golf</span></span>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100"><X className="w-5 h-5" /></button>
+        </div>
 
+        {/* User info ou login */}
+        {isLoggedIn ? (
+          <div className="px-4 py-3 bg-green-50 border-b flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#1B5E20] flex items-center justify-center">
+                <span className="text-white font-bold">{user?.full_name?.[0] || "U"}</span>
+              </div>
+              <div>
+                <p className="font-semibold text-sm text-gray-900">{user?.full_name}</p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
+              </div>
+            </div>
+            <a href="#" onClick={handleVendre}>
+              <Button size="sm" className="bg-[#1B5E20] text-white rounded-full gap-1 text-xs px-3"><Plus className="w-3.5 h-3.5" /> Vendre</Button>
+            </a>
+          </div>
+        ) : (
+          <div className="px-4 py-3 flex gap-2 border-b">
+            <Button className="flex-1 bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full" onClick={() => window.location.href = createPageUrl("Login")}>Se connecter</Button>
+            <Button variant="outline" className="flex-1 border-[#C5A028] text-[#C5A028] rounded-full" onClick={() => window.location.href = createPageUrl("Login")}>S'inscrire</Button>
+          </div>
+        )}
 
+        {/* Actions rapides */}
+        <div className="px-4 py-3 grid grid-cols-2 gap-2 border-b">
+          <Link to={createPageUrl("Marketplace")} onClick={onClose} className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 rounded-xl text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-[#1B5E20]">
+            <LayoutGrid className="w-4 h-4" /> Toutes les annonces
+          </Link>
+          <Link to={createPageUrl("Home")} onClick={onClose} className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 rounded-xl text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-[#1B5E20]">
+            <Home className="w-4 h-4" /> Accueil
+          </Link>
+          {isLoggedIn && <>
+            <Link to={createPageUrl("Dashboard")} onClick={onClose} className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 rounded-xl text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-[#1B5E20]">
+              <ShoppingBag className="w-4 h-4" /> Dashboard
+            </Link>
+            <Link to={createPageUrl("Favorites")} onClick={onClose} className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 rounded-xl text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-[#1B5E20]">
+              <Heart className="w-4 h-4" /> Favoris
+            </Link>
+          </>}
+          <a href="/SearchRequestsList" onClick={onClose} className="flex items-center gap-2 px-3 py-2.5 bg-yellow-50 rounded-xl text-sm font-medium text-[#C5A028]">
+            📋 Demandes acheteurs
+          </a>
+          <a href="/SearchRequest" onClick={onClose} className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 rounded-xl text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-[#1B5E20]">
+            🔍 Poster une recherche
+          </a>
+        </div>
+
+        {/* Catégories */}
+        <div className="px-4 py-2 pb-4">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">Catégories</p>
+          {CATEGORIES.map((cat) => (
+            <div key={cat.name}>
+              <button onClick={() => setMobileOpenCategory(mobileOpenCategory === cat.name ? null : cat.name)}
+                className="w-full text-left flex items-center justify-between px-3 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-[#1B5E20] rounded-xl transition-colors">
+                {cat.name}
+                <ChevronRight className={`w-4 h-4 transition-transform ${mobileOpenCategory === cat.name ? 'rotate-90' : ''}`} />
+              </button>
+              {mobileOpenCategory === cat.name && (
+                <div className="pl-4 mb-1 space-y-0.5">
+                  {cat.subcats.map((sub) => (
+                    <Link key={sub} to={createPageUrl("Marketplace") + `?category=${encodeURIComponent(cat.name)}&subcategory=${encodeURIComponent(sub)}`}
+                      onClick={onClose} className="block px-3 py-1.5 text-xs text-gray-600 hover:text-[#1B5E20] hover:bg-green-50 rounded-lg">{sub}</Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {isLoggedIn && (
+          <div className="px-4 pb-4 border-t pt-3">
+            <button onClick={() => { handleLogout(); onClose(); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl">
+              <LogOut className="w-4 h-4" /> Déconnexion
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
 
 export default function Navbar() {
   const { language, changeLanguage, t } = useTranslate();
@@ -61,14 +151,15 @@ export default function Navbar() {
   const [user, setUser] = useState(null);
   const unreadCount = useUnreadMessages();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mobileOpenCategory, setMobileOpenCategory] = useState(null);
 
   const handleVendre = async (e) => {
     e.preventDefault();
     if (!user) { window.location.href = "/Login"; return; }
-    // Vérifier localStorage d'abord
     const localDone = localStorage.getItem("seller_onboarding_" + user.email);
     if (localDone === "true") { window.location.href = "/CreateListing"; return; }
-    // Sinon vérifier en base
     const { data: profile } = await supabase.from("profiles").select("seller_onboarding_completed").eq("email", user.email).single();
     if (profile?.seller_onboarding_completed) {
       localStorage.setItem("seller_onboarding_" + user.email, "true");
@@ -77,9 +168,6 @@ export default function Navbar() {
       window.location.href = "/SellerOnboarding";
     }
   };
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [mobileOpenCategory, setMobileOpenCategory] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -111,194 +199,168 @@ export default function Navbar() {
   const handleLogout = async () => { await supabase.auth.signOut(); window.location.href = "/"; };
 
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-[9999] relative">
-      <AnnouncementTicker />
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center h-14 md:h-16 gap-3">
-          <Link to={createPageUrl("Home")} className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-full golf-gradient flex items-center justify-center">
-              <span className="text-white font-bold text-sm">S</span>
-            </div>
-            <span className="text-lg font-bold text-[#1B5E20]">SwingMarket<span className="text-[#C5A028]">Golf</span></span>
-          </Link>
-
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl mx-4">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input type="text" placeholder={`${t("common.search")}...`} value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] transition-all" />
-            </div>
-          </form>
-
-          <div className="flex-1 md:hidden" />
-
-          <div className="flex items-center gap-1">
-            <button onClick={() => setSearchOpen(!searchOpen)} className="md:hidden p-2 text-gray-500 hover:text-[#1B5E20]">
-              <Search className="w-5 h-5" />
-            </button>
-
-            {isLoggedIn ? (
-              <>
-                <a href="/SearchRequestsList" className="hidden sm:block text-xs font-medium text-[#C5A028] hover:underline px-3 py-2 whitespace-nowrap">📋 Demandes acheteurs</a>
-                <a href="/SearchRequest" className="hidden sm:block text-xs font-medium text-[#1B5E20] hover:underline px-3 py-2 whitespace-nowrap">🔍 Poster une recherche</a>
-                <a href="#" onClick={handleVendre} className="hidden sm:block">
-                  <Button size="sm" className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full gap-1.5 text-xs px-3">
-                    <Plus className="w-3.5 h-3.5" /> Vendre
-                  </Button>
-                </a>
-                <Link to={createPageUrl("Favorites")} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20]"><Heart className="w-5 h-5" /></Link>
-                <Link to={createPageUrl(t("nav.messages"))} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20] relative">
-                  <MessageCircle className="w-5 h-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </Link>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-1">
-                      <div className="w-8 h-8 rounded-full bg-[#1B5E20] flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">{user?.full_name?.[0] || "U"}</span>
-                      </div>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <div className="px-3 py-2">
-                      <p className="font-medium text-sm">{user?.full_name}</p>
-                      <p className="text-xs text-gray-500">{user?.email}</p>
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild><Link to={createPageUrl("Dashboard")} className="cursor-pointer"><ShoppingBag className="w-4 h-4 mr-2" /> Tableau de bord</Link></DropdownMenuItem>
-                    <DropdownMenuItem asChild><Link to={createPageUrl("Profile") + `?id=${user?.id}`} className="cursor-pointer"><User className="w-4 h-4 mr-2" /> Mon profil</Link></DropdownMenuItem>
-                    <DropdownMenuItem asChild><Link to={createPageUrl("Favorites")} className="cursor-pointer"><Heart className="w-4 h-4 mr-2" /> Favoris</Link></DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer"><LogOut className="w-4 h-4 mr-2" /> Déconnexion</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-              <div className="hidden md:flex items-center gap-2">
-                <div className="flex items-center gap-0.5 border border-gray-200 rounded-lg px-1.5 py-1">
-                  {AVAILABLE_LANGUAGES.map(lang => (
-                    <button
-                      key={lang.code}
-                      onClick={() => changeLanguage(lang.code)}
-                      className={`text-xs font-semibold px-1.5 py-0.5 rounded transition-colors ${language === lang.code ? "bg-[#1B5E20] text-white" : "text-gray-500 hover:text-[#1B5E20]"}`}
-                    >
-                      {lang.flag} {lang.label}
-                    </button>
-                  ))}
-                </div>
-                <Button size="sm" onClick={() => window.location.href = createPageUrl("Login")}
-                  className="rounded-full bg-[#1B5E20] text-white hover:bg-[#2E7D32] text-xs px-3">{t("common.login")}</Button>
-                <Button size="sm" onClick={() => window.location.href = createPageUrl("Login")}
-                  className="rounded-full bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-xs px-3">{t("common.sell")}</Button>
+    <>
+      <nav className="bg-white border-b border-gray-100 sticky top-0 z-[9999]">
+        <AnnouncementTicker />
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center h-14 md:h-16 gap-3">
+            <Link to={createPageUrl("Home")} className="flex items-center gap-2 shrink-0">
+              <div className="w-8 h-8 rounded-full golf-gradient flex items-center justify-center">
+                <span className="text-white font-bold text-sm">S</span>
               </div>
+              <span className="text-lg font-bold text-[#1B5E20]">SwingMarket<span className="text-[#C5A028]">Golf</span></span>
+            </Link>
+
+            <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl mx-4">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input type="text" placeholder={`${t("common.search")}...`} value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] transition-all" />
+              </div>
+            </form>
+
+            {/* Mobile: search bar inline */}
+            {searchOpen && (
+              <form onSubmit={handleSearch} className="md:hidden flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input autoFocus type="text" placeholder="Rechercher..." value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-[#2E7D32]" />
+                </div>
+              </form>
             )}
+            {!searchOpen && <div className="flex-1 md:hidden" />}
 
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 text-gray-500">
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            <div className="flex items-center gap-1">
+              {/* Mobile search toggle */}
+              <button onClick={() => setSearchOpen(!searchOpen)} className="md:hidden p-2 text-gray-500 hover:text-[#1B5E20]">
+                {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+              </button>
+
+              {/* Desktop nav */}
+              {isLoggedIn ? (
+                <>
+                  <a href="/SearchRequestsList" className="hidden sm:block text-xs font-medium text-[#C5A028] hover:underline px-3 py-2 whitespace-nowrap">📋 Demandes</a>
+                  <a href="#" onClick={handleVendre} className="hidden sm:block">
+                    <Button size="sm" className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full gap-1.5 text-xs px-3">
+                      <Plus className="w-3.5 h-3.5" /> Vendre
+                    </Button>
+                  </a>
+                  <Link to={createPageUrl("Favorites")} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20]"><Heart className="w-5 h-5" /></Link>
+                  <Link to={createPageUrl(t("nav.messages"))} className="hidden md:block p-2 text-gray-500 hover:text-[#1B5E20] relative">
+                    <MessageCircle className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-1 hidden md:block">
+                        <div className="w-8 h-8 rounded-full bg-[#1B5E20] flex items-center justify-center">
+                          <span className="text-white text-sm font-medium">{user?.full_name?.[0] || "U"}</span>
+                        </div>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <div className="px-3 py-2">
+                        <p className="font-medium text-sm">{user?.full_name}</p>
+                        <p className="text-xs text-gray-500">{user?.email}</p>
+                      </div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild><Link to={createPageUrl("Dashboard")} className="cursor-pointer"><ShoppingBag className="w-4 h-4 mr-2" /> Tableau de bord</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link to={createPageUrl("Profile") + `?id=${user?.id}`} className="cursor-pointer"><User className="w-4 h-4 mr-2" /> Mon profil</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link to={createPageUrl("Favorites")} className="cursor-pointer"><Heart className="w-4 h-4 mr-2" /> Favoris</Link></DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer"><LogOut className="w-4 h-4 mr-2" /> Déconnexion</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <div className="hidden md:flex items-center gap-2">
+                  <Button size="sm" onClick={() => window.location.href = createPageUrl("Login")}
+                    className="rounded-full bg-[#1B5E20] text-white hover:bg-[#2E7D32] text-xs px-3">{t("common.login")}</Button>
+                  <Button size="sm" onClick={() => window.location.href = createPageUrl("Login")}
+                    className="rounded-full bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-xs px-3">{t("common.sell")}</Button>
+                </div>
+              )}
+
+              {/* Hamburger mobile - seulement visible sur mobile */}
+              <button onClick={() => setMobileOpen(true)} className="md:hidden p-2 text-gray-500">
+                <Menu className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {searchOpen && (
-          <form onSubmit={handleSearch} className="md:hidden pb-3">
+        {/* Desktop categories bar */}
+        <div className="hidden md:flex items-center justify-center gap-2 px-6 py-3 overflow-x-auto border-t border-gray-50 bg-white relative z-[9999]">
+          {CATEGORIES.map((cat) => (<CategoryItem key={cat.name} cat={cat} />))}
+          <Link to={createPageUrl("Blog")} className="text-xs font-medium text-gray-600 hover:text-[#1B5E20] px-3 py-1.5 rounded-full hover:bg-green-50 transition-all whitespace-nowrap">Blog</Link>
+        </div>
+      </nav>
+
+      {/* Mobile menu déroulant */}
+      <MobileMenu
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        isLoggedIn={isLoggedIn}
+        user={user}
+        unreadCount={unreadCount}
+        handleVendre={handleVendre}
+        handleLogout={handleLogout}
+        t={t}
+        mobileOpenCategory={mobileOpenCategory}
+        setMobileOpenCategory={setMobileOpenCategory}
+      />
+
+      {/* Bottom Tab Bar - mobile uniquement */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[9990] bg-white border-t border-gray-200 safe-area-pb">
+        <div className="flex items-center justify-around px-2 py-2">
+          <Link to={createPageUrl("Home")} className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 hover:text-[#1B5E20]">
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Accueil</span>
+          </Link>
+          <Link to={createPageUrl("Marketplace")} className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 hover:text-[#1B5E20]">
+            <LayoutGrid className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Marketplace</span>
+          </Link>
+          {/* Bouton Vendre central */}
+          <a href="#" onClick={handleVendre} className="flex flex-col items-center gap-0.5 -mt-4">
+            <div className="w-12 h-12 rounded-full bg-[#C5A028] flex items-center justify-center shadow-lg border-2 border-white">
+              <Plus className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-[10px] font-medium text-[#C5A028]">Vendre</span>
+          </a>
+          <Link to={isLoggedIn ? createPageUrl(t("nav.messages")) : createPageUrl("Login")} className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 hover:text-[#1B5E20] relative">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input autoFocus type="text" placeholder={`${t("common.search")}...`} value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32]" />
-            </div>
-          </form>
-        )}
-      </div>
-
-      <div className="hidden md:flex items-center justify-center gap-2 px-6 py-3 overflow-x-auto border-t border-gray-50 bg-white relative z-[9999]">
-        {CATEGORIES.map((cat) => (<CategoryItem key={cat.name} cat={cat} />))}
-        <Link to={createPageUrl("Blog")} className="text-xs font-medium text-gray-600 hover:text-[#1B5E20] px-3 py-1.5 rounded-full hover:bg-green-50 transition-all whitespace-nowrap">Blog</Link>
-      </div>
-
-      {mobileOpen && (
-        <div className="md:hidden border-t bg-white max-h-[80vh] overflow-y-auto">
-          {!isLoggedIn && (
-            <div className="p-4 flex gap-2 border-b">
-              <Button className="flex-1 bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full" onClick={() => window.location.href = createPageUrl("Login")}>{t("common.login")}</Button>
-              <Button variant="outline" className="flex-1 border-[#C5A028] text-[#C5A028] hover:bg-[#C5A028] hover:text-white rounded-full" onClick={() => window.location.href = createPageUrl("Login")}>S'inscrire</Button>
-            </div>
-          )}
-          {isLoggedIn && (
-            <div className="p-4 border-b flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#1B5E20] flex items-center justify-center">
-                  <span className="text-white font-medium">{user?.full_name?.[0] || "U"}</span>
-                </div>
-                <div>
-                  <p className="font-medium text-sm">{user?.full_name}</p>
-                  <p className="text-xs text-gray-500">{user?.email}</p>
-                </div>
-              </div>
-              <a href="#" onClick={handleVendre}>
-                <Button size="sm" className="bg-[#1B5E20] text-white rounded-full gap-1 text-xs"><Plus className="w-3.5 h-3.5" /> Vendre</Button>
-              </a>
-            </div>
-          )}
-
-          <div className="px-4 py-2 border-b flex gap-2">
-            <Link to={createPageUrl("Marketplace")} onClick={() => setMobileOpen(false)} className="flex-1 text-center py-2 text-sm font-medium text-[#1B5E20] bg-green-50 rounded-lg">Toutes les annonces</Link>
-            <a href="/SearchRequestsList" onClick={() => setMobileOpen(false)} className="flex-1 text-center py-2 text-sm font-medium text-[#C5A028] bg-yellow-50 rounded-lg">📋 Demandes</a>
-            <a href="/SearchRequest" onClick={() => setMobileOpen(false)} className="flex-1 text-center py-2 text-sm font-medium text-[#1B5E20] bg-green-50 rounded-lg">🔍 Poster</a>
-            <Link to={createPageUrl("Blog")} onClick={() => setMobileOpen(false)} className="flex-1 text-center py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg">Blog</Link>
-          </div>
-
-          <div className="px-4 py-2 pb-4">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">Catégories</p>
-            {CATEGORIES.map((cat) => (
-              <div key={cat.name}>
-                <button onClick={() => setMobileOpenCategory(mobileOpenCategory === cat.name ? null : cat.name)}
-                  className="w-full text-left flex items-center justify-between px-3 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-[#1B5E20] rounded-lg transition-colors">
-                  {cat.name}
-                  <ChevronRight className={`w-4 h-4 transition-transform ${mobileOpenCategory === cat.name ? 'rotate-90' : ''}`} />
-                </button>
-                {mobileOpenCategory === cat.name && (
-                  <div className="pl-4 mb-1 space-y-0.5">
-                    {cat.subcats.map((sub) => (
-                      <Link key={sub} to={createPageUrl("Marketplace") + `?category=${encodeURIComponent(cat.name)}&subcategory=${encodeURIComponent(sub)}`}
-                        onClick={() => setMobileOpen(false)} className="block px-3 py-1.5 text-xs text-gray-600 hover:text-[#1B5E20] hover:bg-green-50 rounded-lg">{sub}</Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {isLoggedIn && (
-            <div className="px-4 py-3 border-t space-y-1">
-              <Link to={createPageUrl("Dashboard")} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><ShoppingBag className="w-4 h-4" /> Tableau de bord</Link>
-              <Link to={createPageUrl("Favorites")} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><Heart className="w-4 h-4" /> Favoris</Link>
-              <Link to={createPageUrl(t("nav.messages"))} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg">
-                <span className="relative">
-                  <MessageCircle className="w-4 h-4" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
+              <MessageCircle className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1.5 min-w-[15px] h-[15px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
-                Messages
-                {unreadCount > 0 && (
-                  <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
-                    {unreadCount}
-                  </span>
-                )}
-              </Link>
-              <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg"><LogOut className="w-4 h-4" /> Déconnexion</button>
+              )}
             </div>
-          )}
+            <span className="text-[10px] font-medium">Messages</span>
+          </Link>
+          <Link to={isLoggedIn ? createPageUrl("Dashboard") : createPageUrl("Login")} className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 hover:text-[#1B5E20]">
+            {isLoggedIn ? (
+              <div className="w-5 h-5 rounded-full bg-[#1B5E20] flex items-center justify-center">
+                <span className="text-white text-[9px] font-bold">{user?.full_name?.[0] || "U"}</span>
+              </div>
+            ) : (
+              <User className="w-5 h-5" />
+            )}
+            <span className="text-[10px] font-medium">{isLoggedIn ? "Profil" : "Connexion"}</span>
+          </Link>
         </div>
-      )}
-    </nav>
+      </div>
+
+      {/* Spacer pour éviter que le contenu soit caché derrière la bottom bar */}
+      <div className="md:hidden h-16" />
+    </>
   );
 }
