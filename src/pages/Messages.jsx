@@ -451,6 +451,7 @@ export default function Messages() {
                       </p>
                     )}
                   </div>
+                  </>
                 );
               })}
               <div ref={messagesEndRef} />
