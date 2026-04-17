@@ -135,7 +135,7 @@ export default function ProductDetail() {
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-3 md:px-4 py-3 md:py-8">
         <div className="grid md:grid-cols-2 gap-8">
           <div className="aspect-square shimmer rounded-2xl" />
           <div className="space-y-4">
@@ -160,7 +160,7 @@ export default function ProductDetail() {
   const photos = product.images?.length > 0 ? product.images : ["https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=600&h=600&fit=crop"];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-3 md:px-4 py-3 md:py-8">
       <SEOHead
         title={`${product.title} - Occasion | SwingMarket`}
         description={`Achetez ${product.title} d'occasion au meilleur prix. Produit vérifié, livraison rapide et sécurisée sur SwingMarket.`}
@@ -169,7 +169,7 @@ export default function ProductDetail() {
         type="product"
         structuredData={productStructuredData}
       />
-      <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+      <div className="grid md:grid-cols-2 gap-4 md:gap-8 lg:gap-12">
         {/* Photos */}
         <div>
           <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3">
@@ -211,7 +211,7 @@ export default function ProductDetail() {
             {product.sale_type !== 'auction' && (
               <>
                 <div className="flex items-baseline gap-3 flex-wrap">
-                  <span className="text-3xl font-extrabold text-[#1B5E20]">{product.price?.toFixed(2)} €</span>
+                  <span className="text-2xl md:text-3xl font-extrabold text-[#1B5E20]">{product.price?.toFixed(2)} €</span>
                   {product.retail_price && product.retail_price > product.price && (
                     <>
                       <span className="text-lg text-gray-400 line-through">{product.retail_price.toFixed(2)} €</span>
@@ -274,10 +274,10 @@ export default function ProductDetail() {
           ) : (
             <>
               <div className="flex gap-3 mb-3">
-                <Button onClick={handleBuy} size="lg" className="flex-1 bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full font-semibold">
+                <Button onClick={handleBuy} size="sm" className="flex-1 bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full font-semibold text-sm md:text-base">
                   <ShoppingBag className="w-4 h-4 mr-2" /> Acheter
                 </Button>
-                <Button onClick={handleContact} size="lg" className="flex-1 bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full font-semibold">
+                <Button onClick={handleContact} size="sm" className="flex-1 bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full font-semibold text-sm md:text-base">
                   <MessageCircle className="w-4 h-4 mr-2" /> Contacter
                 </Button>
               </div>
@@ -337,10 +337,10 @@ export default function ProductDetail() {
 
       {/* Other seller products */}
       {otherSellerProducts.length > 0 && (
-        <section className="mt-12">
+        <section className="mt-6 md:mt-12">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Autres produits de ce vendeur</h2>
+              <h2 className="text-lg md:text-2xl font-bold text-gray-900">Autres produits de ce vendeur</h2>
               <p className="text-sm text-gray-500 mt-1">{product.seller_name}</p>
             </div>
             <Link
@@ -363,8 +363,8 @@ export default function ProductDetail() {
 
       {/* Similar products */}
       {similarProducts.filter(p => p.id !== product.id).length > 0 && (
-        <section className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Produits similaires</h2>
+        <section className="mt-8 md:mt-16">
+          <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-2">Produits similaires</h2>
           <h3 className="text-base text-gray-600 mb-6">Autres {product.category?.toLowerCase()} qui pourraient vous intéresser</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {similarProducts.filter(p => p.id !== product.id).slice(0, 4).map(p => (
