@@ -80,7 +80,11 @@ export default function Footer() {
             <div className="space-y-2 text-sm text-gray-400 mb-6">
               <Link to={createPageUrl("Confidentialite")} className="block hover:text-white transition-colors">Politique de confidentialité</Link>
               <Link to="/Contact" className="block hover:text-white transition-colors">Nous contacter</Link>
-              <p>contact@swingmarketgolf.com</p>
+              <div className="pt-2 border-t border-gray-700 mt-2">
+                <p className="text-[#C5A028] font-semibold mb-1">Service client</p>
+                <p className="text-gray-400 text-xs leading-relaxed">Du lundi au vendredi de 9h à 18h</p>
+                <a href="mailto:contact@swingmarketgolf.com" className="text-gray-400 hover:text-white transition-colors text-xs break-all">contact@swingmarketgolf.com</a>
+              </div>
             </div>
             <h4 className="font-semibold mb-3 text-[#C5A028]">Suivez-nous</h4>
             <div className="flex items-center gap-3">
