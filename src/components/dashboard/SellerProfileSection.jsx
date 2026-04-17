@@ -19,6 +19,7 @@ export default function SellerProfileSection({ user }) {
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     if (!user?.id) return;
@@ -42,26 +43,42 @@ export default function SellerProfileSection({ user }) {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `logos/${user.id}_${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("products").upload(path, file, { upsert: true });
-    if (!error) {
+    try {
+      const ext = file.name.split(".").pop().toLowerCase();
+      const path = `logos/${user.id}_${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("products").upload(path, file, { upsert: true, contentType: file.type });
+      if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from("products").getPublicUrl(path);
       setForm(prev => ({ ...prev, logo_url: publicUrl }));
-      await supabase.from("profiles").update({ logo_url: publicUrl }).eq("id", user.id);
+      const { error: updateError } = await supabase.from("profiles").update({ logo_url: publicUrl }).eq("id", user.id);
+      if (updateError) throw updateError;
+    } catch (err) {
+      console.error("Erreur upload logo:", err);
+      alert("Erreur upload : " + err.message);
     }
     setUploading(false);
   };
 
   const handleSave = async () => {
     setSaving(true);
-    const { error } = await supabase.from("profiles").upsert({
-      id: user.id,
-      ...form,
-    });
+    setSaveError("");
+    const { error } = await supabase.from("profiles")
+      .update({
+        full_name: form.full_name,
+        shop_name: form.shop_name,
+        bio: form.bio,
+        phone: form.phone,
+        city: form.city,
+        logo_url: form.logo_url,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
     if (!error) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+    } else {
+      console.error("Erreur save profil:", error);
+      alert("Erreur lors de la sauvegarde : " + error.message);
     }
     setSaving(false);
   };
@@ -193,6 +210,9 @@ export default function SellerProfileSection({ user }) {
             <span className="flex items-center gap-1 text-sm text-green-600 font-medium">
               <CheckCircle className="w-4 h-4" /> Profil mis à jour !
             </span>
+          )}
+          {saveError && (
+            <span className="text-sm text-red-500">{saveError}</span>
           )}
         </div>
       </div>
