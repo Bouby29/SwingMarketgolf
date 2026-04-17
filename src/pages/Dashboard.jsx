@@ -19,7 +19,7 @@ const NAV = [
   { group: "Mon Compte", items: [
     { id: "info", label: "Informations", icon: "👤" },
     { id: "addresses", label: "Adresses", icon: "📍" },
-    { id: "subscription", label: "Mon abonnement", icon: "⭐" },
+    { id: "subscription", label: "Mon abonnement", icon: "⭐", proOnly: true },
   ]},
   { group: "Espace Vendeur", items: [
     { id: "sell", label: "Vendre un produit", icon: "➕" },
@@ -591,7 +591,7 @@ case "messages": navigate("/Messages"); return null;
             {NAV.map(group => (
               <div key={group.group}>
                 <div className="dash-nav-group">{group.group}</div>
-                {group.items.map(item => (
+                {group.items.filter(item => !item.proOnly || profile?.is_pro).map(item => (
                   <button key={item.id}
                     className={`dash-nav-btn${section === item.id ? " active" : ""}`}
                     onClick={() => { if (item.id === "sell") { navigate("/CreateListing"); } else if (item.id === "messages") { navigate("/Messages"); } else { setSection(item.id); setSidebarOpen(false); } }}>
