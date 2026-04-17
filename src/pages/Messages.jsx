@@ -322,7 +322,6 @@ export default function Messages() {
             <p className="text-gray-400 font-medium">Sélectionnez une conversation</p>
           </div>
         ) : (
-          <>
             {/* Header */}
             <div className="bg-white border-b border-gray-200 p-4 flex items-center gap-3">
               <button onClick={() => setSelectedConv(null)} className="md:hidden p-1 rounded-lg hover:bg-gray-100">
@@ -332,8 +331,6 @@ export default function Messages() {
                 const other = getOtherParticipant(selectedConv);
                 const product = selectedConv.product_id ? products[selectedConv.product_id] : null;
                 return (
-                  <>
-                  <>
                     <div className="w-9 h-9 rounded-full bg-[#1B5E20] flex items-center justify-center text-white font-bold text-sm">
                       {getDisplayName(other)?.[0]?.toUpperCase() || "?"}
                     </div>
