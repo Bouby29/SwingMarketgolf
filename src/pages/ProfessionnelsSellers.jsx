@@ -44,6 +44,12 @@ export default function ProfessionnelsSellers() {
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <Link
+                  to="/Abonnements"
+                  className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-[#C5A028] hover:bg-[#b8902a] text-white font-bold rounded-lg transition-colors text-base sm:text-lg shadow-lg"
+                >
+                  ⭐ Voir nos abonnements
+                </Link>
+                <Link
                   to={createPageUrl("CreateListing")}
                   className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white text-[#1B5E20] font-bold rounded-lg hover:bg-gray-100 transition-colors text-base sm:text-lg shadow-lg"
                 >
