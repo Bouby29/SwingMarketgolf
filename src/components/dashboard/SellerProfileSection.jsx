@@ -70,7 +70,6 @@ export default function SellerProfileSection({ user }) {
         phone: form.phone,
         city: form.city,
         avatar_url: form.avatar_url,
-        updated_at: new Date().toISOString(),
       })
       .eq("id", user.id);
     if (!error) {
