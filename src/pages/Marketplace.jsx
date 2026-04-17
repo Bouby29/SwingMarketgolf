@@ -158,7 +158,7 @@ export default function Marketplace() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-8">
       {saleTypeFilter === "auction" && (
         <div className="bg-gradient-to-r from-[#0F3D2E] via-[#1B5E20] to-[#2E7D32] py-5 px-4 -mx-4 mb-6 rounded-xl">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
@@ -179,11 +179,11 @@ export default function Marketplace() {
         url={`https://swingmarketgolf.com/Marketplace${category ? `?category=${encodeURIComponent(category)}` : ""}`}
       />
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
+      <div className="mb-4 md:mb-8">
+        <h1 className="text-xl md:text-3xl font-bold text-gray-900">
           {category ? `${category} de golf d'occasion` : "Marketplace golf - Matériel de golf d'occasion"}
         </h1>
-        <h2 className="text-lg text-gray-600 mt-2">
+        <h2 className="text-sm md:text-lg text-gray-600 mt-1">
           {category 
             ? `Trouvez les meilleurs ${category.toLowerCase()} au meilleur prix`
             : "Achetez et vendez votre équipement de golf entre passionnés"
@@ -214,7 +214,7 @@ export default function Marketplace() {
           <div className="relative">
             <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none z-10" />
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[200px] rounded-full bg-white border-2 border-gray-300 font-medium text-gray-900 pl-10">
+              <SelectTrigger className="w-[140px] sm:w-[200px] rounded-full bg-white border-2 border-gray-300 font-medium text-gray-900 pl-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -230,7 +230,7 @@ export default function Marketplace() {
       {/* Filters panel */}
       {showFilters && (
         <div className="bg-white rounded-2xl p-6 mb-6 border border-gray-100 shadow-sm">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1.5 block">Catégorie</label>
               <Select value={category} onValueChange={setCategory}>
@@ -279,7 +279,7 @@ export default function Marketplace() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1.5 block">Prix max (€)</label>
               <Input type="number" placeholder="∞" value={priceMax} onChange={e => setPriceMax(e.target.value)} className="rounded-lg" />
@@ -336,7 +336,7 @@ export default function Marketplace() {
 
       {/* Products grid */}
       {isLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {Array(8).fill(0).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl overflow-hidden">
               <div className="aspect-square shimmer" />
@@ -357,7 +357,7 @@ export default function Marketplace() {
           <p className="text-gray-500 text-sm mt-1">Essayez avec d'autres filtres</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {filtered.map(product => (
             <ProductCard key={product.id} product={product} />
           ))}
