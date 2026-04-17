@@ -322,6 +322,7 @@ export default function Messages() {
             <p className="text-gray-400 font-medium">Sélectionnez une conversation</p>
           </div>
         ) : (
+          <>
             {/* Header */}
             <div className="bg-white border-b border-gray-200 p-4 flex items-center gap-3">
               <button onClick={() => setSelectedConv(null)} className="md:hidden p-1 rounded-lg hover:bg-gray-100">
@@ -331,6 +332,7 @@ export default function Messages() {
                 const other = getOtherParticipant(selectedConv);
                 const product = selectedConv.product_id ? products[selectedConv.product_id] : null;
                 return (
+                  <>
                     <div className="w-9 h-9 rounded-full bg-[#1B5E20] flex items-center justify-center text-white font-bold text-sm">
                       {getDisplayName(other)?.[0]?.toUpperCase() || "?"}
                     </div>
@@ -370,60 +372,79 @@ export default function Messages() {
                 const showCounter = showActions && counterOfferInput[msg.id] !== undefined;
 
                 return (
-                  <React.Fragment key={msg.id}>
-                    {/* Bouton Acheter si vendeur a accepté — visible pour l acheteur */}
+                  <div key={msg.id} className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}>
+                    <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
+                      isOffer
+                        ? "bg-amber-50 border-2 border-[#C5A028] text-gray-900 rounded-bl-sm shadow-sm"
+                        : isMine
+                          ? "bg-[#1B5E20] text-white rounded-br-sm"
+                          : "bg-white text-gray-900 border border-gray-200 rounded-bl-sm shadow-sm"
+                    }`}>
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                      <p className={`text-xs mt-1 ${isMine && !isOffer ? "text-green-200" : "text-gray-400"}`}>{formatTime(msg.created_at)}</p>
+                    </div>
                     {msg.content?.startsWith("✅ J'accepte") && !isMine && selectedConv?.product_id && (
-                      <div className="flex justify-start mb-2">
-                        
-                          href={"/Checkout?product=" + selectedConv.product_id}
-                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1B5E20] text-white text-sm font-bold hover:bg-green-800 transition-colors shadow-md"
+                      <a href={"/Checkout?product=" + selectedConv.product_id} className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1B5E20] text-white text-xs font-bold hover:bg-green-800 transition-colors shadow">
+                        🛒 Acheter au prix négocié
+                      </a>
+                    )}
+
+                    {/* Boutons Accepter/Refuser/Contre-proposer — visible uniquement pour le vendeur */}
+                    {showActions && !showCounter && (
+                      <div className="flex gap-2 mt-2 max-w-[75%]">
+                        <button
+                          onClick={() => handleAcceptOffer(msg)}
+                          className="flex-1 py-2 px-3 rounded-full bg-[#1B5E20] text-white text-xs font-bold hover:bg-[#2E7D32] transition-colors"
                         >
-                          🛒 Acheter au prix négocié
-                        </a>
+                          ✅ Accepter
+                        </button>
+                        <button
+                          onClick={() => setCounterOfferInput(prev => ({ ...prev, [msg.id]: "" }))}
+                          className="flex-1 py-2 px-3 rounded-full bg-[#C5A028] text-white text-xs font-bold hover:bg-[#b8902a] transition-colors"
+                        >
+                          💬 Contre-proposer
+                        </button>
+                        <button
+                          onClick={() => handleRefuseOffer(msg)}
+                          className="flex-1 py-2 px-3 rounded-full bg-white border border-red-300 text-red-500 text-xs font-bold hover:bg-red-50 transition-colors"
+                        >
+                          ❌ Refuser
+                        </button>
                       </div>
                     )}
-                    <div className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}>
-                      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
-                        isOffer
-                          ? "bg-amber-50 border-2 border-[#C5A028] text-gray-900 rounded-bl-sm shadow-sm"
-                          : isMine
-                            ? "bg-[#1B5E20] text-white rounded-br-sm"
-                            : "bg-white text-gray-900 border border-gray-200 rounded-bl-sm shadow-sm"
-                      }`}>
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
-                        <p className={`text-xs mt-1 ${isMine && !isOffer ? "text-green-200" : "text-gray-400"}`}>{formatTime(msg.created_at)}</p>
+
+                    {/* Input contre-offre */}
+                    {showActions && showCounter && (
+                      <div className="flex gap-2 mt-2 max-w-[75%] items-center">
+                        <input
+                          type="number"
+                          value={counterOfferInput[msg.id] || ""}
+                          onChange={e => setCounterOfferInput(prev => ({ ...prev, [msg.id]: e.target.value }))}
+                          placeholder="Votre prix €"
+                          className="flex-1 border-2 border-[#C5A028] rounded-full px-3 py-1.5 text-sm text-center font-bold outline-none"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleCounterOffer(msg)}
+                          className="py-2 px-3 rounded-full bg-[#C5A028] text-white text-xs font-bold hover:bg-[#b8902a]"
+                        >
+                          Envoyer →
+                        </button>
+                        <button
+                          onClick={() => setCounterOfferInput(prev => { const n = {...prev}; delete n[msg.id]; return n; })}
+                          className="py-2 px-3 rounded-full border border-gray-300 text-gray-500 text-xs"
+                        >
+                          ✕
+                        </button>
                       </div>
+                    )}
 
-                      {showActions && !showCounter && (
-                        <div className="flex gap-2 mt-2 max-w-[75%]">
-                          <button onClick={() => handleAcceptOffer(msg)} className="flex-1 py-2 px-3 rounded-full bg-[#1B5E20] text-white text-xs font-bold hover:bg-[#2E7D32] transition-colors">✅ Accepter</button>
-                          <button onClick={() => setCounterOfferInput(prev => ({ ...prev, [msg.id]: "" }))} className="flex-1 py-2 px-3 rounded-full bg-[#C5A028] text-white text-xs font-bold hover:bg-[#b8902a] transition-colors">💬 Contre-proposer</button>
-                          <button onClick={() => handleRefuseOffer(msg)} className="flex-1 py-2 px-3 rounded-full bg-white border border-red-300 text-red-500 text-xs font-bold hover:bg-red-50 transition-colors">❌ Refuser</button>
-                        </div>
-                      )}
-
-                      {showActions && showCounter && (
-                        <div className="flex gap-2 mt-2 max-w-[75%] items-center">
-                          <input
-                            type="number"
-                            value={counterOfferInput[msg.id] || ""}
-                            onChange={e => setCounterOfferInput(prev => ({ ...prev, [msg.id]: e.target.value }))}
-                            placeholder="Votre prix €"
-                            className="flex-1 border-2 border-[#C5A028] rounded-full px-3 py-1.5 text-sm text-center font-bold outline-none"
-                            autoFocus
-                          />
-                          <button onClick={() => handleCounterOffer(msg)} className="py-2 px-3 rounded-full bg-[#C5A028] text-white text-xs font-bold hover:bg-[#b8902a]">Envoyer →</button>
-                          <button onClick={() => setCounterOfferInput(prev => { const n = {...prev}; delete n[msg.id]; return n; })} className="py-2 px-3 rounded-full border border-gray-300 text-gray-500 text-xs">✕</button>
-                        </div>
-                      )}
-
-                      {alreadyActed && isOffer && !isMine && (
-                        <p className="text-xs text-gray-400 mt-1">
-                          {alreadyActed === "accepted" ? "✅ Offre acceptée" : alreadyActed === "refused" ? "❌ Offre refusée" : "💬 Contre-offre envoyée"}
-                        </p>
-                      )}
-                    </div>
-                  </React.Fragment>
+                    {alreadyActed && isOffer && !isMine && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        {alreadyActed === "accepted" ? "✅ Offre acceptée" : alreadyActed === "refused" ? "❌ Offre refusée" : "💬 Contre-offre envoyée"}
+                      </p>
+                    )}
+                  </div>
                 );
               })}
               <div ref={messagesEndRef} />
