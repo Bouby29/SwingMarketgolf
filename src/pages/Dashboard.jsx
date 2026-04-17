@@ -195,11 +195,13 @@ const styles = `
     color: #9ca3af !important;
   }
   @media (max-width: 768px) {
-    .dash-sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 200; }
-    .dash-sidebar.open { transform: translateX(0); }
-    .dash-main { margin-left: 0; padding: 1rem; padding-top: 0; }
-    .dash-stat-grid { grid-template-columns: 1fr; }
-    .dash-mobile-header { display: flex !important; align-items: center; justify-content: space-between; padding: 12px 16px; background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
+    .dash-root { display: block; overflow-x: hidden; }
+    .dash-sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 200; width: 280px; }
+    .dash-sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,0.3); }
+    .dash-main { margin-left: 0 !important; padding: 1rem; padding-top: 0; overflow-x: hidden; max-width: 100vw; }
+    .dash-stat-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .dash-page-title { font-size: 1.3rem !important; }
+    .dash-mobile-header { display: flex !important; align-items: center; justify-content: space-between; padding: 12px 16px; background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
   }
 `;
 
