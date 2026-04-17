@@ -76,30 +76,30 @@ export default function HeroSection() {
         <div className="inline-flex items-center gap-2 bg-[#C5A028]/20 border border-[#C5A028]/40 backdrop-blur-sm text-[#C5A028] rounded-full px-4 py-1.5 text-xs font-semibold mb-5 tracking-wider uppercase">
           🔥 Achat immédiat ou enchères
         </div>
-        <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-tight mb-6 max-w-4xl" style={{ whiteSpace: "pre-line" }}>
+        <h1 className="text-3xl sm:text-4xl md:text-7xl font-extrabold text-white leading-tight mb-4 max-w-4xl" style={{ whiteSpace: "pre-line" }}>
           {slide.title}
         </h1>
-        <p className="text-white/75 text-lg md:text-xl mb-8 max-w-2xl leading-relaxed">
+        <p className="text-white/75 text-sm md:text-xl mb-6 max-w-2xl leading-relaxed px-2">
           {slide.subtitle}
         </p>
         <div className="flex flex-wrap gap-3 justify-center">
           {slide.cta.action ? (
             <button
               onClick={slide.cta.action}
-              className="bg-[#C5A028] hover:bg-[#D4AF37] text-white font-semibold rounded-full px-8 py-3 text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
+              className="bg-[#C5A028] hover:bg-[#D4AF37] text-white font-semibold rounded-full px-5 md:px-8 py-2.5 md:py-3 text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
             >
               {slide.cta.label} <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
             <Link to={slide.cta.url}>
-              <button className="bg-[#C5A028] hover:bg-[#D4AF37] text-white font-semibold rounded-full px-8 py-3 text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl">
+              <button className="bg-[#C5A028] hover:bg-[#D4AF37] text-white font-semibold rounded-full px-5 md:px-8 py-2.5 md:py-3 text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl">
                 {slide.cta.label} <ArrowRight className="w-4 h-4" />
               </button>
             </Link>
           )}
           {slide.ctaSecondary && (
             <Link to={slide.ctaSecondary.url}>
-              <button className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold rounded-full px-8 py-3 text-sm transition-all backdrop-blur-sm">
+              <button className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold rounded-full px-5 md:px-8 py-2.5 md:py-3 text-sm transition-all backdrop-blur-sm">
                 {slide.ctaSecondary.label}
               </button>
             </Link>

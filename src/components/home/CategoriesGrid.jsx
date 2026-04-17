@@ -24,10 +24,10 @@ export default function CategoriesGrid() {
   };
 
   return (
-    <section className="w-full py-12 bg-gray-50">
+    <section className="w-full py-6 md:py-12 bg-gray-50">
       <div className="px-6 mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{t('home.categories_title')}</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">{t('home.categories_title')}</h2>
           <p className="text-gray-500 mt-1 text-sm">{t('home.categories_subtitle')}</p>
         </div>
         <div className="flex gap-2">

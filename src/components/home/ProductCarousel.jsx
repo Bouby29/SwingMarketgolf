@@ -25,7 +25,7 @@ export default function ProductCarousel({ title, subtitle, products, titleKey, s
     <section className="w-full px-4 py-12">
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h2>
           <p className="text-gray-500 mt-1 text-sm">{subtitle}</p>
         </div>
         <div className="flex gap-2">
@@ -52,7 +52,7 @@ export default function ProductCarousel({ title, subtitle, products, titleKey, s
         style={{ scrollBehavior: "smooth" }}
       >
         {displayProducts.map((product) => (
-          <div key={product.id} className="flex-shrink-0 w-72">
+          <div key={product.id} className="flex-shrink-0 w-44 sm:w-56 md:w-72">
             <ProductCard product={product} />
           </div>
         ))}
