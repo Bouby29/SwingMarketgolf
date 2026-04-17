@@ -51,10 +51,11 @@ export default function Footer() {
               <Link to={createPageUrl("Marketplace") + "?category=Balles de golf"} className="block hover:text-white transition-colors">Balles de golf</Link>
               <Link to={createPageUrl("Marketplace") + "?category=Sacs de golf"} className="block hover:text-white transition-colors">Sacs de golf</Link>
               <Link to={createPageUrl("Marketplace") + "?category=Vêtements"} className="block hover:text-white transition-colors">Vêtements golf</Link>
-              <Link to={createPageUrl("ProfessionnelsSellers")} className="block hover:text-white transition-colors">Vendeurs pro
+              <Link to={createPageUrl("ProfessionnelsSellers")} className="block hover:text-white transition-colors">Vendeurs pro</Link>
+              <Link to="/Abonnements" className="text-gray-400 hover:text-white text-sm transition-colors">Abonnements pro</Link>
+              <Link to="/Abonnements" className="inline-flex items-center gap-1.5 mt-2 bg-[#C5A028] hover:bg-[#b8902a] text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
+                ⭐ Voir nos abonnements
               </Link>
-              <Link to="/Abonnements" className="text-gray-400 hover:text-white text-sm transition-colors">
-                Abonnements pro</Link>
             </div>
           </div>
 
