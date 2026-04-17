@@ -375,7 +375,7 @@ export default function Messages() {
                   {/* Bouton Acheter si le vendeur a accepté — visible pour l'acheteur */}
                   {msg.content?.startsWith("✅ J'accepte") && !isMine && selectedConv?.product_id && (
                     <div className="flex justify-start mb-2">
-                      
+                      <a
                         href={"/Checkout?product=" + selectedConv.product_id}
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1B5E20] text-white text-sm font-bold hover:bg-green-800 transition-colors shadow-md"
                       >
