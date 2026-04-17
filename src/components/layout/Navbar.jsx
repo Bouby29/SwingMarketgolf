@@ -317,49 +317,61 @@ export default function Navbar() {
         setMobileOpenCategory={setMobileOpenCategory}
       />
 
-      {/* Bottom Tab Bar - mobile uniquement */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[9990] bg-white border-t border-gray-200 safe-area-pb">
-        <div className="flex items-center justify-around px-2 py-2">
-          <Link to={createPageUrl("Home")} className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 hover:text-[#1B5E20]">
-            <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Accueil</span>
+      {/* Bottom Tab Bar - style Leboncoin */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[9990] bg-white border-t border-gray-100 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]" style={{paddingBottom: "env(safe-area-inset-bottom)"}}>
+        <div className="flex items-stretch h-14">
+
+          {/* Accueil */}
+          <Link to={createPageUrl("Home")} className="flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-400 active:text-[#1B5E20]">
+            <Home className="w-[22px] h-[22px]" strokeWidth={1.8} />
+            <span className="text-[10px] font-medium tracking-tight">Accueil</span>
           </Link>
-          <Link to={createPageUrl("Marketplace")} className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 hover:text-[#1B5E20]">
-            <LayoutGrid className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Marketplace</span>
+
+          {/* Marketplace */}
+          <Link to={createPageUrl("Marketplace")} className="flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-400 active:text-[#1B5E20]">
+            <Search className="w-[22px] h-[22px]" strokeWidth={1.8} />
+            <span className="text-[10px] font-medium tracking-tight">Rechercher</span>
           </Link>
-          {/* Bouton Vendre central */}
-          <a href="#" onClick={handleVendre} className="flex flex-col items-center gap-0.5 -mt-4">
-            <div className="w-12 h-12 rounded-full bg-[#C5A028] flex items-center justify-center shadow-lg border-2 border-white">
-              <Plus className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-[10px] font-medium text-[#C5A028]">Vendre</span>
-          </a>
-          <Link to={isLoggedIn ? createPageUrl(t("nav.messages")) : createPageUrl("Login")} className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 hover:text-[#1B5E20] relative">
+
+          {/* Vendre - bouton central surélevé */}
+          <div className="flex-1 flex flex-col items-center justify-center relative">
+            <a href="#" onClick={handleVendre} className="flex flex-col items-center gap-0.5 -mt-3">
+              <div className="w-11 h-11 rounded-full bg-[#1B5E20] flex items-center justify-center shadow-md">
+                <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
+              </div>
+              <span className="text-[10px] font-medium text-[#1B5E20] tracking-tight">Publier</span>
+            </a>
+          </div>
+
+          {/* Messages */}
+          <Link to={isLoggedIn ? createPageUrl(t("nav.messages")) : createPageUrl("Login")} className="flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-400 active:text-[#1B5E20]">
             <div className="relative">
-              <MessageCircle className="w-5 h-5" />
+              <MessageCircle className="w-[22px] h-[22px]" strokeWidth={1.8} />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1.5 min-w-[15px] h-[15px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-2 min-w-[15px] h-[15px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </div>
-            <span className="text-[10px] font-medium">Messages</span>
+            <span className="text-[10px] font-medium tracking-tight">Messages</span>
           </Link>
-          <Link to={isLoggedIn ? createPageUrl("Dashboard") : createPageUrl("Login")} className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 hover:text-[#1B5E20]">
+
+          {/* Mon compte */}
+          <Link to={isLoggedIn ? createPageUrl("Dashboard") : createPageUrl("Login")} className="flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-400 active:text-[#1B5E20]">
             {isLoggedIn ? (
-              <div className="w-5 h-5 rounded-full bg-[#1B5E20] flex items-center justify-center">
-                <span className="text-white text-[9px] font-bold">{user?.full_name?.[0] || "U"}</span>
+              <div className="w-[22px] h-[22px] rounded-full bg-[#1B5E20] flex items-center justify-center">
+                <span className="text-white text-[10px] font-bold">{user?.full_name?.[0] || "U"}</span>
               </div>
             ) : (
-              <User className="w-5 h-5" />
+              <User className="w-[22px] h-[22px]" strokeWidth={1.8} />
             )}
-            <span className="text-[10px] font-medium">{isLoggedIn ? "Profil" : "Connexion"}</span>
+            <span className="text-[10px] font-medium tracking-tight">Mon compte</span>
           </Link>
+
         </div>
       </div>
 
-      {/* Spacer pour éviter que le contenu soit caché derrière la bottom bar */}
+      {/* Spacer */}
       <div className="md:hidden h-16" />
     </>
   );
