@@ -414,31 +414,59 @@ export default function Dashboard() {
       case "addresses": return <AddressesSection user={user} />;
       case "subscription": return (
         <div>
-          <div className="dash-subscription-hero">
-            <div style={{ position: "relative", zIndex: 1 }}>
-              <div style={{ fontSize: "2.5rem", marginBottom: 8 }}>{planCfg.icon}</div>
-              <div style={{ fontFamily: "Playfair Display, serif", fontSize: "1.6rem", fontWeight: 800, marginBottom: 4 }}>Plan {planCfg.label}</div>
-              <div style={{ opacity: 0.75, fontSize: "0.9rem" }}>{plan === "basique" ? "5 annonces / mois" : plan === "pro" ? "30 annonces / mois" : "Annonces illimitées"}</div>
-              {(plan === "basique" || plan === "pro") && (
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: "0.8rem", opacity: 0.8 }}>
-                    <span>Annonces utilisées ce mois</span>
-                    <span style={{ fontWeight: 700 }}>{annCount} / {planCfg.limit}</span>
-                  </div>
-                  <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 20, height: 8, overflow: "hidden" }}>
-                    <div style={{ background: "white", height: "100%", borderRadius: 20, width: `${Math.min(100, (annCount / planCfg.limit) * 100)}%`, transition: "width 0.4s" }} />
-                  </div>
+          {!profile?.is_pro && (
+            <div style={{padding:"2rem",background:"white",borderRadius:16,border:"1px solid #e5e7eb",marginBottom:20}}>
+              <div style={{textAlign:"center",marginBottom:24}}>
+                <div style={{fontSize:"3rem",marginBottom:12}}>🎯</div>
+                <div style={{fontFamily:"Playfair Display, serif",fontSize:"1.4rem",fontWeight:800,color:"#1a2332",marginBottom:8}}>Vous êtes vendeur particulier</div>
+                <p style={{color:"#6b7280",fontSize:"0.9rem",maxWidth:400,margin:"0 auto"}}>
+                  Les abonnements Pro sont pour les vendeurs professionnels. En tant que particulier, vous publiez gratuitement jusqu&#39;à 5 annonces par mois.
+                </p>
+              </div>
+              <div style={{background:"#f0f7f0",borderRadius:12,padding:"1.25rem",marginBottom:20}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:8,fontSize:"0.85rem",color:"#374151",fontWeight:600}}>
+                  <span>Annonces ce mois</span>
+                  <span style={{color:"#1B5E20"}}>{annCount} / 5</span>
                 </div>
-              )}
+                <div style={{background:"#d1fae5",borderRadius:20,height:8,overflow:"hidden"}}>
+                  <div style={{background:"#1B5E20",height:"100%",borderRadius:20,width:`${Math.min(100,(annCount/5)*100)}%`,transition:"width 0.4s"}} />
+                </div>
+              </div>
+              <div style={{textAlign:"center"}}>
+                <p style={{fontSize:"0.85rem",color:"#6b7280",marginBottom:12}}>Vendez régulièrement ? Passez Pro pour plus de visibilité.</p>
+                <Link to="/Abonnements" style={{background:"#C5A028",color:"white",padding:"0.75rem 2rem",borderRadius:50,fontWeight:800,textDecoration:"none",fontSize:"0.9rem",display:"inline-block"}}>
+                  Voir les offres Pro &#8594;
+                </Link>
+              </div>
             </div>
-          </div>
-          {plan === "basique" && (
-            <div className="dash-upgrade-card">
-              <div style={{ fontFamily: "Playfair Display, serif", fontSize: "1.2rem", fontWeight: 800, marginBottom: 8 }}>Passez à la vitesse supérieure 🚀</div>
-              <p style={{ opacity: 0.9, fontSize: "0.88rem", marginBottom: 16 }}>Plus d annonces, plus de visibilité, plus de ventes.</p>
-              <Link to="/Abonnements" style={{ background: "white", color: "#C5A028", padding: "0.65rem 2rem", borderRadius: 50, fontWeight: 800, textDecoration: "none", fontSize: "0.9rem", display: "inline-block" }}>
-                Voir les offres →
-              </Link>
+          )}
+          {profile?.is_pro && (
+            <div>
+              <div className="dash-subscription-hero">
+                <div style={{position:"relative",zIndex:1}}>
+                  <div style={{fontSize:"2.5rem",marginBottom:8}}>{planCfg.icon}</div>
+                  <div style={{fontFamily:"Playfair Display, serif",fontSize:"1.6rem",fontWeight:800,marginBottom:4}}>Plan {planCfg.label}</div>
+                  <div style={{opacity:0.75,fontSize:"0.9rem"}}>{plan==="pro"?"30 annonces / mois":"Annonces illimitées"}</div>
+                  {plan==="pro" && (
+                    <div style={{marginTop:16}}>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,fontSize:"0.8rem",opacity:0.8}}>
+                        <span>Annonces utilisées</span>
+                        <span style={{fontWeight:700}}>{annCount} / {planCfg.limit}</span>
+                      </div>
+                      <div style={{background:"rgba(255,255,255,0.15)",borderRadius:20,height:8,overflow:"hidden"}}>
+                        <div style={{background:"white",height:"100%",borderRadius:20,width:`${Math.min(100,(annCount/planCfg.limit)*100)}%`,transition:"width 0.4s"}} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="dash-upgrade-card">
+                <div style={{fontFamily:"Playfair Display, serif",fontSize:"1.1rem",fontWeight:800,marginBottom:8}}>Gérer mon abonnement</div>
+                <p style={{opacity:0.9,fontSize:"0.88rem",marginBottom:16}}>Modifier ou upgrader votre abonnement Pro.</p>
+                <Link to="/Abonnements" style={{background:"white",color:"#C5A028",padding:"0.65rem 2rem",borderRadius:50,fontWeight:800,textDecoration:"none",fontSize:"0.9rem",display:"inline-block"}}>
+                  Gérer &#8594;
+                </Link>
+              </div>
             </div>
           )}
         </div>
