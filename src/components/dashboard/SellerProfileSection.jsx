@@ -13,7 +13,7 @@ export default function SellerProfileSection({ user }) {
     bio: "",
     phone: "",
     city: "",
-    logo_url: "",
+    avatar_url: "",
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -32,7 +32,7 @@ export default function SellerProfileSection({ user }) {
             bio: data.bio || "",
             phone: data.phone || "",
             city: data.city || "",
-            logo_url: data.logo_url || "",
+            avatar_url: data.avatar_url || "",
           });
         }
         setLoading(false);
@@ -49,8 +49,8 @@ export default function SellerProfileSection({ user }) {
       const { error: uploadError } = await supabase.storage.from("products").upload(path, file, { upsert: true, contentType: file.type });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from("products").getPublicUrl(path);
-      setForm(prev => ({ ...prev, logo_url: publicUrl }));
-      const { error: updateError } = await supabase.from("profiles").update({ logo_url: publicUrl }).eq("id", user.id);
+      setForm(prev => ({ ...prev, avatar_url: publicUrl }));
+      const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
       if (updateError) throw updateError;
     } catch (err) {
       console.error("Erreur upload logo:", err);
@@ -69,7 +69,7 @@ export default function SellerProfileSection({ user }) {
         bio: form.bio,
         phone: form.phone,
         city: form.city,
-        logo_url: form.logo_url,
+        avatar_url: form.avatar_url,
         updated_at: new Date().toISOString(),
       })
       .eq("id", user.id);
@@ -99,8 +99,8 @@ export default function SellerProfileSection({ user }) {
         <label className="block text-sm font-semibold text-gray-700 mb-3">Logo de la boutique</label>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#f0f7f0", border: "2px dashed #1B5E20", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-            {form.logo_url
-              ? <img src={form.logo_url} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            {form.avatar_url
+              ? <img src={form.avatar_url} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               : <span style={{ fontSize: "1.8rem" }}>🏪</span>
             }
           </div>
@@ -110,8 +110,8 @@ export default function SellerProfileSection({ user }) {
               <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: "none" }} />
             </label>
             <p style={{ color: "#888", fontSize: "0.75rem", marginTop: 6 }}>JPG, PNG ou WebP — affiché sur vos annonces</p>
-            {form.logo_url && (
-              <button onClick={() => setForm(prev => ({ ...prev, logo_url: "" }))} style={{ color: "#c62828", fontSize: "0.75rem", background: "none", border: "none", cursor: "pointer", marginTop: 4 }}>
+            {form.avatar_url && (
+              <button onClick={() => setForm(prev => ({ ...prev, avatar_url: "" }))} style={{ color: "#c62828", fontSize: "0.75rem", background: "none", border: "none", cursor: "pointer", marginTop: 4 }}>
                 Supprimer le logo
               </button>
             )}
@@ -122,8 +122,8 @@ export default function SellerProfileSection({ user }) {
       {/* Aperçu */}
       <div className="flex items-center gap-4 p-4 bg-[#F0F7F0] rounded-xl mb-6 border border-[#C8E6C9]">
         <div className="w-14 h-14 rounded-full bg-[#1B5E20] flex items-center justify-center text-white font-bold text-xl shrink-0 overflow-hidden">
-          {form.logo_url
-            ? <img src={form.logo_url} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          {form.avatar_url
+            ? <img src={form.avatar_url} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             : displayName?.[0]?.toUpperCase() || "V"
           }
         </div>
