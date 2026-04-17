@@ -86,12 +86,22 @@ export default function Login() {
     setLoading(true); setError("");
     const pwdChecks = [form.password.length >= 8, /[A-Z]/.test(form.password), /[0-9]/.test(form.password), /[^A-Za-z0-9]/.test(form.password)];
     if (pwdChecks.filter(Boolean).length < 4) { setError("Le mot de passe doit être Fort."); setLoading(false); return; }
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: form.email, password: form.password,
       options: { data: { full_name: form.firstName + " " + form.lastName, is_pro: isPro, ...(isPro ? { company: form.companyName } : {}) } }
     });
     if (error) setError(error.message);
     else {
+      // Créer le profil avec is_pro
+      if (signUpData?.user?.id) {
+        await supabase.from("profiles").upsert({
+          id: signUpData.user.id,
+          email: form.email,
+          full_name: form.firstName + " " + form.lastName,
+          is_pro: !!isPro,
+          plan: isPro ? "basique" : null,
+        });
+      }
       setSuccess("Compte créé ! Vérifiez votre email pour confirmer votre inscription.");
       sendSignupConfirmation({ email: form.email, full_name: form.firstName + " " + form.lastName });
     }
