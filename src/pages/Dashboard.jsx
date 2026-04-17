@@ -195,10 +195,11 @@ const styles = `
     color: #9ca3af !important;
   }
   @media (max-width: 768px) {
-    .dash-sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+    .dash-sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 200; }
     .dash-sidebar.open { transform: translateX(0); }
-    .dash-main { margin-left: 0; padding: 1rem; }
+    .dash-main { margin-left: 0; padding: 1rem; padding-top: 0; }
     .dash-stat-grid { grid-template-columns: 1fr; }
+    .dash-mobile-header { display: flex !important; align-items: center; justify-content: space-between; padding: 12px 16px; background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
   }
 `;
 
@@ -363,6 +364,7 @@ export default function Dashboard() {
   const [sales, setSales] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -528,7 +530,19 @@ case "messages": navigate("/Messages"); return null;
     <>
       <style>{styles}</style>
       <div className="dash-root">
-        <aside className="dash-sidebar">
+        {/* Overlay mobile */}
+        {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:99}} />}
+
+        {/* Header mobile */}
+        <div style={{display:"none"}} className="dash-mobile-header">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{background:"none",border:"none",cursor:"pointer",padding:"8px",color:"#1a2e1c"}}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <span style={{fontWeight:700,color:"#1a2e1c",fontSize:"1rem"}}>Mon compte</span>
+          <div style={{width:38}} />
+        </div>
+
+        <aside className={`dash-sidebar${sidebarOpen ? " open" : ""}`}>
           <div className="dash-sidebar-header">
             <Link to="/" className="dash-logo">SwingMarketGolf</Link>
             <div className="dash-user-card">
@@ -550,7 +564,7 @@ case "messages": navigate("/Messages"); return null;
                 {group.items.map(item => (
                   <button key={item.id}
                     className={`dash-nav-btn${section === item.id ? " active" : ""}`}
-                    onClick={() => { if (item.id === "sell") { navigate("/CreateListing"); } else if (item.id === "messages") { navigate("/Messages"); } else { setSection(item.id); } }}>
+                    onClick={() => { if (item.id === "sell") { navigate("/CreateListing"); } else if (item.id === "messages") { navigate("/Messages"); } else { setSection(item.id); setSidebarOpen(false); } }}>
                     <span className="dash-nav-icon">{item.icon}</span>
                     {item.label}
                   </button>
