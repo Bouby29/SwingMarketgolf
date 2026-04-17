@@ -51,23 +51,27 @@ export default function CreateListing() {
   const handleSubmit = async () => {
     if (!user) return;
     setSaving(true);
-    // Verification plan abonnement
+    // Verification plan abonnement (pros uniquement)
     const PLAN_LIMITS = { basique: 5, pro: 30, premium: 999999, business: 999999 };
-    const { data: planProfile } = await supabase.from("profiles").select("plan, plan_annonces_count, plan_reset_date").eq("id", user.id).single();
-    const userPlan = planProfile?.plan || "basique";
-    const planLimit = PLAN_LIMITS[userPlan];
-    const today = new Date().toISOString().split("T")[0];
-    const resetDate = planProfile?.plan_reset_date;
-    const monthChanged = !resetDate || new Date(resetDate).getMonth() !== new Date(today).getMonth() || new Date(resetDate).getFullYear() !== new Date(today).getFullYear();
-    let annCount = monthChanged ? 0 : (planProfile?.plan_annonces_count || 0);
-    if (monthChanged) await supabase.from("profiles").update({ plan_annonces_count: 0, plan_reset_date: today }).eq("id", user.id);
-    if (annCount >= planLimit) {
-      setUserPlanInfo({ plan: userPlan, limit: planLimit });
-      setShowLimitModal(true);
-      setSaving(false);
-      return;
+    const { data: planProfile } = await supabase.from("profiles").select("plan, plan_annonces_count, plan_reset_date, is_pro").eq("id", user.id).single();
+    const isPro = planProfile?.is_pro === true;
+    // Particuliers : aucune limite
+    if (isPro) {
+      const userPlan = planProfile?.plan || "basique";
+      const planLimit = PLAN_LIMITS[userPlan] || 5;
+      const today = new Date().toISOString().split("T")[0];
+      const resetDate = planProfile?.plan_reset_date;
+      const monthChanged = !resetDate || new Date(resetDate).getMonth() !== new Date(today).getMonth() || new Date(resetDate).getFullYear() !== new Date(today).getFullYear();
+      let annCount = monthChanged ? 0 : (planProfile?.plan_annonces_count || 0);
+      if (monthChanged) await supabase.from("profiles").update({ plan_annonces_count: 0, plan_reset_date: today }).eq("id", user.id);
+      if (annCount >= planLimit) {
+        setUserPlanInfo({ plan: userPlan, limit: planLimit });
+        setShowLimitModal(true);
+        setSaving(false);
+        return;
+      }
+      await supabase.from("profiles").update({ plan_annonces_count: annCount + 1 }).eq("id", user.id);
     }
-    await supabase.from("profiles").update({ plan_annonces_count: annCount + 1 }).eq("id", user.id);
     try {
       const isAuction = form.sale_type === 'auction';
       const auctionDays = parseInt(form.auction_duration || '7');
