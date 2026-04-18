@@ -6,6 +6,7 @@ import AdminOrders from "../components/admin/AdminOrders";
 import AdminCommissions from "../components/admin/AdminCommissions";
 import AdminShipping from "../components/admin/AdminShipping";
 import AdminDisputes from "../components/admin/AdminDisputes";
+import AdminReviews from "../components/admin/AdminReviews";
 import AdminFAQ from "../components/admin/AdminFAQ";
 
 const ADMIN_PASSWORD = "swingadmin2025!";
