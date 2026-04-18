@@ -58,13 +58,17 @@ export default function BuyerOrderCard({ order }) {
   };
 
   const handleConfirm = async () => {
-    await supabase.from("orders").update({ status: "completed" }).eq("id", order.id);
+    await supabase.from("orders").update({
+      status: "completed",
+      buyer_confirmed: true,
+      buyer_confirmed_at: new Date().toISOString()
+    }).eq("id", order.id);
     queryClient.invalidateQueries({ queryKey: ["my-orders"] });
   };
 
   const handleDispute = () => {
     if (!disputeReason.trim()) return;
-    update.mutate({ status: "disputed", dispute_reason: disputeReason });
+    update.mutate({ status: "disputed", dispute_reason: disputeReason, dispute: true });
     setShowDisputeForm(false);
   };
 
