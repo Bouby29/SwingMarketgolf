@@ -1,4 +1,51 @@
 import React, { useState, useEffect } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+
+function StripePaymentForm({ product, onSuccess, onBack, placing, setPlacing }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [error, setError] = useState("");
+
+  const handlePay = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setPlacing(true);
+    setError("");
+    const { error: submitError } = await elements.submit();
+    if (submitError) { setError(submitError.message); setPlacing(false); return; }
+    const res = await fetch("/api/create-payment-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: product.price, orderId: product._orderId, sellerId: product.seller_id, buyerId: product._buyerId })
+    });
+    const { clientSecret, error: apiError } = await res.json();
+    if (apiError) { setError(apiError); setPlacing(false); return; }
+    const { error: confirmError } = await stripe.confirmPayment({
+      elements,
+      clientSecret,
+      confirmParams: { return_url: window.location.origin + "/Dashboard" },
+      redirect: "if_required"
+    });
+    if (confirmError) { setError(confirmError.message); setPlacing(false); return; }
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handlePay}>
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-4">
+        <PaymentElement />
+      </div>
+      {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+      <button type="button" onClick={onBack} className="text-sm text-gray-400 mb-3 flex items-center gap-1">← Retour</button>
+      <button type="submit" disabled={!stripe || placing} className="w-full bg-[#1B5E20] hover:bg-[#2E7D32] disabled:opacity-40 text-white rounded-full font-semibold py-3 flex items-center justify-center gap-2 transition-colors">
+        {placing ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Traitement...</> : <><Lock className="w-4 h-4" /> Payer {product.price?.toFixed(2)} €</>}
+      </button>
+    </form>
+  );
+}
 import { useLocation, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
@@ -297,64 +344,23 @@ export default function Checkout() {
                   </button>
                   <h2 className="text-xl font-bold text-gray-900">Paiement sécurisé</h2>
                 </div>
-
-                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-3 mb-2">
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-3 mb-4">
                   <Lock className="w-5 h-5 text-blue-600 shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-blue-900">Paiement sécurisé par Stripe</p>
                     <p className="text-xs text-blue-600">Vos données bancaires ne sont jamais stockées sur nos serveurs</p>
                   </div>
-                  <div className="ml-auto flex gap-1.5 shrink-0">
-                    {["VISA", "MC", "CB"].map(c => (
-                      <div key={c} className="bg-white border border-blue-200 rounded px-1.5 py-0.5 text-[9px] font-bold text-blue-700">{c}</div>
-                    ))}
-                  </div>
                 </div>
-
-                <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">Numéro de carte</label>
-                    <div className="relative">
-                      <Input placeholder="0000 0000 0000 0000" value={cardNumber} onChange={e => setCardNumber(formatCard(e.target.value))} className="rounded-xl border-gray-200 pr-10 text-base tracking-widest font-mono" maxLength={19} />
-                      <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">Nom sur la carte</label>
-                    <Input placeholder="PRÉNOM NOM" value={cardName} onChange={e => setCardName(e.target.value.toUpperCase())} className="rounded-xl border-gray-200 uppercase tracking-wide" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">Expiration</label>
-                      <Input placeholder="MM/AA" value={cardExpiry} onChange={e => setCardExpiry(formatExpiry(e.target.value))} className="rounded-xl border-gray-200" maxLength={5} />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">CVC</label>
-                      <Input placeholder="123" value={cardCvc} onChange={e => setCardCvc(e.target.value.replace(/\D/g, "").slice(0, 4))} className="rounded-xl border-gray-200" maxLength={4} type="password" />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSaveCard(!saveCard)}>
-                    <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-all ${saveCard ? "bg-[#1B5E20] border-[#1B5E20]" : "border-gray-300"}`}>
-                      {saveCard && <Check className="w-3 h-3 text-white" />}
-                    </div>
-                    <span className="text-sm text-gray-600">Sauvegarder cette carte pour mes prochains achats</span>
-                  </div>
-                </div>
-
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-700">Le paiement Stripe sera activé prochainement. Votre commande sera enregistrée sans débit pour le moment.</p>
-                </div>
-
-                <button onClick={handleConfirm} disabled={placing} className="w-full bg-[#1B5E20] hover:bg-[#2E7D32] disabled:opacity-40 text-white rounded-full font-semibold py-3 flex items-center justify-center gap-2 transition-colors mt-2">
-                  {placing ? (
-                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Traitement...</>
-                  ) : (
-                    <><Lock className="w-4 h-4" /> Confirmer la commande — {product.price?.toFixed(2)} €</>
-                  )}
-                </button>
-
-                <div className="flex items-center justify-center gap-4 mt-2">
+                <Elements stripe={stripePromise} options={{ mode: "payment", amount: Math.round((product.price || 0) * 100), currency: "eur" }}>
+                  <StripePaymentForm
+                    product={{ ...product, _orderId: null, _buyerId: user?.id }}
+                    onSuccess={handleConfirm}
+                    onBack={() => setStep(0)}
+                    placing={placing}
+                    setPlacing={setPlacing}
+                  />
+                </Elements>
+                <div className="flex items-center justify-center gap-4 mt-4">
                   {[{ icon: Shield, text: "Achat protégé" }, { icon: Lock, text: "SSL 256-bit" }, { icon: Star, text: "Stripe Secure" }].map(({ icon: Icon, text }) => (
                     <div key={text} className="flex items-center gap-1.5 text-xs text-gray-400">
                       <Icon className="w-3.5 h-3.5" /> {text}
