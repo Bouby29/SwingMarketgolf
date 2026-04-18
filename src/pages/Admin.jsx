@@ -64,6 +64,7 @@ export default function Admin() {
     { id: "shipping", label: "🚚 Transport" },
     { id: "disputes", label: "⚠️ Litiges" },
     { id: "faq", label: "❓ FAQ" },
+    { id: "reviews", label: "⭐ Avis" },
   ];
 
   return (
