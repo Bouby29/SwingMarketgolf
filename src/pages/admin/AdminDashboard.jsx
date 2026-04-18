@@ -137,38 +137,7 @@ export default function AdminDashboard() {
     document.body.style.color = "#333";
   }, []);
 
-  const loadReviews = async () => {
-    const { data: rv } = await supabaseAdmin.from("reviews").select("*").order("created_at", { ascending: false });
-    setReviews(rv || []);
-    const { data: pr } = await supabaseAdmin.from("profiles").select("id, full_name, shop_name, email");
-    setReviewSellers(pr || []);
-  };
-
-  const saveReview = async () => {
-    if (!reviewForm.seller_id || !reviewForm.buyer_name) return;
-    if (reviewEditing) {
-      await supabaseAdmin.from("reviews").update({ seller_id: reviewForm.seller_id, buyer_name: reviewForm.buyer_name, rating: parseInt(reviewForm.rating), comment: reviewForm.comment }).eq("id", reviewEditing);
-    } else {
-      await supabaseAdmin.from("reviews").insert({ seller_id: reviewForm.seller_id, buyer_name: reviewForm.buyer_name, rating: parseInt(reviewForm.rating), comment: reviewForm.comment });
-    }
-    setReviewForm({ seller_id: "", buyer_name: "", rating: 5, comment: "" });
-    setReviewShowForm(false);
-    setReviewEditing(null);
-    loadReviews();
-  };
-
-  const deleteReview = async (id) => {
-    if (!window.confirm("Supprimer cet avis ?")) return;
-    await supabaseAdmin.from("reviews").delete().eq("id", id);
-    loadReviews();
-  };
-
-  const sellerName = (id) => {
-    const s = reviewSellers.find(s => s.id === id);
-    return s ? (s.shop_name || s.full_name || s.email || id) : id;
-  };
-
-  useEffect(() => { if (authed) loadData(); }, [authed]);
+    useEffect(() => { if (authed) loadData(); }, [authed]);
 
   const loadData = async () => {
     setLoading(true);
