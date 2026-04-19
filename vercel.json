@@ -1,1 +1,8 @@
-{"rewrites":[{"source":"/(.*)", "destination":"/"}]}
+{
+  "crons": [
+    {
+      "path": "/api/release-funds",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
