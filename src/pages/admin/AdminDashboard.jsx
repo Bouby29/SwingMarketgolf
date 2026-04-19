@@ -31,6 +31,7 @@ const STATUS_COLORS = {
   shipped: { bg: "#e0f2f1", color: "#00695c", label: "Expédié" },
   delivered: { bg: "#e8f5e9", color: "#2e7d32", label: "Livré" },
   cancelled: { bg: "#ffebee", color: "#c62828", label: "Annulé" },
+  disputed: { bg: "#fff3e0", color: "#e65100", label: "⚠️ Litige" },
 };
 
 function Badge({ status }) {
