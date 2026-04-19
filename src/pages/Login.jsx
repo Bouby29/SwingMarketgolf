@@ -70,6 +70,20 @@ export default function Login() {
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin + "/" }
+    });
+  };
+
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin + "/" }
+    });
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true); setError("");
