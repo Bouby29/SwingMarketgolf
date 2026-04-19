@@ -10,20 +10,17 @@ module.exports = async (req, res) => {
 
   const now = new Date();
   const cutoff48h = new Date(now - 48 * 60 * 60 * 1000).toISOString();
-  const cutoff5d = new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString();
 
-  // CAS 1: Acheteur a confirmé conforme + 48h écoulées
+  // CAS 1: Acheteur a confirmé conforme → libération IMMEDIATE
   const { data: confirmed } = await supabase
     .from('orders')
     .select('*')
     .eq('payment_status', 'paid')
     .eq('seller_paid', false)
-    .eq('status', 'delivered')
     .eq('buyer_confirmed', true)
-    .eq('dispute', false)
-    .lt('buyer_confirmed_at', cutoff48h);
+    .eq('dispute', false);
 
-  // CAS 2: Livré + acheteur n'a pas répondu sous 5 jours (protection vendeur)
+  // CAS 2: Livré + acheteur n'a pas répondu sous 48h → libération automatique
   const { data: noResponse } = await supabase
     .from('orders')
     .select('*')
@@ -32,8 +29,9 @@ module.exports = async (req, res) => {
     .eq('status', 'delivered')
     .eq('buyer_confirmed', false)
     .eq('dispute', false)
-    .lt('delivered_at', cutoff5d);
+    .lt('delivered_at', cutoff48h);
 
+  // CAS 3: Litige (dispute: true) → on ne touche à RIEN
   const toRelease = [...(confirmed || []), ...(noResponse || [])];
 
   let released = 0;
@@ -41,11 +39,10 @@ module.exports = async (req, res) => {
     await supabase.from('orders').update({
       seller_paid: true,
       seller_paid_at: now.toISOString(),
-      release_reason: order.buyer_confirmed ? 'buyer_confirmed' : 'auto_5days'
+      release_reason: order.buyer_confirmed ? 'buyer_confirmed' : 'auto_48h'
     }).eq('id', order.id);
     released++;
   }
 
-  // CAS 3: Litiges → on ne touche à RIEN, admin doit résoudre manuellement
-  res.status(200).json({ released, blocked_disputes: 'handled by admin' });
+  res.status(200).json({ released });
 };
