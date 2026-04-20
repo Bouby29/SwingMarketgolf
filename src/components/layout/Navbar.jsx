@@ -240,9 +240,9 @@ export default function Navbar() {
               </button>
 
               {/* Desktop nav */}
+              <a href="/SearchRequestsList" className="hidden sm:block text-xs font-medium text-[#C5A028] hover:underline px-3 py-2 whitespace-nowrap">📋 Demandes</a>
               {isLoggedIn ? (
                 <>
-                  <a href="/SearchRequestsList" className="hidden sm:block text-xs font-medium text-[#C5A028] hover:underline px-3 py-2 whitespace-nowrap">📋 Demandes</a>
                   <a href="#" onClick={handleVendre} className="hidden sm:block">
                     <Button size="sm" className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white rounded-full gap-1.5 text-xs px-3">
                       <Plus className="w-3.5 h-3.5" /> Vendre
