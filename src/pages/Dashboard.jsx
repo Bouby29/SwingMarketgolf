@@ -559,7 +559,70 @@ case "messages": navigate("/Messages"); return null;
   return (
     <>
       <style>{styles}</style>
-      <div className="dash-root">
+      <div className="md:hidden" style={{minHeight:"100vh",background:"#F2F2F7"}}>
+        <div style={{padding:"16px 20px 12px",fontSize:32,fontWeight:700,color:"#000"}}>Profil</div>
+        <div style={{margin:"0 16px 12px",background:"#fff",borderRadius:16,padding:"14px 16px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{width:56,height:56,borderRadius:14,background:"#1B5E20",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              {profile?.avatar_url
+                ? <img src={profile.avatar_url} alt="" style={{width:56,height:56,borderRadius:14,objectFit:"cover"}} />
+                : <span style={{fontSize:24,fontWeight:700,color:"#fff"}}>{(profile?.shop_name||profile?.full_name||user?.email||"U")[0].toUpperCase()}</span>
+              }
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:17,fontWeight:600,color:"#000",marginBottom:2}}>{profile?.shop_name||profile?.full_name||user?.email}</div>
+              <div style={{fontSize:13,color:"#888"}}>{user?.email}</div>
+            </div>
+            <button onClick={()=>setSection("info")} style={{background:"#F2F2F7",border:"none",borderRadius:8,padding:"6px 14px",fontSize:14,fontWeight:500,cursor:"pointer"}}>Modifier</button>
+          </div>
+        </div>
+        <div style={{margin:"0 16px 16px",background:"#fff",borderRadius:16,padding:"14px 8px"}}>
+          <div style={{display:"flex",justifyContent:"space-around"}}>
+            <div style={{textAlign:"center"}}><div style={{fontSize:20,fontWeight:700}}>{profile?.sales_count||0}</div><div style={{fontSize:12,color:"#888",marginTop:2}}>Ventes</div></div>
+            <div style={{width:"0.5px",background:"#e0e0e0"}}></div>
+            <div style={{textAlign:"center"}}><div style={{fontSize:20,fontWeight:700}}>{profile?.purchases_count||0}</div><div style={{fontSize:12,color:"#888",marginTop:2}}>Achats</div></div>
+            <div style={{width:"0.5px",background:"#e0e0e0"}}></div>
+            <div style={{textAlign:"center"}}><div style={{fontSize:20,fontWeight:700}}>{profile?.favorites_count||0}</div><div style={{fontSize:12,color:"#888",marginTop:2}}>Favoris</div></div>
+          </div>
+        </div>
+        <div style={{padding:"0 0 32px"}}>
+          {NAV.map(group => (
+            <div key={group.group}>
+              <div style={{padding:"0 32px 6px",fontSize:12,fontWeight:500,color:"#888",textTransform:"uppercase",letterSpacing:0.5,marginTop:8}}>{group.group}</div>
+              <div style={{margin:"0 16px 12px",background:"#fff",borderRadius:16,overflow:"hidden"}}>
+                {group.items.map((item, i) => (
+                  <div key={item.id} onClick={()=>{ if(item.id==="sell"){navigate("/CreateListing");}else if(item.id==="messages"){navigate("/Messages");}else{setSection(item.id);} }}
+                    style={{display:"flex",alignItems:"center",padding:"0 16px",minHeight:50,position:"relative",cursor:"pointer",background:section===item.id?"#f0f4f0":"#fff"}}>
+                    <span style={{fontSize:18,marginRight:14,width:24,textAlign:"center"}}>{item.icon}</span>
+                    <span style={{flex:1,fontSize:16,color:section===item.id?"#1B5E20":"#000",fontWeight:section===item.id?600:400}}>{item.label}</span>
+                    <svg width="8" height="13" viewBox="0 0 8 13"><path d="M1 1l6 5.5-6 5.5" stroke="#ccc" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    {i < group.items.length-1 && <div style={{position:"absolute",bottom:0,left:54,right:0,height:"0.5px",background:"#f0f0f0"}}></div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div style={{margin:"8px 16px 0",background:"#fff",borderRadius:16,overflow:"hidden"}}>
+            <div onClick={handleLogout} style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px",minHeight:50,cursor:"pointer",gap:10}}>
+              <div style={{width:10,height:10,borderRadius:"50%",background:"#FF3B30"}}></div>
+              <span style={{fontSize:16,color:"#FF3B30",fontWeight:500}}>Deconnexion</span>
+            </div>
+          </div>
+        </div>
+        {section && (
+          <div style={{position:"fixed",inset:0,background:"#F2F2F7",zIndex:200,overflowY:"auto"}}>
+            <div style={{background:"#F2F2F7",padding:"56px 16px 12px",display:"flex",alignItems:"center",gap:12,borderBottom:"0.5px solid #e0e0e0"}}>
+              <button onClick={()=>setSection(null)} style={{background:"rgba(116,116,128,0.12)",border:"none",borderRadius:9999,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                <svg width="10" height="16" viewBox="0 0 10 16" fill="none"><path d="M8 2L2 8l6 6" stroke="#1B5E20" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <span style={{fontSize:17,fontWeight:600,color:"#000"}}>{NAV.flatMap(g=>g.items).find(i=>i.id===section)?.label}</span>
+            </div>
+            <div style={{padding:16}}>{renderSection()}</div>
+          </div>
+        )}
+      </div>
+      <div className="hidden md:block">
+<div className="dash-root">
         {/* Overlay mobile */}
         {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:99}} />}
 
@@ -619,6 +682,7 @@ case "messages": navigate("/Messages"); return null;
             />
           )}
         </main>
+      </div>
       </div>
     </>
   );
