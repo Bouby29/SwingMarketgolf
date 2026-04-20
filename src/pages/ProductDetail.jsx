@@ -200,7 +200,11 @@ export default function ProductDetail() {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Badge className="bg-green-50 text-[#1B5E20] border-0">{product.category}</Badge>
-            {product.condition && <Badge variant="outline">{conditionLabels[product.condition]}</Badge>}
+            {product.condition && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+                  {conditionLabels[product.condition]}
+                </span>
+              )}
           </div>
 
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{product.title}</h1>
