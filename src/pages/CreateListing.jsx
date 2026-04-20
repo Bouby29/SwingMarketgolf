@@ -91,6 +91,7 @@ export default function CreateListing() {
         images: form.photos,
         specs: form.specs && Object.keys(form.specs).length > 0 ? form.specs : null,
         seller_id: user.id,
+        seller_name: profile?.shop_name || profile?.full_name || user.email?.split("@")[0] || "Vendeur",
         status: "active",
         views_count: 0,
         favorites_count: 0,
