@@ -198,17 +198,7 @@ export default function Login() {
                 <span className="text-xs text-gray-400">ou</span>
                 <div className="flex-1 h-px bg-gray-200" />
               </div>
-              <button type="button" onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-sm font-semibold text-gray-700 mb-2">
-                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.6 20-21 0-1.3-.2-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15.2 17 19.3 14 24 14c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3c-7.6 0-14.2 4.1-17.7 10.2z"/><path fill="#FBBC05" d="M24 45c5.8 0 10.7-1.9 14.3-5.1l-6.6-5.5C29.8 36.1 27 37 24 37c-6 0-11.1-3.9-12.9-9.3l-7 5.4C7.6 41.1 15.3 45 24 45z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.9 2.8-2.8 5.1-5.3 6.7l6.6 5.5C41.3 37.6 44.5 31.3 44.5 24c0-1.3-.2-2.7-.5-4z"/></svg>
-                Continuer avec Google
-              </button>
-              <div className="flex items-center gap-3 my-2">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span className="text-xs text-gray-400">ou</span>
-                <div className="flex-1 h-px bg-gray-200" />
-              </div>
-              {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">{error}</div>}
+                            {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">{error}</div>}
               <button type="submit" disabled={loading} className="w-full bg-[#1B5E20] hover:bg-[#2E7D32] text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50">
                 {loading ? "Connexion..." : "Se connecter"}
               </button>
@@ -222,6 +212,18 @@ export default function Login() {
               <div>
                 <h1 className="text-2xl font-black text-gray-900 mb-1">Créer mon compte</h1>
                 <p className="text-gray-500 text-sm">Gratuit et sans engagement. Achetez et vendez en quelques minutes.</p>
+              </div>
+
+              {/* Bouton Google */}
+              <button type="button" onClick={handleGoogleLogin}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-sm font-semibold text-gray-700 mb-2">
+                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.6 20-21 0-1.3-.2-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15.2 17 19.3 14 24 14c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3c-7.6 0-14.2 4.1-17.7 10.2z"/><path fill="#FBBC05" d="M24 45c5.8 0 10.7-1.9 14.3-5.1l-6.6-5.5C29.8 36.1 27 37 24 37c-6 0-11.1-3.9-12.9-9.3l-7 5.4C7.6 41.1 15.3 45 24 45z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.9 2.8-2.8 5.1-5.3 6.7l6.6 5.5C41.3 37.6 44.5 31.3 44.5 24c0-1.3-.2-2.7-.5-4z"/></svg>
+                Continuer avec Google
+              </button>
+              <div className="flex items-center gap-3 my-3">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs text-gray-400">ou créer avec email</span>
+                <div className="flex-1 h-px bg-gray-200" />
               </div>
 
               {/* INFOS PERSO */}
