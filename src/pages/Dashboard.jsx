@@ -359,7 +359,7 @@ function MySearchesSection({ user }) {
 }
 
 export default function Dashboard() {
-  const [section, setSection] = useState("info");
+  const [section, setSection] = useState(null);
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [products, setProducts] = useState([]);
