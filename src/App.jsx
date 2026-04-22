@@ -20,6 +20,9 @@ import CGS from './pages/CGS';
 import CGSPro from './pages/CGSPro';
 import SellerOnboarding from './pages/SellerOnboarding';
 import Abonnements from './pages/Abonnements';
+import ComingSoon from './pages/ComingSoon';
+
+const COMING_SOON_MODE = import.meta.env.VITE_COMING_SOON === 'true';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -32,7 +35,6 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -41,18 +43,15 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
   }
 
-  // Render the main app
   return (
     <Routes>
       <Route path="/" element={
@@ -108,7 +107,6 @@ const AuthenticatedApp = () => {
 
 
 function App() {
-  // Sync dark mode with system preferences
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e) => {
@@ -118,14 +116,14 @@ function App() {
         document.documentElement.classList.remove('dark');
       }
     };
-    
-    // Set initial theme
     handleChange(mediaQuery);
-    
-    // Listen for changes
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
+
+  if (COMING_SOON_MODE && window.location.hostname !== "admin.swingmarketgolf.com" && window.location.hostname !== "localhost") {
+    return <ComingSoon />;
+  }
 
   return (
     <AuthProvider>
@@ -136,8 +134,8 @@ function App() {
           <WelcomePopup />
           <Routes>
             <Route path="/Admin" element={window.location.hostname === "admin.swingmarketgolf.com" || window.location.hostname === "localhost" ? <AdminDashboard /> : <PageNotFound />} />
-      <Route path="/SellerOnboarding" element={<SellerOnboarding />} />
-      <Route path="/Abonnements" element={<Abonnements />} />
+            <Route path="/SellerOnboarding" element={<SellerOnboarding />} />
+            <Route path="/Abonnements" element={<Abonnements />} />
             <Route path="/*" element={<AuthenticatedApp />} />
           </Routes>
         </Router>
