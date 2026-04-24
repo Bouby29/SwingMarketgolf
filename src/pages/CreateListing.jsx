@@ -52,10 +52,10 @@ export default function CreateListing() {
     if (!user) return;
     setSaving(true);
     // Verification plan abonnement (pros uniquement)
-    const PLAN_LIMITS = { basique: 5, pro: 30, premium: 999999, business: 999999 };
+    const PLAN_LIMITS = { pro: 30, premium: 999999, business: 999999 };
     const { data: planProfile } = await supabase.from("profiles").select("plan, plan_annonces_count, plan_reset_date, is_pro").eq("id", user.id).single();
     const isPro = planProfile?.is_pro === true;
-    // Particuliers : aucune limite
+    // Particuliers : aucune limite, pros uniquement
     if (isPro) {
       const userPlan = planProfile?.plan || "basique";
       const planLimit = PLAN_LIMITS[userPlan] || 5;
