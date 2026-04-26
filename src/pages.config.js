@@ -64,6 +64,7 @@ import Marketplace from './pages/Marketplace';
 import Encheres from './pages/Encheres';
 import MentionsLegales from './pages/MentionsLegales';
 import Messages from './pages/Messages';
+import OrderSuccess from './pages/OrderSuccess';
 import ProductDetail from './pages/ProductDetail';
 import ProfessionnelsSellers from './pages/ProfessionnelsSellers';
 import Profile from './pages/Profile';
@@ -89,6 +90,7 @@ export const PAGES = {
     "Encheres": Encheres,
     "MentionsLegales": MentionsLegales,
     "Messages": Messages,
+    "OrderSuccess": OrderSuccess,
     "ProductDetail": ProductDetail,
     "ProfessionnelsSellers": ProfessionnelsSellers,
     "Profile": Profile,
