@@ -2,8 +2,8 @@
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "crons": [
     {
-      "path": "/api/release-funds",
-      "schedule": "0 2 * * *"
+      "path": "/api/cron/all",
+      "schedule": "0 * * * *"
     }
   ]
 }

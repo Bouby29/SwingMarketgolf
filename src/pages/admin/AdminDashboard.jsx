@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, Fragment } from "react";
 import { createClient } from "@supabase/supabase-js";
+import Papa from "papaparse";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, PieChart, Pie, Cell, Line,
@@ -10,7 +11,8 @@ import {
   PenSquare, Search, Bell, HelpCircle, Download, Plus,
   ChevronsUpDown, MoreVertical, ArrowUpRight, ArrowDownRight,
   Minus, Filter, Star, Trash2, Pencil, Eye, KeyRound, X,
-  RefreshCw,
+  RefreshCw, Upload, FileSpreadsheet, Check, Play, Settings2,
+  ArrowRight, ArrowLeft, AlertCircle,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────
@@ -50,6 +52,7 @@ const NAV_GROUPS = [
     label: "Opérations",
     items: [
       { id: "carriers",   label: "Transporteurs", Icon: Truck },
+      { id: "feeds",      label: "Flux d'import", Icon: Upload },
       { id: "categories", label: "Catégories",    Icon: Layers },
       { id: "reviews",    label: "Avis",          Icon: MessageSquare, badgeKey: "reviewsCount" },
       { id: "blog",       label: "Blog",          Icon: PenSquare },
@@ -248,10 +251,28 @@ export default function AdminDashboard() {
   const [admins, setAdmins] = useState([]);
   const [blogPosts, setBlogPosts] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [feeds, setFeeds] = useState([]);
   const [counters, setCounters] = useState({
     activeProducts: 0, pendingOrders: 0, activeUsers: 0,
     disputes: 0, reviewsCount: 0,
   });
+
+  // ─── Wizard "Flux d'import" — état dédié ───
+  const [editFeed, setEditFeed] = useState(null);          // null = wizard fermé
+  const [feedWizardStep, setFeedWizardStep] = useState(0); // 0..3
+  const [importedRows, setImportedRows] = useState([]);    // lignes du CSV parsé
+  const [importedColumns, setImportedColumns] = useState([]); // noms des colonnes
+  const [importedFilename, setImportedFilename] = useState("");
+  const [detectedPlatform, setDetectedPlatform] = useState(null);
+  const [feedMapping, setFeedMapping] = useState({});      // { swingMarketKey: csvColumnName }
+  const [feedImporting, setFeedImporting] = useState(false);
+  const [feedImportProgress, setFeedImportProgress] = useState({ done: 0, total: 0 });
+  // Modal historique des syncs d'un flux
+  const [historyFeed, setHistoryFeed] = useState(null);  // null = fermé
+  const [historyRuns, setHistoryRuns] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  // Sync en cours : map { feedId: true } pour disabled UI
+  const [syncing, setSyncing] = useState({});
 
   // Édition (modals)
   const [editProduct, setEditProduct] = useState(null);
@@ -450,6 +471,14 @@ export default function AdminDashboard() {
     setAdmins(adminsRes.data || []);
     setBlogPosts(blogRes.data || []);
     setReviews(reviewsRes.data || []);
+
+    // Flux d'import — fetch séparé (pas d'embedded select)
+    const { data: feedsData, error: feedsErr } = await supabaseAdmin
+      .from("seller_feeds")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (feedsErr) console.error("[AdminDashboard] seller_feeds →", feedsErr);
+    setFeeds(feedsData || []);
     setCounters({
       activeProducts: productsData.filter(p => p.status === "active").length,
       pendingOrders: pendingRes.count || 0,
@@ -606,6 +635,366 @@ export default function AdminDashboard() {
       supabaseAdmin.from("orders").select("*").eq("buyer_id", user.id).order("created_at", { ascending: false }),
     ]);
     setUserHistory({ user, listings: listings || [], purchases: purchases || [] });
+  };
+
+  // ═════════════════════════════════════════════
+  // FLUX D'IMPORT (catalogue vendeurs pros)
+  // ═════════════════════════════════════════════
+
+  // Ouvre le wizard en création
+  const openFeedWizardCreate = () => {
+    setEditFeed({
+      id: null,
+      name: "",
+      seller_id: "",
+      source_type: "manual_csv",
+      mapping: null,
+      on_missing_action: "deactivate",
+      notification_email: "",
+    });
+    resetWizardCsvState();
+    setFeedWizardStep(0);
+  };
+
+  // Ouvre le wizard en édition (pour réimporter un CSV sur un flux existant)
+  const openFeedWizardEdit = (feed) => {
+    setEditFeed({ ...feed });
+    resetWizardCsvState();
+    // Pré-remplit le mapping s'il existe déjà
+    if (feed.mapping) setFeedMapping(feed.mapping);
+    setFeedWizardStep(0);
+  };
+
+  const resetWizardCsvState = () => {
+    setImportedRows([]);
+    setImportedColumns([]);
+    setImportedFilename("");
+    setDetectedPlatform(null);
+    setFeedMapping({});
+    setFeedImporting(false);
+    setFeedImportProgress({ done: 0, total: 0 });
+  };
+
+  const closeFeedWizard = () => {
+    setEditFeed(null);
+    resetWizardCsvState();
+    setFeedWizardStep(0);
+  };
+
+  // Lance la sync : ouvre direct le wizard à STEP 1 pour réimporter un CSV
+  const launchSync = (feed) => {
+    setEditFeed({ ...feed });
+    resetWizardCsvState();
+    if (feed.mapping) setFeedMapping(feed.mapping);
+    setFeedWizardStep(1);
+  };
+
+  const deleteFeed = async (id) => {
+    if (!confirm("Supprimer ce flux ? Les produits déjà importés ne seront pas supprimés.")) return;
+    const { error } = await supabaseAdmin.from("seller_feeds").delete().eq("id", id);
+    if (error) { alert("Erreur : " + error.message); return; }
+    flash("Flux supprimé");
+    loadData();
+  };
+
+  // ─── Sync manuelle d'un flux (URL distante uniquement) ───
+  const syncNow = async (feed) => {
+    if (feed.source_type !== "remote_url") {
+      // Pour un flux CSV, on rouvre le wizard à la step 1 pour réimporter un fichier
+      launchSync(feed);
+      return;
+    }
+    setSyncing((s) => ({ ...s, [feed.id]: true }));
+    try {
+      const r = await fetch("/api/feeds/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feed_id: feed.id }),
+      });
+      const json = await r.json();
+      if (!json.ok) {
+        alert("Sync échouée : " + (json.error || "erreur"));
+      } else {
+        const s = json.stats || {};
+        flash(`✓ Sync OK · +${s.added || 0} / ${s.updated || 0} MAJ / ${s.removed || 0} retirés${s.failed ? ` · ${s.failed} échecs` : ""}`);
+      }
+    } catch (e) {
+      alert("Erreur réseau : " + (e.message || e));
+    }
+    setSyncing((s) => { const n = { ...s }; delete n[feed.id]; return n; });
+    loadData();
+  };
+
+  // ─── Toggle pause / actif ───
+  const togglePauseFeed = async (feed) => {
+    const next = feed.status === "active" ? "paused" : "active";
+    const { error } = await supabaseAdmin
+      .from("seller_feeds")
+      .update({ status: next })
+      .eq("id", feed.id);
+    if (error) { alert("Erreur : " + error.message); return; }
+    flash(next === "active" ? "Flux réactivé" : "Flux mis en pause");
+    loadData();
+  };
+
+  // ─── Ouvrir l'historique des runs ───
+  const openHistory = async (feed) => {
+    setHistoryFeed(feed);
+    setHistoryRuns([]);
+    setHistoryLoading(true);
+    const { data, error } = await supabaseAdmin
+      .from("seller_feed_runs")
+      .select("*")
+      .eq("feed_id", feed.id)
+      .order("started_at", { ascending: false })
+      .limit(20);
+    setHistoryRuns(data || []);
+    setHistoryLoading(false);
+    if (error) console.error("[history]", error);
+  };
+
+  // ─────────────────────────────────────────────
+  // Détection auto plateforme à partir des colonnes CSV
+  // ─────────────────────────────────────────────
+  const detectPlatformFromColumns = (cols) => {
+    const set = new Set(cols);
+    if (set.has("name") && set.has("price_tax_incl")) return "prestashop";
+    if (set.has("Title") && set.has("Variant Price")) return "shopify";
+    if (set.has("post_title") && set.has("regular_price")) return "woocommerce";
+    return "custom";
+  };
+
+  // Mapping pré-rempli selon plateforme détectée
+  const getDefaultMapping = (platform) => {
+    if (platform === "prestashop") return {
+      title: "name", price: "price_tax_incl", category: "category_name",
+      description: "description_short", brand: "manufacturer_name",
+      condition: "", images: "image_url", stock: "quantity",
+    };
+    if (platform === "shopify") return {
+      title: "Title", price: "Variant Price", category: "Type",
+      description: "Body (HTML)", brand: "Vendor",
+      condition: "", images: "Image Src", stock: "Variant Inventory Qty",
+    };
+    if (platform === "woocommerce") return {
+      title: "post_title", price: "regular_price", category: "",
+      description: "post_content", brand: "pa_brand",
+      condition: "", images: "images", stock: "stock",
+    };
+    return {
+      title: "", price: "", category: "", description: "",
+      brand: "", condition: "", images: "", stock: "",
+    };
+  };
+
+  // Parse un fichier CSV avec papaparse + détection plateforme
+  const parseCsvFile = (file) => {
+    return new Promise((resolve, reject) => {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rows = results.data || [];
+          const cols = results.meta?.fields || [];
+          const platform = detectPlatformFromColumns(cols);
+          resolve({ rows, cols, platform });
+        },
+        error: (err) => reject(err),
+      });
+    });
+  };
+
+  // Helper : split une string d'URLs séparées par , ou |
+  const splitImages = (val) => {
+    if (!val) return [];
+    return String(val).split(/[,|]/).map((s) => s.trim()).filter(Boolean);
+  };
+
+  // ─────────────────────────────────────────────
+  // Lance l'import final (étape 3)
+  // ─────────────────────────────────────────────
+  const runFeedImport = async () => {
+    if (!editFeed?.seller_id || !editFeed?.name) {
+      alert("Nom et vendeur requis"); return;
+    }
+    if (importedRows.length === 0) {
+      alert("Aucune ligne à importer"); return;
+    }
+    const seller = profilesById[editFeed.seller_id];
+    const sellerName = seller?.shop_name || seller?.full_name || "Vendeur";
+
+    setFeedImporting(true);
+
+    const isRemoteUrl = editFeed.source_type === "remote_url";
+
+    // 1) Upsert du flux : on crée ou on met à jour selon le cas
+    let feedId = editFeed.id;
+    const feedPayload = {
+      name: editFeed.name,
+      seller_id: editFeed.seller_id,
+      source_type: editFeed.source_type || "manual_csv",
+      source_url: isRemoteUrl ? (editFeed.source_url || null) : null,
+      source_format: isRemoteUrl ? null : "csv",
+      detected_platform: detectedPlatform,
+      mapping: feedMapping,
+      sync_frequency: isRemoteUrl ? (editFeed.sync_frequency || "daily") : "manual",
+      on_missing_action: editFeed.on_missing_action || "deactivate",
+      notification_email: editFeed.notification_email || null,
+      status: "active",
+    };
+
+    try {
+      if (feedId) {
+        const { error: upErr } = await supabaseAdmin
+          .from("seller_feeds")
+          .update(feedPayload)
+          .eq("id", feedId);
+        if (upErr) throw upErr;
+      } else {
+        const { data: created, error: insErr } = await supabaseAdmin
+          .from("seller_feeds")
+          .insert(feedPayload)
+          .select()
+          .single();
+        if (insErr) throw insErr;
+        feedId = created.id;
+      }
+    } catch (e) {
+      console.error("Création/MAJ flux:", e);
+      alert("Erreur création flux : " + (e.message || e));
+      setFeedImporting(false);
+      return;
+    }
+
+    // ─── Mode URL distante : on délègue la sync à l'endpoint serverless
+    // ─── /api/feeds/sync (qui exécute la logique côté serveur en utilisant
+    // ─── la service_key Supabase). On évite d'importer 50+ produits côté
+    // ─── client et on bénéficie automatiquement du diff (UPDATE vs INSERT).
+    if (isRemoteUrl) {
+      try {
+        const r = await fetch("/api/feeds/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ feed_id: feedId }),
+        });
+        const json = await r.json();
+        setFeedImporting(false);
+        if (!json.ok) {
+          alert("Sync échouée : " + (json.error || "erreur inconnue"));
+          return;
+        }
+        const s = json.stats || {};
+        flash(`✓ Flux activé · ${s.added || 0} ajoutés, ${s.updated || 0} MAJ${s.failed ? `, ${s.failed} échecs` : ""}`);
+        closeFeedWizard();
+        loadData();
+        return;
+      } catch (e) {
+        console.error("sync remote:", e);
+        alert("Erreur réseau lors de la première sync : " + (e.message || e));
+        setFeedImporting(false);
+        return;
+      }
+    }
+
+    // 2) Crée la run (status=running)
+    let runId;
+    try {
+      const { data: runData, error: runErr } = await supabaseAdmin
+        .from("seller_feed_runs")
+        .insert({ feed_id: feedId, status: "running" })
+        .select()
+        .single();
+      if (runErr) throw runErr;
+      runId = runData.id;
+    } catch (e) {
+      console.error("Création run:", e);
+    }
+
+    // 3) Import par batches de 50
+    const BATCH = 50;
+    let added = 0;
+    let failed = 0;
+    const errorsLog = [];
+    setFeedImportProgress({ done: 0, total: importedRows.length });
+
+    for (let i = 0; i < importedRows.length; i += BATCH) {
+      const chunk = importedRows.slice(i, i + BATCH);
+      // Construit les payloads produit pour ce batch
+      const payloads = chunk.map((row) => {
+        const stockVal = parseInt(row[feedMapping.stock] || "1");
+        return {
+          title: (row[feedMapping.title] || "Sans titre").toString().slice(0, 200),
+          description: row[feedMapping.description] || "",
+          price: parseFloat(row[feedMapping.price]) || 0,
+          brand: row[feedMapping.brand] || null,
+          category: row[feedMapping.category] || "Autres",
+          condition: row[feedMapping.condition] || "Très bon",
+          images: splitImages(row[feedMapping.images]),
+          seller_id: editFeed.seller_id,
+          seller_name: sellerName,
+          status: stockVal >= 1 ? "active" : "archived",
+          sale_type: "fixed",
+          views_count: 0,
+          favorites_count: 0,
+          created_at: new Date().toISOString(),
+        };
+      });
+
+      // INSERT en batch — si une ligne échoue on retombe sur insert unitaire
+      try {
+        const { error: batchErr } = await supabaseAdmin.from("products").insert(payloads);
+        if (batchErr) throw batchErr;
+        added += payloads.length;
+      } catch (batchErr) {
+        // Fallback unitaire : chaque ligne individuellement
+        for (const p of payloads) {
+          try {
+            const { error: oneErr } = await supabaseAdmin.from("products").insert(p);
+            if (oneErr) throw oneErr;
+            added += 1;
+          } catch (oneErr) {
+            failed += 1;
+            errorsLog.push({ title: p.title, error: oneErr.message || String(oneErr) });
+          }
+        }
+      }
+
+      setFeedImportProgress({ done: Math.min(i + BATCH, importedRows.length), total: importedRows.length });
+    }
+
+    // 4) Update de la run
+    const finalStatus = failed === 0 ? "success" : (added > 0 ? "partial" : "error");
+    if (runId) {
+      try {
+        await supabaseAdmin.from("seller_feed_runs").update({
+          ended_at: new Date().toISOString(),
+          products_added: added,
+          products_failed: failed,
+          errors_log: errorsLog.length > 0 ? errorsLog.slice(0, 200) : null,
+          status: finalStatus,
+        }).eq("id", runId);
+      } catch (e) { console.error("update run:", e); }
+    }
+
+    // 5) Update du flux : last_sync_*, total_products
+    try {
+      const { count: totalActive } = await supabaseAdmin
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("seller_id", editFeed.seller_id)
+        .eq("status", "active");
+      await supabaseAdmin.from("seller_feeds").update({
+        last_sync_at: new Date().toISOString(),
+        last_sync_status: finalStatus,
+        last_sync_message: `${added} ajoutés, ${failed} échecs`,
+        total_products: totalActive || 0,
+      }).eq("id", feedId);
+    } catch (e) { console.error("update feed sync:", e); }
+
+    setFeedImporting(false);
+    flash(`✓ ${added} produits importés${failed > 0 ? ` (${failed} erreurs)` : ""}`);
+    closeFeedWizard();
+    loadData();
   };
 
   // ─────────────────────────────────────────────
@@ -938,6 +1327,19 @@ export default function AdminDashboard() {
                 flash("Transporteur ajouté");
               }} />
           )}
+          {section === "feeds" && (
+            <FeedsSection
+              feeds={feeds}
+              profilesById={profilesById}
+              syncing={syncing}
+              onCreate={openFeedWizardCreate}
+              onEdit={openFeedWizardEdit}
+              onDelete={deleteFeed}
+              onSyncNow={syncNow}
+              onTogglePause={togglePauseFeed}
+              onOpenHistory={openHistory}
+            />
+          )}
           {section === "categories" && (
             <CategoriesSection categoriesAgg={categoriesAgg} products={products} />
           )}
@@ -981,6 +1383,942 @@ export default function AdminDashboard() {
       {userHistory && (
         <UserHistoryModal data={userHistory} onClose={() => setUserHistory(null)} />
       )}
+      {historyFeed && (
+        <FeedHistoryModal
+          feed={historyFeed}
+          runs={historyRuns}
+          loading={historyLoading}
+          onClose={() => { setHistoryFeed(null); setHistoryRuns([]); }}
+        />
+      )}
+      {editFeed && (
+        <FeedWizardModal
+          feed={editFeed}
+          setFeed={setEditFeed}
+          step={feedWizardStep}
+          setStep={setFeedWizardStep}
+          profiles={profiles}
+          profilesById={profilesById}
+          importedRows={importedRows}
+          setImportedRows={setImportedRows}
+          importedColumns={importedColumns}
+          setImportedColumns={setImportedColumns}
+          importedFilename={importedFilename}
+          setImportedFilename={setImportedFilename}
+          detectedPlatform={detectedPlatform}
+          setDetectedPlatform={setDetectedPlatform}
+          feedMapping={feedMapping}
+          setFeedMapping={setFeedMapping}
+          parseCsvFile={parseCsvFile}
+          getDefaultMapping={getDefaultMapping}
+          importing={feedImporting}
+          progress={feedImportProgress}
+          onClose={closeFeedWizard}
+          onSubmit={runFeedImport}
+        />
+      )}
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════
+// FLUX D'IMPORT — Liste des flux (FeedsSection)
+// ═════════════════════════════════════════════════════════
+function FeedsSection({ feeds, profilesById, syncing, onCreate, onEdit, onDelete, onSyncNow, onTogglePause, onOpenHistory }) {
+  const STATUS_VARIANTS = {
+    active:   "deliv",
+    draft:    "prep",
+    paused:   "pay",
+    error:    "refund",
+  };
+  const STATUS_LABELS = {
+    active: "Actif",
+    draft:  "Brouillon",
+    paused: "En pause",
+    error:  "Erreur",
+  };
+  return (
+    <>
+      <PageHeader
+        title="Flux d'import"
+        sub={`${feeds.length} flux configuré${feeds.length > 1 ? "s" : ""} · import du catalogue de vos vendeurs pros`}
+        right={
+          <button onClick={onCreate} style={{ ...styles.btn, ...styles.btnPrimary }}>
+            <Plus size={14} /> Nouveau flux
+          </button>
+        }
+      />
+
+      {feeds.length === 0 ? (
+        <section style={{ ...styles.card, padding: 56, textAlign: "center" }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 14, background: COLORS.ink50,
+            display: "grid", placeItems: "center", margin: "0 auto 16px",
+          }}>
+            <Upload size={26} color={COLORS.ink400} />
+          </div>
+          <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 6px" }}>Aucun flux pour l'instant</h3>
+          <p style={{ fontSize: 13, color: COLORS.ink500, margin: "0 auto 18px", maxWidth: 420 }}>
+            Créez votre premier flux pour importer le catalogue d'un vendeur pro
+            depuis un export CSV PrestaShop, Shopify ou WooCommerce.
+          </p>
+          <button onClick={onCreate} style={{ ...styles.btn, ...styles.btnPrimary, margin: "0 auto" }}>
+            <Plus size={14} /> Créer un flux
+          </button>
+        </section>
+      ) : (
+        <div style={{ display: "grid", gap: 12 }}>
+          {feeds.map((f) => {
+            const seller = profilesById[f.seller_id];
+            const sellerName = seller?.shop_name || seller?.full_name || seller?.email || "Vendeur supprimé";
+            return (
+              <article key={f.id} style={{ ...styles.card, padding: 18 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 14, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 14, alignItems: "flex-start", flex: 1, minWidth: 280 }}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                      background: f.detected_platform === "prestashop" ? "#EEF2F7" :
+                                  f.detected_platform === "shopify"    ? "#F0FDF4" :
+                                  f.detected_platform === "woocommerce" ? "#F5F3FF" : COLORS.ink50,
+                      color: COLORS.ink700, display: "grid", placeItems: "center",
+                    }}>
+                      <FileSpreadsheet size={20} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
+                        <h3 style={{ fontSize: 15, fontWeight: 700, color: COLORS.ink900, margin: 0 }}>{f.name}</h3>
+                        <StatusBadge variant={STATUS_VARIANTS[f.status] || "prep"} label={STATUS_LABELS[f.status] || f.status} />
+                        {f.detected_platform && (
+                          <span style={{
+                            fontSize: 10.5, fontWeight: 600, letterSpacing: ".04em", textTransform: "uppercase",
+                            color: COLORS.ink600, background: COLORS.ink100,
+                            padding: "2px 7px", borderRadius: 5,
+                          }}>{f.detected_platform}</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 12.5, color: COLORS.ink600, marginBottom: 4 }}>
+                        Vendeur · <strong style={{ color: COLORS.ink900 }}>{sellerName}</strong>
+                      </div>
+                      <div style={{ fontSize: 12, color: COLORS.ink500 }}>
+                        Source · {f.source_type === "remote_url" ? "🔗 URL distante" : "Upload manuel CSV"}
+                        {f.source_type === "remote_url" && f.sync_frequency && (
+                          <> · Fréquence · <strong style={{ color: COLORS.ink700 }}>{({
+                            manual: "Manuelle", daily: "Quotidienne",
+                            every_6h: "Toutes les 6 h", hourly: "Toutes les heures",
+                          })[f.sync_frequency] || f.sync_frequency}</strong></>
+                        )}
+                        {" · "}
+                        Dernière sync · {f.last_sync_at ? relativeTime(f.last_sync_at) : "jamais"}
+                        {" · "}
+                        <strong style={{ color: COLORS.green800 }}>{fmtInt(f.total_products || 0)}</strong> produits
+                      </div>
+                      {f.source_type === "remote_url" && f.source_url && (
+                        <div style={{ fontSize: 11, color: COLORS.ink400, marginTop: 4, fontFamily: "'JetBrains Mono', monospace", wordBreak: "break-all" }}>
+                          {f.source_url}
+                        </div>
+                      )}
+                      {f.last_sync_message && (
+                        <div style={{ fontSize: 11.5, color: COLORS.ink500, marginTop: 4, fontStyle: "italic" }}>
+                          {f.last_sync_message}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <button
+                      onClick={() => onSyncNow(f)}
+                      disabled={!!syncing[f.id]}
+                      style={{
+                        ...styles.btn, ...styles.btnPrimary,
+                        height: 32, padding: "0 12px", fontSize: 12.5,
+                        opacity: syncing[f.id] ? 0.6 : 1,
+                        cursor: syncing[f.id] ? "wait" : "pointer",
+                      }}
+                    >
+                      {syncing[f.id] ? <RefreshCw size={12} /> : <Play size={12} />}
+                      {syncing[f.id]
+                        ? "Sync en cours…"
+                        : (f.source_type === "remote_url" ? "Sync maintenant" : "Lancer un import")}
+                    </button>
+                    {f.source_type === "remote_url" && (
+                      <button onClick={() => onTogglePause(f)} style={{ ...styles.btn, ...styles.btnGhost, height: 32, padding: "0 12px", fontSize: 12.5 }}>
+                        {f.status === "active" ? "⏸ Pause" : "▶ Reprendre"}
+                      </button>
+                    )}
+                    <button onClick={() => onOpenHistory(f)} style={{ ...styles.btn, ...styles.btnGhost, height: 32, padding: "0 12px", fontSize: 12.5 }}>
+                      <FileText size={12} /> Historique
+                    </button>
+                    <button onClick={() => onEdit(f)} style={{ ...styles.btn, ...styles.btnGhost, height: 32, padding: "0 12px", fontSize: 12.5 }}>
+                      <Settings2 size={12} /> Configurer
+                    </button>
+                    <button
+                      onClick={() => onDelete(f.id)}
+                      style={{ ...styles.btn, ...styles.btnGhost, height: 32, padding: "0 12px", fontSize: 12.5, color: COLORS.danger, borderColor: "rgba(239,68,68,.2)" }}
+                    >
+                      <Trash2 size={12} /> Supprimer
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+}
+
+// ═════════════════════════════════════════════════════════
+// FLUX D'IMPORT — Wizard 4 étapes (FeedWizardModal)
+// ═════════════════════════════════════════════════════════
+const SWING_FIELDS = [
+  { key: "title",       label: "Titre",         required: true,  hint: "Nom du produit affiché sur la marketplace" },
+  { key: "price",       label: "Prix (€)",      required: true,  hint: "Prix TTC en nombre décimal (séparateur ., pas de symbole)" },
+  { key: "category",    label: "Catégorie",     required: true,  hint: "Ex: Clubs de golf, Balles de golf, Sacs de golf…" },
+  { key: "description", label: "Description",   required: false, hint: "HTML accepté" },
+  { key: "brand",       label: "Marque",        required: false, hint: "Ex: TaylorMade, Callaway, Titleist…" },
+  { key: "condition",   label: "État",          required: false, hint: "Si vide : « Très bon » par défaut" },
+  { key: "images",      label: "Photos (URLs)", required: true,  hint: "URLs séparées par , ou |", multi: true },
+  { key: "stock",       label: "Stock",         required: false, hint: "0 = produit archivé · ≥1 = produit actif" },
+];
+
+function FeedWizardModal({
+  feed, setFeed, step, setStep,
+  profiles, profilesById,
+  importedRows, setImportedRows,
+  importedColumns, setImportedColumns,
+  importedFilename, setImportedFilename,
+  detectedPlatform, setDetectedPlatform,
+  feedMapping, setFeedMapping,
+  parseCsvFile, getDefaultMapping,
+  importing, progress,
+  onClose, onSubmit,
+}) {
+  const fileInputRef = useRef(null);
+  const [parsing, setParsing] = useState(false);
+  const [parseError, setParseError] = useState("");
+  // ─── Test d'URL distante (sync auto) ───
+  const [urlTestState, setUrlTestState] = useState("idle"); // idle | testing | success | error
+  const [urlTestResult, setUrlTestResult] = useState(null); // { format, platform, totalRows, error }
+
+  // Lance un test d'URL : appelle /api/feeds/test-url avec preview=true
+  // et hydrate aussi importedRows/columns/platform pour la suite du wizard.
+  const handleTestUrl = async () => {
+    if (!feed.source_url) return;
+    setUrlTestState("testing");
+    setUrlTestResult(null);
+    try {
+      const res = await fetch("/api/feeds/test-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: feed.source_url, preview: true }),
+      });
+      const json = await res.json();
+      if (!json.ok) {
+        setUrlTestState("error");
+        setUrlTestResult({ error: json.error || "Erreur inconnue" });
+        return;
+      }
+      setUrlTestState("success");
+      setUrlTestResult({
+        format: json.format,
+        platform: json.platform,
+        totalRows: json.totalRows,
+      });
+      // Hydrate l'état du wizard pour les steps suivantes
+      setImportedRows(json.preview || []);
+      setImportedColumns(json.columns || []);
+      setDetectedPlatform(json.platform);
+      setImportedFilename(feed.source_url);
+      if (Object.keys(feedMapping).length === 0) {
+        setFeedMapping(getDefaultMapping(json.platform));
+      }
+    } catch (err) {
+      setUrlTestState("error");
+      setUrlTestResult({ error: err.message || "Erreur réseau" });
+    }
+  };
+
+  // Vendeurs onboardés uniquement
+  const eligibleSellers = useMemo(
+    () => profiles.filter((p) => p.seller_onboarding_completed),
+    [profiles]
+  );
+
+  const seller = profilesById[feed.seller_id];
+  const sellerLabel = seller?.shop_name || seller?.full_name || seller?.email;
+
+  // Validation par étape
+  const canGoNext = (() => {
+    if (step === 0) {
+      if (!feed.name || !feed.seller_id || !feed.source_type) return false;
+      // En mode URL distante, on exige que le test ait réussi
+      if (feed.source_type === "remote_url") {
+        return !!feed.source_url && urlTestState === "success";
+      }
+      return true;
+    }
+    if (step === 1) return importedRows.length > 0;
+    if (step === 2) {
+      // title, price, category, images doivent être mappés
+      return ["title", "price", "category", "images"].every((k) => !!feedMapping[k]);
+    }
+    return true;
+  })();
+
+  // ─── STEP 1 : parsing CSV ───
+  const handleFile = async (file) => {
+    if (!file) return;
+    setParseError("");
+    setParsing(true);
+    try {
+      const { rows, cols, platform } = await parseCsvFile(file);
+      if (!rows.length) throw new Error("Le fichier est vide ou n'a pas de header.");
+      setImportedRows(rows);
+      setImportedColumns(cols);
+      setDetectedPlatform(platform);
+      setImportedFilename(file.name);
+      // Pré-remplit le mapping seulement s'il est encore vide
+      if (Object.keys(feedMapping).length === 0) {
+        setFeedMapping(getDefaultMapping(platform));
+      }
+    } catch (e) {
+      setParseError(e.message || "Erreur de parsing CSV");
+    }
+    setParsing(false);
+  };
+
+  const onDropFile = (e) => {
+    e.preventDefault();
+    const f = e.dataTransfer?.files?.[0];
+    if (f) handleFile(f);
+  };
+
+  const STEPS = ["Création", "Import", "Mapping", "Sync"];
+
+  return (
+    <div style={modalOverlayStyle} onClick={importing ? undefined : onClose}>
+      <div style={{ ...modalBoxStyle, maxWidth: 880 }} onClick={(e) => e.stopPropagation()}>
+        <div style={modalHeadStyle}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>
+            {feed.id ? "Modifier le flux" : "Nouveau flux d'import"}
+          </h3>
+          <button onClick={onClose} style={styles.rowAction} disabled={importing}><X size={16} /></button>
+        </div>
+
+        {/* Stepper visuel */}
+        <div style={{ padding: "16px 24px 8px", borderBottom: `1px solid ${COLORS.ink150}`, background: COLORS.ink50 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            {STEPS.map((label, i) => {
+              const active = i === step;
+              const done = i < step;
+              return (
+                <Fragment key={label}>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "5px 11px", borderRadius: 999,
+                    background: active ? COLORS.ink900 : (done ? COLORS.green50 : "transparent"),
+                    color: active ? "#fff" : (done ? COLORS.green800 : COLORS.ink500),
+                    fontSize: 12, fontWeight: 600,
+                  }}>
+                    <span style={{
+                      width: 18, height: 18, borderRadius: "50%",
+                      background: active ? "#fff" : (done ? COLORS.green800 : COLORS.ink200),
+                      color: active ? COLORS.ink900 : (done ? "#fff" : COLORS.ink500),
+                      display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700,
+                    }}>{done ? <Check size={11} /> : i + 1}</span>
+                    {label}
+                  </div>
+                  {i < STEPS.length - 1 && <div style={{ flex: 1, height: 1, background: COLORS.ink200 }} />}
+                </Fragment>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: "20px 24px", maxHeight: "65vh", overflowY: "auto" }}>
+          {step === 0 && (
+            <div>
+              <FormField label="Nom du flux">
+                <input
+                  style={modalInputStyle}
+                  value={feed.name || ""}
+                  onChange={(e) => setFeed({ ...feed, name: e.target.value })}
+                  placeholder="Ex : ProGolf Marseille — Catalogue 2026"
+                />
+              </FormField>
+
+              <div style={{ marginTop: 12 }}>
+                <FormField label="Vendeur associé">
+                  <select
+                    style={modalInputStyle}
+                    value={feed.seller_id || ""}
+                    onChange={(e) => setFeed({ ...feed, seller_id: e.target.value })}
+                  >
+                    <option value="">— Choisir un vendeur —</option>
+                    {eligibleSellers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.shop_name || s.full_name || s.email} {s.email ? `· ${s.email}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </FormField>
+                <p style={{ fontSize: 11.5, color: COLORS.ink500, marginTop: 4 }}>
+                  Seuls les vendeurs ayant terminé leur onboarding apparaissent.
+                </p>
+              </div>
+
+              <div style={{ marginTop: 18 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: COLORS.ink600, display: "block", marginBottom: 8 }}>
+                  Type de flux
+                </label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <label style={radioOptionStyle(feed.source_type === "manual_csv")}>
+                    <input
+                      type="radio"
+                      checked={feed.source_type === "manual_csv"}
+                      onChange={() => setFeed({ ...feed, source_type: "manual_csv" })}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: COLORS.ink900 }}>Upload manuel CSV</div>
+                      <div style={{ fontSize: 11.5, color: COLORS.ink500 }}>
+                        Le vendeur exporte son catalogue, vous l'importez à la main.
+                      </div>
+                    </div>
+                  </label>
+                  <label style={radioOptionStyle(feed.source_type === "remote_url")}>
+                    <input
+                      type="radio"
+                      checked={feed.source_type === "remote_url"}
+                      onChange={() => {
+                        setFeed({ ...feed, source_type: "remote_url" });
+                        setUrlTestState("idle");
+                        setUrlTestResult(null);
+                      }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: COLORS.ink900 }}>URL distante (sync auto)</div>
+                      <div style={{ fontSize: 11.5, color: COLORS.ink500 }}>
+                        Synchronisation périodique depuis un export PrestaShop / Shopify / WooCommerce / Google Merchant.
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Champ URL + bouton "Tester la connexion" — visible uniquement en mode remote_url */}
+              {feed.source_type === "remote_url" && (
+                <div style={{ marginTop: 18 }}>
+                  <FormField label="URL du flux distant">
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input
+                        type="url"
+                        style={{ ...modalInputStyle, flex: 1 }}
+                        value={feed.source_url || ""}
+                        onChange={(e) => {
+                          setFeed({ ...feed, source_url: e.target.value });
+                          if (urlTestState !== "idle") {
+                            setUrlTestState("idle");
+                            setUrlTestResult(null);
+                          }
+                        }}
+                        placeholder="https://exemple.com/products.xml"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleTestUrl}
+                        disabled={!feed.source_url || urlTestState === "testing"}
+                        style={{
+                          ...styles.btn, ...styles.btnGhost,
+                          opacity: !feed.source_url || urlTestState === "testing" ? 0.5 : 1,
+                          cursor: !feed.source_url || urlTestState === "testing" ? "not-allowed" : "pointer",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {urlTestState === "testing" ? <RefreshCw size={14} /> : <Play size={14} />}
+                        {urlTestState === "testing" ? "Test en cours…" : "Tester la connexion"}
+                      </button>
+                    </div>
+                  </FormField>
+
+                  {/* Résultat du test */}
+                  {urlTestState === "success" && urlTestResult && (
+                    <div style={{
+                      marginTop: 10, padding: "10px 12px", borderRadius: 10,
+                      background: COLORS.green50, border: "1px solid rgba(27,94,32,.20)",
+                      fontSize: 12.5, color: COLORS.ink800, display: "flex", alignItems: "flex-start", gap: 8,
+                    }}>
+                      <Check size={14} color={COLORS.green800} style={{ marginTop: 2 }} />
+                      <div>
+                        <strong>Connexion OK</strong> · Format <strong>{urlTestResult.format?.toUpperCase()}</strong> détecté
+                        · <strong>{fmtInt(urlTestResult.totalRows)}</strong> items trouvés
+                        · Plateforme : <strong>{urlTestResult.platform}</strong>
+                      </div>
+                    </div>
+                  )}
+                  {urlTestState === "error" && urlTestResult && (
+                    <div style={{
+                      marginTop: 10, padding: "10px 12px", borderRadius: 10,
+                      background: "#FEF2F2", border: "1px solid #FECACA",
+                      fontSize: 12.5, color: "#B91C1C", display: "flex", alignItems: "flex-start", gap: 8,
+                    }}>
+                      <AlertCircle size={14} style={{ marginTop: 2 }} />
+                      <div><strong>Erreur :</strong> {urlTestResult.error}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 1 && (
+            <div>
+              {/* Mode URL distante : la preview a déjà été chargée en step 0,
+                  on affiche juste un récap (pas de drop zone). */}
+              {feed.source_type === "remote_url" && importedRows.length > 0 && (
+                <div style={{
+                  background: COLORS.green50, border: "1px solid rgba(27,94,32,.18)",
+                  borderRadius: 12, padding: "14px 16px",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <Check size={16} color={COLORS.green800} />
+                    <strong style={{ fontSize: 13, color: COLORS.ink900 }}>Aperçu du flux récupéré</strong>
+                  </div>
+                  <div style={{ fontSize: 12.5, color: COLORS.ink700, lineHeight: 1.6 }}>
+                    <div><strong>URL :</strong> <span style={{ wordBreak: "break-all" }}>{feed.source_url}</span></div>
+                    <div>
+                      <strong>Format :</strong> {urlTestResult?.format?.toUpperCase() || detectedPlatform}
+                      {" · "}
+                      <strong>Plateforme :</strong> {detectedPlatform}
+                    </div>
+                    <div><strong>Items chargés (preview) :</strong> {fmtInt(importedRows.length)} / {fmtInt(urlTestResult?.totalRows || importedRows.length)}</div>
+                    <div><strong>Colonnes ({importedColumns.length}) :</strong> {importedColumns.slice(0, 12).join(", ")}{importedColumns.length > 12 ? "…" : ""}</div>
+                  </div>
+                  <p style={{ fontSize: 11.5, color: COLORS.ink500, marginTop: 10, marginBottom: 0 }}>
+                    La synchronisation complète (toutes les lignes) sera lancée à la dernière étape.
+                  </p>
+                </div>
+              )}
+
+              {/* Mode CSV manuel : drop zone classique */}
+              {feed.source_type !== "remote_url" && (importedRows.length === 0 ? (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={onDropFile}
+                  style={{
+                    border: `2px dashed ${COLORS.ink200}`,
+                    borderRadius: 14, padding: "44px 24px",
+                    textAlign: "center", cursor: "pointer",
+                    background: COLORS.ink50, transition: "all .2s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = COLORS.green800; e.currentTarget.style.background = COLORS.green50; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.ink200; e.currentTarget.style.background = COLORS.ink50; }}
+                >
+                  <input
+                    ref={fileInputRef} type="file" accept=".csv,.xlsx" hidden
+                    onChange={(e) => handleFile(e.target.files?.[0])}
+                  />
+                  <Upload size={32} color={COLORS.ink400} style={{ marginBottom: 10 }} />
+                  <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.ink900, marginBottom: 4 }}>
+                    {parsing ? "Parsing en cours…" : "Glissez votre fichier CSV ici"}
+                  </div>
+                  <div style={{ fontSize: 12, color: COLORS.ink500 }}>
+                    ou cliquez pour sélectionner · accepte .csv (.xlsx aussi parsé en CSV)
+                  </div>
+                  {parseError && (
+                    <div style={{
+                      marginTop: 12, padding: "8px 10px", fontSize: 12,
+                      background: "#FEF2F2", border: "1px solid #FECACA",
+                      color: "#B91C1C", borderRadius: 8, display: "inline-flex", gap: 6, alignItems: "center",
+                    }}>
+                      <AlertCircle size={13} /> {parseError}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <div style={{
+                    background: COLORS.green50, border: "1px solid rgba(27,94,32,.18)",
+                    borderRadius: 12, padding: "14px 16px", marginBottom: 16,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <Check size={16} color={COLORS.green800} />
+                      <strong style={{ fontSize: 13, color: COLORS.ink900 }}>Fichier importé avec succès</strong>
+                    </div>
+                    <div style={{ fontSize: 12.5, color: COLORS.ink700, lineHeight: 1.6 }}>
+                      <div><strong>Fichier :</strong> {importedFilename} · {fmtInt(importedRows.length)} lignes</div>
+                      <div>
+                        <strong>Source détectée :</strong>{" "}
+                        {detectedPlatform === "prestashop"  ? "PrestaShop"
+                         : detectedPlatform === "shopify"     ? "Shopify"
+                         : detectedPlatform === "woocommerce" ? "WooCommerce"
+                         : "Format custom"}
+                      </div>
+                      <div><strong>Colonnes ({importedColumns.length}) :</strong> {importedColumns.slice(0, 12).join(", ")}{importedColumns.length > 12 ? "…" : ""}</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { setImportedRows([]); setImportedColumns([]); setImportedFilename(""); setDetectedPlatform(null); }}
+                    style={{ ...styles.btn, ...styles.btnGhost, height: 32, padding: "0 12px", fontSize: 12 }}
+                  >
+                    <RefreshCw size={12} /> Re-uploader un autre fichier
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {step === 2 && (
+            <div>
+              <div style={{
+                background: "#FEF9E7", border: "1px solid rgba(197,160,40,.25)",
+                borderRadius: 10, padding: "10px 14px", marginBottom: 14,
+                fontSize: 12, color: "#8B6914", lineHeight: 1.5,
+              }}>
+                <strong>Pré-mapping {detectedPlatform || "automatique"} appliqué.</strong> Vérifiez et ajustez si nécessaire.
+                {" "}Les champs marqués <span style={{ color: COLORS.danger, fontWeight: 700 }}>*</span> sont obligatoires.
+              </div>
+
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...styles.th, width: "35%" }}>Champ SwingMarket</th>
+                    <th style={styles.th}>Colonne CSV</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {SWING_FIELDS.map((f) => (
+                    <tr key={f.key} style={styles.tr}>
+                      <td style={styles.td}>
+                        <div style={{ fontWeight: 600, color: COLORS.ink900, fontSize: 13 }}>
+                          {f.label}
+                          {f.required && <span style={{ color: COLORS.danger, marginLeft: 3 }}>*</span>}
+                        </div>
+                        <div style={{ fontSize: 11, color: COLORS.ink500, marginTop: 2 }}>{f.hint}</div>
+                      </td>
+                      <td style={styles.td}>
+                        <select
+                          value={feedMapping[f.key] || ""}
+                          onChange={(e) => setFeedMapping({ ...feedMapping, [f.key]: e.target.value })}
+                          style={{ ...modalInputStyle, fontSize: 12.5 }}
+                        >
+                          <option value="">— Non mappé —</option>
+                          {importedColumns.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Aperçu 3 lignes */}
+              {importedRows.length > 0 && feedMapping.title && feedMapping.price && (
+                <div style={{ marginTop: 18 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.ink600, marginBottom: 8, letterSpacing: ".06em", textTransform: "uppercase" }}>
+                    Aperçu (3 premières lignes)
+                  </div>
+                  <div style={{ background: COLORS.ink50, border: `1px solid ${COLORS.ink150}`, borderRadius: 10, padding: 12 }}>
+                    {importedRows.slice(0, 3).map((row, i) => {
+                      const title = row[feedMapping.title] || "—";
+                      const price = parseFloat(row[feedMapping.price]) || 0;
+                      const cat = row[feedMapping.category] || "—";
+                      return (
+                        <div key={i} style={{ fontSize: 12.5, color: COLORS.ink700, padding: "4px 0", borderBottom: i < 2 ? `1px dashed ${COLORS.ink200}` : "none" }}>
+                          <strong style={{ color: COLORS.ink900 }}>{title}</strong> — {price.toFixed(2)} € — <span style={{ color: COLORS.green800 }}>{cat}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 3 && (
+            <div>
+              {/* Fréquence de synchronisation — uniquement pour les flux URL distantes */}
+              {feed.source_type === "remote_url" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: COLORS.ink600 }}>Fréquence de synchronisation automatique</label>
+                  {[
+                    { value: "manual",   label: "Manuelle",          desc: "Sync uniquement à la demande (bouton Sync)" },
+                    { value: "daily",    label: "Quotidienne",       desc: "Recommandé · une sync par jour" },
+                    { value: "every_6h", label: "Toutes les 6 h",    desc: "Pour les catalogues qui bougent souvent" },
+                    { value: "hourly",   label: "Toutes les heures", desc: "À utiliser avec parcimonie · charge serveur élevée" },
+                  ].map((opt) => (
+                    <label key={opt.value} style={radioOptionStyle((feed.sync_frequency || "daily") === opt.value)}>
+                      <input
+                        type="radio"
+                        checked={(feed.sync_frequency || "daily") === opt.value}
+                        onChange={() => setFeed({ ...feed, sync_frequency: opt.value })}
+                      />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: COLORS.ink900 }}>{opt.label}</div>
+                        <div style={{ fontSize: 11.5, color: COLORS.ink500 }}>{opt.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: COLORS.ink600 }}>Que faire pour les produits manquants à la prochaine sync ?</label>
+                {[
+                  { value: "deactivate", label: "Désactiver", desc: "Recommandé · les produits absents passent en archived" },
+                  { value: "delete",     label: "Supprimer", desc: "Suppression définitive en base" },
+                  { value: "ignore",     label: "Ne rien faire", desc: "Les produits manquants restent en l'état" },
+                ].map((opt) => (
+                  <label key={opt.value} style={radioOptionStyle(feed.on_missing_action === opt.value)}>
+                    <input
+                      type="radio"
+                      checked={feed.on_missing_action === opt.value}
+                      onChange={() => setFeed({ ...feed, on_missing_action: opt.value })}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: COLORS.ink900 }}>{opt.label}</div>
+                      <div style={{ fontSize: 11.5, color: COLORS.ink500 }}>{opt.desc}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              <FormField label="Email de notification (optionnel)">
+                <input
+                  type="email"
+                  style={modalInputStyle}
+                  value={feed.notification_email || ""}
+                  onChange={(e) => setFeed({ ...feed, notification_email: e.target.value })}
+                  placeholder="vendeur@exemple.com"
+                />
+              </FormField>
+
+              {/* Récap final */}
+              <div style={{
+                marginTop: 22, padding: 18,
+                background: COLORS.green50, border: "1px solid rgba(27,94,32,.18)",
+                borderRadius: 12,
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.green800, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 10 }}>
+                  Récap final
+                </div>
+                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+                  {(() => {
+                    const lines = [
+                      `Flux : ${feed.name}`,
+                      `Vendeur : ${sellerLabel || "—"}`,
+                    ];
+                    if (feed.source_type === "remote_url") {
+                      lines.push(`Source : URL distante · ${feed.source_url}`);
+                      const freqLabel = {
+                        manual: "Manuelle (à la demande)",
+                        daily: "Quotidienne",
+                        every_6h: "Toutes les 6 h",
+                        hourly: "Toutes les heures",
+                      }[feed.sync_frequency || "daily"];
+                      lines.push(`Fréquence : ${freqLabel}`);
+                    } else {
+                      lines.push(`${fmtInt(importedRows.length)} produits prêts à être importés`);
+                    }
+                    lines.push(`Plateforme détectée : ${detectedPlatform || "custom"}`);
+                    lines.push(`Mapping configuré : ${Object.values(feedMapping).filter(Boolean).length} champs`);
+                    return lines.map((line, i) => (
+                      <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: COLORS.ink800 }}>
+                        <Check size={14} color={COLORS.green800} /> {line}
+                      </li>
+                    ));
+                  })()}
+                </ul>
+              </div>
+
+              {/* Barre de progression à l'import */}
+              {importing && (
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ fontSize: 12, color: COLORS.ink600, marginBottom: 6 }}>
+                    Import en cours · <strong style={{ color: COLORS.ink900 }}>{progress.done}</strong> / {progress.total} produits
+                  </div>
+                  <div style={{ height: 6, background: COLORS.ink100, borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%",
+                      width: progress.total > 0 ? `${(progress.done / progress.total) * 100}%` : "0%",
+                      background: `linear-gradient(90deg, ${COLORS.green800}, ${COLORS.gold600})`,
+                      transition: "width .3s",
+                    }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer — boutons navigation */}
+        <div style={modalFootStyle}>
+          {step > 0 && !importing && (
+            <button onClick={() => setStep(step - 1)} style={{ ...styles.btn, ...styles.btnGhost }}>
+              <ArrowLeft size={14} /> Retour
+            </button>
+          )}
+          <div style={{ flex: 1 }} />
+          {step < 3 ? (
+            <button
+              onClick={() => setStep(step + 1)}
+              disabled={!canGoNext}
+              style={{
+                ...styles.btn, ...styles.btnPrimary,
+                opacity: canGoNext ? 1 : 0.4,
+                cursor: canGoNext ? "pointer" : "not-allowed",
+              }}
+            >
+              Suivant <ArrowRight size={14} />
+            </button>
+          ) : (
+            <button
+              onClick={onSubmit}
+              disabled={importing}
+              style={{
+                ...styles.btn, ...styles.btnPrimary,
+                background: `linear-gradient(135deg, ${COLORS.green800}, ${COLORS.green700})`,
+                opacity: importing ? 0.5 : 1,
+              }}
+            >
+              {importing ? <RefreshCw size={14} className="animate-spin" /> : <Check size={14} />}
+              {importing
+                ? "Import en cours…"
+                : (feed.source_type === "remote_url" ? "Activer le flux" : "Lancer l'import")}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const radioOptionStyle = (active) => ({
+  display: "flex", gap: 10, alignItems: "flex-start",
+  padding: "10px 12px", border: `1px solid ${active ? COLORS.green800 : COLORS.ink200}`,
+  background: active ? COLORS.green50 : COLORS.paper,
+  borderRadius: 10, cursor: "pointer", transition: "all .15s",
+});
+
+// ═════════════════════════════════════════════════════════
+// FLUX D'IMPORT — Historique des syncs (FeedHistoryModal)
+// ═════════════════════════════════════════════════════════
+function FeedHistoryModal({ feed, runs, loading, onClose }) {
+  const [expandedRun, setExpandedRun] = useState(null);
+
+  const STATUS_COLORS = {
+    success: { bg: "#ECFDF5", fg: "#047857", label: "Succès" },
+    partial: { bg: "#FFFBEB", fg: "#92400E", label: "Partiel" },
+    error:   { bg: "#FEF2F2", fg: "#B91C1C", label: "Erreur" },
+    running: { bg: "#EFF6FF", fg: "#1D4ED8", label: "En cours" },
+  };
+
+  const formatDuration = (run) => {
+    if (!run.started_at || !run.ended_at) return "—";
+    const ms = new Date(run.ended_at) - new Date(run.started_at);
+    if (ms < 1000) return `${ms} ms`;
+    if (ms < 60000) return `${(ms / 1000).toFixed(1)} s`;
+    return `${(ms / 60000).toFixed(1)} min`;
+  };
+
+  return (
+    <div style={modalOverlayStyle} onClick={onClose}>
+      <div style={{ ...modalBoxStyle, maxWidth: 880 }} onClick={(e) => e.stopPropagation()}>
+        <div style={modalHeadStyle}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Historique des synchronisations</h3>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: COLORS.ink500 }}>{feed.name}</p>
+          </div>
+          <button onClick={onClose} style={styles.rowAction}><X size={16} /></button>
+        </div>
+
+        <div style={{ padding: "16px 24px", maxHeight: "65vh", overflowY: "auto" }}>
+          {loading && <div style={{ padding: 30, textAlign: "center", color: COLORS.ink500, fontSize: 13 }}>Chargement…</div>}
+          {!loading && runs.length === 0 && (
+            <div style={{ padding: 40, textAlign: "center", color: COLORS.ink500, fontSize: 13 }}>
+              Aucune synchronisation enregistrée pour ce flux.
+            </div>
+          )}
+          {!loading && runs.length > 0 && (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>Date</th>
+                  <th style={styles.th}>Statut</th>
+                  <th style={{ ...styles.th, textAlign: "right" }}>Ajoutés</th>
+                  <th style={{ ...styles.th, textAlign: "right" }}>MAJ</th>
+                  <th style={{ ...styles.th, textAlign: "right" }}>Retirés</th>
+                  <th style={{ ...styles.th, textAlign: "right" }}>Échoués</th>
+                  <th style={{ ...styles.th, textAlign: "right" }}>Durée</th>
+                </tr>
+              </thead>
+              <tbody>
+                {runs.map((r) => {
+                  const stat = STATUS_COLORS[r.status] || { bg: COLORS.ink100, fg: COLORS.ink600, label: r.status };
+                  const isExpanded = expandedRun === r.id;
+                  const hasErrors = !!(r.errors_log && Array.isArray(r.errors_log) && r.errors_log.length > 0);
+                  return (
+                    <Fragment key={r.id}>
+                      <tr
+                        style={{ ...styles.tr, cursor: hasErrors ? "pointer" : "default" }}
+                        onClick={() => hasErrors && setExpandedRun(isExpanded ? null : r.id)}
+                      >
+                        <td style={{ ...styles.td, color: COLORS.ink700 }}>
+                          {new Date(r.started_at).toLocaleString("fr-FR", {
+                            day: "2-digit", month: "short", year: "numeric",
+                            hour: "2-digit", minute: "2-digit",
+                          })}
+                        </td>
+                        <td style={styles.td}>
+                          <span style={{
+                            display: "inline-block", padding: "2px 8px", borderRadius: 999,
+                            background: stat.bg, color: stat.fg, fontSize: 11, fontWeight: 600,
+                          }}>{stat.label}</span>
+                          {hasErrors && (
+                            <span style={{ marginLeft: 6, fontSize: 11, color: COLORS.ink500 }}>
+                              ({r.errors_log.length} {isExpanded ? "▴" : "▾"})
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ ...styles.td, textAlign: "right", color: COLORS.green800, fontWeight: 600 }}>{fmtInt(r.products_added || 0)}</td>
+                        <td style={{ ...styles.td, textAlign: "right", color: COLORS.info, fontWeight: 600 }}>{fmtInt(r.products_updated || 0)}</td>
+                        <td style={{ ...styles.td, textAlign: "right", color: COLORS.ink600 }}>{fmtInt(r.products_removed || 0)}</td>
+                        <td style={{ ...styles.td, textAlign: "right", color: r.products_failed > 0 ? COLORS.danger : COLORS.ink500, fontWeight: r.products_failed > 0 ? 600 : 400 }}>{fmtInt(r.products_failed || 0)}</td>
+                        <td style={{ ...styles.td, textAlign: "right", color: COLORS.ink600, fontFamily: "'JetBrains Mono', monospace" }}>{formatDuration(r)}</td>
+                      </tr>
+                      {isExpanded && hasErrors && (
+                        <tr>
+                          <td colSpan={7} style={{ background: "#FEF2F2", padding: 14, borderBottom: `1px solid ${COLORS.ink150}` }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: "#B91C1C", marginBottom: 6, letterSpacing: ".06em", textTransform: "uppercase" }}>
+                              Erreurs détaillées ({r.errors_log.length})
+                            </div>
+                            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4, maxHeight: 200, overflowY: "auto" }}>
+                              {r.errors_log.map((e, i) => (
+                                <li key={i} style={{ fontSize: 11.5, color: COLORS.ink800, fontFamily: "'JetBrains Mono', monospace" }}>
+                                  <strong>{e.title || e.global || "—"} :</strong> {e.error || ""}
+                                </li>
+                              ))}
+                            </ul>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div style={modalFootStyle}>
+          <div style={{ flex: 1 }} />
+          <button onClick={onClose} style={{ ...styles.btn, ...styles.btnGhost }}>Fermer</button>
+        </div>
+      </div>
     </div>
   );
 }
