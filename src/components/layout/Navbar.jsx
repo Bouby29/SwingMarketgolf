@@ -109,6 +109,9 @@ function MobileMenu({ open, onClose, isLoggedIn, user, unreadCount, handleVendre
           <a href="/SearchRequest" onClick={onClose} className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 rounded-xl text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-[#1B5E20]">
             🔍 Poster une recherche
           </a>
+          <Link to={createPageUrl("Guides")} onClick={onClose} className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 rounded-xl text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-[#1B5E20]">
+            📖 Guides
+          </Link>
         </div>
 
         {/* Catégories */}
@@ -299,6 +302,7 @@ export default function Navbar() {
         {/* Desktop categories bar */}
         <div className="hidden md:flex items-center justify-center gap-2 px-6 py-3 overflow-x-auto border-t border-gray-50 bg-white relative z-[9999]">
           {CATEGORIES.map((cat) => (<CategoryItem key={cat.name} cat={cat} />))}
+          <Link to={createPageUrl("Guides")} className="text-xs font-medium text-gray-600 hover:text-[#1B5E20] px-3 py-1.5 rounded-full hover:bg-green-50 transition-all whitespace-nowrap">Guides</Link>
           <Link to={createPageUrl("Blog")} className="text-xs font-medium text-gray-600 hover:text-[#1B5E20] px-3 py-1.5 rounded-full hover:bg-green-50 transition-all whitespace-nowrap">Blog</Link>
         </div>
       </nav>
