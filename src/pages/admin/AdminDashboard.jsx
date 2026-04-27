@@ -518,6 +518,16 @@ export default function AdminDashboard() {
     loadData();
   };
 
+  // Suppression en masse (multi-sélection dans ProductsSection)
+  const bulkDeleteProducts = async (ids) => {
+    if (!ids || ids.length === 0) return;
+    if (!confirm(`Supprimer ${ids.length} annonce${ids.length > 1 ? "s" : ""} ? Cette action est irréversible.`)) return;
+    const { error } = await supabaseAdmin.from("products").delete().in("id", ids);
+    if (error) { alert("Erreur : " + error.message); return; }
+    flash(`✓ ${ids.length} annonce${ids.length > 1 ? "s supprimées" : " supprimée"}`);
+    loadData();
+  };
+
   const saveUser = async () => {
     await supabaseAdmin.from("profiles").update({
       full_name: editUser.full_name,
@@ -1296,7 +1306,8 @@ export default function AdminDashboard() {
           )}
           {section === "products" && (
             <ProductsSection products={productsFiltered}
-              onEdit={(p) => setEditProduct({ ...p })} onDelete={deleteProduct} />
+              onEdit={(p) => setEditProduct({ ...p })} onDelete={deleteProduct}
+              onBulkDelete={bulkDeleteProducts} />
           )}
           {section === "users" && (
             <UsersSection profiles={profilesFiltered}
@@ -2623,15 +2634,110 @@ function OrdersTable({ orders, profilesById, onEdit, compact }) {
   );
 }
 
-function ProductsSection({ products, onEdit, onDelete }) {
+function ProductsSection({ products, onEdit, onDelete, onBulkDelete }) {
+  // Multi-sélection : Set d'ids pour ajout/suppression rapide
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+
+  const allVisibleIds = useMemo(() => products.map((p) => p.id), [products]);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id) => selectedIds.has(id));
+  const someSelected = !allSelected && allVisibleIds.some((id) => selectedIds.has(id));
+
+  const toggleOne = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    setSelectedIds((prev) => {
+      if (allSelected) return new Set();
+      return new Set(allVisibleIds);
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    await onBulkDelete(Array.from(selectedIds));
+    clearSelection();
+  };
+
+  // Ref pour appliquer le state "indeterminate" sur la checkbox d'en-tête
+  const headerCheckboxRef = useRef(null);
+  useEffect(() => {
+    if (headerCheckboxRef.current) {
+      headerCheckboxRef.current.indeterminate = someSelected;
+    }
+  }, [someSelected]);
+
   return (
     <>
-      <PageHeader title="Annonces" sub={`${fmtInt(products.length)} annonces dans la marketplace`} />
+      <PageHeader
+        title="Annonces"
+        sub={`${fmtInt(products.length)} annonces dans la marketplace`}
+        right={
+          selectedIds.size > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              style={{
+                ...styles.btn, ...styles.btnPrimary,
+                background: COLORS.danger,
+                boxShadow: "0 8px 20px -8px rgba(239,68,68,.45)",
+              }}
+            >
+              <Trash2 size={14} />
+              Supprimer la sélection ({selectedIds.size})
+            </button>
+          )
+        }
+      />
+
+      {/* Bandeau "X sélectionnée(s)" qui apparaît dès qu'on coche au moins 1 ligne */}
+      {selectedIds.size > 0 && (
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "10px 14px", marginBottom: 12,
+          background: "#FEF2F2", border: "1px solid #FECACA",
+          borderRadius: 12, fontSize: 13, color: "#B91C1C", fontWeight: 600,
+        }}>
+          <span>
+            <strong>{selectedIds.size}</strong> annonce{selectedIds.size > 1 ? "s sélectionnées" : " sélectionnée"}
+          </span>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={clearSelection} style={{ ...styles.btn, ...styles.btnGhost, height: 30, padding: "0 12px", fontSize: 12 }}>
+              Annuler la sélection
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              style={{
+                ...styles.btn, height: 30, padding: "0 14px", fontSize: 12,
+                background: COLORS.danger, color: "#fff", border: 0,
+              }}
+            >
+              <Trash2 size={12} /> Supprimer
+            </button>
+          </div>
+        </div>
+      )}
+
       <section style={styles.card}>
         <div style={{ overflowX: "auto" }}>
           <table style={styles.table}>
             <thead>
               <tr>
+                <th style={{ ...styles.th, width: 40, paddingLeft: 16, paddingRight: 0 }}>
+                  <input
+                    ref={headerCheckboxRef}
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleAll}
+                    style={{ cursor: "pointer", width: 14, height: 14, accentColor: COLORS.green800 }}
+                    aria-label="Tout sélectionner"
+                  />
+                </th>
                 <th style={styles.th}>Titre</th>
                 <th style={{ ...styles.th, textAlign: "right" }}>Prix</th>
                 <th style={styles.th}>Catégorie</th>
@@ -2645,8 +2751,24 @@ function ProductsSection({ products, onEdit, onDelete }) {
             <tbody>
               {products.map(p => {
                 const stat = ORDER_STATUS[p.status] || { label: p.status || "—", cls: "prep" };
+                const isSelected = selectedIds.has(p.id);
                 return (
-                  <tr key={p.id} style={styles.tr}>
+                  <tr
+                    key={p.id}
+                    style={{
+                      ...styles.tr,
+                      background: isSelected ? "#FEF2F2" : "transparent",
+                    }}
+                  >
+                    <td style={{ ...styles.td, paddingLeft: 16, paddingRight: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleOne(p.id)}
+                        style={{ cursor: "pointer", width: 14, height: 14, accentColor: COLORS.green800 }}
+                        aria-label={`Sélectionner ${p.title}`}
+                      />
+                    </td>
                     <td style={{ ...styles.td, fontWeight: 600, maxWidth: 280 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         {p.images?.[0] && (
@@ -2669,7 +2791,7 @@ function ProductsSection({ products, onEdit, onDelete }) {
                 );
               })}
               {products.length === 0 && (
-                <tr><td colSpan={8} style={{ ...styles.td, textAlign: "center", color: COLORS.ink500, padding: 32 }}>
+                <tr><td colSpan={9} style={{ ...styles.td, textAlign: "center", color: COLORS.ink500, padding: 32 }}>
                   Aucune annonce.
                 </td></tr>
               )}
