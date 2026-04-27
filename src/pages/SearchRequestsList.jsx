@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
-import { Bell, MessageCircle, Plus, Clock, Tag, Wallet } from "lucide-react";
+import { Bell, MessageCircle, Plus, Clock, Tag, Wallet, ChevronRight } from "lucide-react";
 
 const CAT_COLORS = {
   "Clubs de golf": { bg: "#f0fdf4", border: "#86efac", text: "#15803d", emoji: "🏌️" },
@@ -23,12 +24,12 @@ function timeAgo(d) {
 
 export default function SearchRequestsList() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("Toutes");
-  const [proposing, setProposing] = useState(null);
-  const [form, setForm] = useState({ name: "", email: user?.email || "", message: "" });
-  const [sent, setSent] = useState({});
+  // Toast "publié avec succès" depuis SearchRequest (?published=1)
+  const [justPublished, setJustPublished] = useState(false);
 
   const CATS = ["Toutes", "Clubs de golf", "Balles de golf", "Chariots", "Sacs de golf", "Accessoires", "Vetements"];
 
@@ -37,25 +38,22 @@ export default function SearchRequestsList() {
       .then(({ data }) => { setRequests(data || []); setLoading(false); });
   }, []);
 
+  // Toast au retour d'une publication réussie
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("published") === "1") {
+      setJustPublished(true);
+      // Nettoie l'URL pour ne pas re-déclencher au refresh
+      window.history.replaceState({}, "", window.location.pathname);
+      const t = setTimeout(() => setJustPublished(false), 4000);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  // Ouverture détail d'une recherche
+  const openDetail = (req) => navigate(`/SearchRequestDetail?id=${req.id}`);
+
   const filtered = filter === "Toutes" ? requests : requests.filter(r => r.category === filter);
-
-  const handlePropose = (req) => {
-    if (!form.email || !form.message) return alert("Remplis ton email et ton message.");
-    const subject = encodeURIComponent("J ai le materiel que tu recherches - SwingMarketGolf");
-    const body = encodeURIComponent(`Bonjour ${req.name || ""},
-
-Tu recherches : ${req.title}
-
-${form.message}
-
-Cordialement,
-${form.name || "Un vendeur SwingMarketGolf"}
-
-Voir mes annonces : https://swingmarketgolf.com`);
-    window.open(`mailto:${req.email}?subject=${subject}&body=${body}`);
-    setSent(prev => ({...prev, [req.id]: true}));
-    setProposing(null);
-  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f9fafb" }}>
@@ -82,6 +80,19 @@ Voir mes annonces : https://swingmarketgolf.com`);
       </div>
 
       <div style={{ maxWidth: 760, margin: "-2.5rem auto 0", padding: "0 1rem 3rem", position: "relative" }}>
+
+        {/* Toast publication réussie */}
+        {justPublished && (
+          <div style={{
+            background: "#ECFDF5", border: "1px solid rgba(16,185,129,.25)",
+            borderRadius: 14, padding: "0.85rem 1.1rem", marginBottom: 14,
+            display: "flex", alignItems: "center", gap: 10,
+            color: "#047857", fontSize: "0.875rem", fontWeight: 600,
+            boxShadow: "0 4px 18px rgba(16,185,129,.10)",
+          }}>
+            ✓ Recherche publiée — les vendeurs concernés peuvent maintenant la consulter.
+          </div>
+        )}
 
         {/* Filtres */}
         <div style={{ background: "white", borderRadius: 16, padding: "1rem 1.25rem", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", marginBottom: 20, display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -116,14 +127,44 @@ Voir mes annonces : https://swingmarketgolf.com`);
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {filtered.map(req => {
             const cat = CAT_COLORS[req.category] || CAT_COLORS["Clubs de golf"];
+            const isMine = !!(user && req.user_id && user.id === req.user_id);
             return (
-              <div key={req.id} style={{ background: "white", borderRadius: 16, padding: "1.5rem", boxShadow: "0 2px 16px rgba(0,0,0,0.06)", border: "1px solid #f3f4f6", transition: "box-shadow 0.2s" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
+              <button
+                key={req.id}
+                onClick={() => openDetail(req)}
+                type="button"
+                style={{
+                  background: "white", borderRadius: 16, padding: "1.5rem",
+                  boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+                  border: isMine ? "1px solid rgba(197,160,40,.35)" : "1px solid #f3f4f6",
+                  transition: "all 0.18s ease",
+                  cursor: "pointer", textAlign: "left", width: "100%",
+                  position: "relative",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 8px 28px rgba(15,23,42,0.10)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 2px 16px rgba(0,0,0,0.06)";  e.currentTarget.style.transform = ""; }}
+              >
+                {/* Badge "Votre recherche" en haut-droite */}
+                {isMine && (
+                  <span style={{
+                    position: "absolute", top: 14, right: 14,
+                    display: "inline-flex", alignItems: "center", gap: 4,
+                    fontSize: "0.7rem", fontWeight: 700,
+                    color: "#8B6914", background: "#FEF9E7",
+                    border: "1px solid rgba(197,160,40,.30)",
+                    borderRadius: 999, padding: "0.18rem 0.55rem",
+                    letterSpacing: ".02em",
+                  }}>
+                    Votre recherche
+                  </span>
+                )}
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: req.description ? 12 : 0, gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
                     <div style={{ width: 48, height: 48, borderRadius: 12, background: cat.bg, border: `1.5px solid ${cat.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", flexShrink: 0 }}>
                       {cat.emoji}
                     </div>
-                    <div>
+                    <div style={{ minWidth: 0, paddingRight: isMine ? 96 : 0 }}>
                       <h3 style={{ fontWeight: 700, fontSize: "1rem", color: "#1a2332", margin: 0, marginBottom: 4 }}>{req.title}</h3>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.75rem", color: cat.text, background: cat.bg, border: `1px solid ${cat.border}`, borderRadius: 20, padding: "0.2rem 0.6rem", fontWeight: 600 }}>
@@ -136,63 +177,19 @@ Voir mes annonces : https://swingmarketgolf.com`);
                         )}
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.75rem", color: "#9ca3af" }}>
                           <Clock style={{ width: 10, height: 10 }} />{timeAgo(req.created_at)}
-                          {req.name && ` · ${req.name}`}
                         </span>
                       </div>
                     </div>
                   </div>
+                  <ChevronRight style={{ width: 18, height: 18, color: "#9ca3af", flexShrink: 0, marginTop: 4 }} />
                 </div>
 
                 {req.description && (
-                  <p style={{ fontSize: "0.875rem", color: "#6b7280", margin: "0 0 14px", lineHeight: 1.6, paddingLeft: 60 }}>{req.description}</p>
+                  <p style={{ fontSize: "0.875rem", color: "#6b7280", margin: "0", lineHeight: 1.6, paddingLeft: 60 }}>
+                    {req.description.length > 200 ? req.description.slice(0, 200) + "…" : req.description}
+                  </p>
                 )}
-
-                {sent[req.id] ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "0.75rem 1rem", fontSize: "0.875rem", color: "#15803d", fontWeight: 600 }}>
-                    ✅ Proposition envoyee ! Le vendeur a ete contacte.
-                  </div>
-                ) : proposing === req.id ? (
-                  <div style={{ background: "#f9fafb", borderRadius: 12, padding: "1.25rem", border: "1px solid #e5e7eb" }}>
-                    <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "#1a2332", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-                      <MessageCircle style={{ width: 16, height: 16, color: "#1B5E20" }} />
-                      Contacter {req.name || "l acheteur"} par email
-                    </p>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-                      <input value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-                        placeholder="Ton prenom" style={{ padding: "0.65rem 0.9rem", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: "0.85rem", color: "#1a2332", outline: "none" }} />
-                      <input value={form.email} onChange={e => setForm({...form, email: e.target.value})}
-                        placeholder="Ton email" type="email" style={{ padding: "0.65rem 0.9rem", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: "0.85rem", color: "#1a2332", outline: "none" }} />
-                    </div>
-                    <textarea value={form.message} onChange={e => setForm({...form, message: e.target.value})}
-                      placeholder="Decris le materiel que tu proposes, son etat, son prix estimatif..."
-                      rows={3} style={{ width: "100%", padding: "0.65rem 0.9rem", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: "0.85rem", color: "#1a2332", outline: "none", resize: "vertical", boxSizing: "border-box", marginBottom: 10 }} />
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => handlePropose(req)} style={{ flex: 1, padding: "0.75rem", borderRadius: 50, border: "none", background: "linear-gradient(135deg, #1B5E20, #2E7D32)", color: "white", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}>
-                        📧 Envoyer ma proposition
-                      </button>
-                      <button onClick={() => setProposing(null)} style={{ padding: "0.75rem 1.25rem", borderRadius: 50, border: "1.5px solid #e5e7eb", background: "white", color: "#6b7280", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}>
-                        Annuler
-                      </button>
-                    </div>
-                    <p style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: 8, textAlign: "center" }}>
-                      Cela ouvrira ton client email avec le message pre-rempli.
-                    </p>
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <button onClick={() => setProposing(req.id)} style={{
-                      display: "inline-flex", alignItems: "center", gap: 6,
-                      padding: "0.65rem 1.25rem", borderRadius: 50, border: "none",
-                      background: "linear-gradient(135deg, #1B5E20, #2E7D32)",
-                      color: "white", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer",
-                      boxShadow: "0 2px 10px rgba(27,94,32,0.25)"
-                    }}>
-                      <MessageCircle style={{ width: 14, height: 14 }} />
-                      Proposer ce materiel
-                    </button>
-                  </div>
-                )}
-              </div>
+              </button>
             );
           })}
         </div>

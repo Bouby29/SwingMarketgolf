@@ -66,6 +66,7 @@ import MentionsLegales from './pages/MentionsLegales';
 import Messages from './pages/Messages';
 import OrderSuccess from './pages/OrderSuccess';
 import ProductDetail from './pages/ProductDetail';
+import SearchRequestDetail from './pages/SearchRequestDetail';
 import ProfessionnelsSellers from './pages/ProfessionnelsSellers';
 import Profile from './pages/Profile';
 import QuiSommesNous from './pages/QuiSommesNous';
@@ -92,6 +93,7 @@ export const PAGES = {
     "Messages": Messages,
     "OrderSuccess": OrderSuccess,
     "ProductDetail": ProductDetail,
+    "SearchRequestDetail": SearchRequestDetail,
     "ProfessionnelsSellers": ProfessionnelsSellers,
     "Profile": Profile,
     "QuiSommesNous": QuiSommesNous,

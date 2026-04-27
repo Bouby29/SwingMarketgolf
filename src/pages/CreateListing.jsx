@@ -3,8 +3,8 @@ import { useEmailService } from "../components/email/useEmailService";
 import { supabase, entities } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, CheckCircle2, Search } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import RegisterModal from "../components/auth/RegisterModal";
 import CategorySelector from "../components/listing/CategorySelector";
 import GeneralInfoStep from "../components/listing/GeneralInfoStep";
@@ -14,7 +14,10 @@ import ReviewStep from "../components/listing/ReviewStep";
 
 export default function CreateListing() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
+  // Recherche d'origine (si on vient de "Proposer un produit" depuis une recherche)
+  const [originSearch, setOriginSearch] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -44,6 +47,35 @@ export default function CreateListing() {
       setUser(profile || session.user);
     };
     init();
+  }, []);
+
+  // Pré-remplissage depuis une recherche acheteur (?prefill_title=...&prefill_category=...&from_search=...)
+  // Ne s'applique qu'au mount, et seulement si les champs sont encore vides.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const prefillTitle = params.get("prefill_title");
+    const prefillCategory = params.get("prefill_category");
+    const fromSearch = params.get("from_search");
+
+    if (prefillTitle || prefillCategory) {
+      setForm((f) => ({
+        ...f,
+        title: f.title || prefillTitle || "",
+        category: f.category || prefillCategory || "",
+      }));
+      // Si une catégorie est pré-remplie, on saute la 1ère étape (sélecteur de catégorie)
+      if (prefillCategory) setCurrentStep(1);
+    }
+
+    if (fromSearch) {
+      // Récupère le titre de la recherche d'origine pour le bandeau
+      supabase.from("search_requests")
+        .select("id, title, category")
+        .eq("id", fromSearch)
+        .maybeSingle()
+        .then(({ data }) => { if (data) setOriginSearch(data); });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { sendListingPublished } = useEmailService();
@@ -197,6 +229,23 @@ export default function CreateListing() {
       </div>
     )}
     <div className="max-w-3xl mx-auto px-4 py-8">
+      {/* Bandeau "réponse à une recherche" — visible si on vient de SearchRequestDetail */}
+      {originSearch && (
+        <div className="mb-6 bg-[#F7FEF7] border border-[#1B5E20]/15 rounded-2xl px-4 py-3 flex items-start gap-3">
+          <div className="w-9 h-9 rounded-full bg-[#1B5E20]/10 flex items-center justify-center shrink-0">
+            <Search className="w-4 h-4 text-[#1B5E20]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] font-semibold text-[#0F172A]">
+              Vous proposez ce produit en réponse à une recherche
+            </div>
+            <div className="text-xs text-gray-500 mt-0.5">
+              Recherche d'un acheteur · « <span className="text-[#1B5E20] font-medium">{originSearch.title}</span> »
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Créer une annonce</h1>
       <p className="text-gray-500 text-sm mb-8">Vendez votre matériel de golf en quelques minutes</p>
       <div className="flex gap-2 mb-8">

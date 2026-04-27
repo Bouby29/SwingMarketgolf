@@ -15,6 +15,7 @@ import SellCTAStrip from "../components/home/SellCTAStrip";
 import AuctionCarousel from "../components/auction/AuctionCarousel";
 import VideoCtaBanner from "../components/home/VideoCtaBanner";
 import BrandCarousel from "../components/home/BrandCarousel";
+import SearchRequestCTA from "../components/home/SearchRequestCTA";
 import StatsCounter from "../components/home/StatsCounter";
 
 export default function Home() {
@@ -88,6 +89,7 @@ export default function Home() {
       <ReviewsSection />
       <VideoCtaBanner />
       <BrandCarousel />
+      <SearchRequestCTA />
     </div>
   );
 }

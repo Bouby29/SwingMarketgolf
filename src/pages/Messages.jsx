@@ -4,7 +4,7 @@ import { useEmailService } from "../components/email/useEmailService";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, ArrowLeft, MessageCircle, Package } from "lucide-react";
+import { Send, ArrowLeft, MessageCircle, Package, Search } from "lucide-react";
 import { createPageUrl } from "@/utils";
 
 export default function Messages() {
@@ -14,6 +14,9 @@ export default function Messages() {
   const offerTitle = params.get("title");
   const toUserId = params.get("to");
   const productId = params.get("product");
+  // Référence à une recherche acheteur (?about_search=SEARCH_ID) — purement informatif
+  const aboutSearchId = params.get("about_search");
+  const [aboutSearch, setAboutSearch] = useState(null);
 
   const [user, setUser] = useState(null);
   const [conversations, setConversations] = useState([]);
@@ -35,6 +38,16 @@ export default function Messages() {
       setUser(session.user);
     });
   }, []);
+
+  // Fetch la recherche référencée pour afficher son titre dans le bandeau
+  useEffect(() => {
+    if (!aboutSearchId) { setAboutSearch(null); return; }
+    supabase.from("search_requests")
+      .select("id, title, category")
+      .eq("id", aboutSearchId)
+      .maybeSingle()
+      .then(({ data }) => setAboutSearch(data || null));
+  }, [aboutSearchId]);
 
   // Load conversations
   useEffect(() => {
@@ -355,6 +368,22 @@ export default function Messages() {
                 );
               })()}
             </div>
+
+            {/* Bandeau "À propos de la recherche" — affiché si on arrive depuis SearchRequestDetail */}
+            {aboutSearch && (
+              <div className="bg-[#F7FEF7] border-b border-[#1B5E20]/15 px-4 py-2.5 flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-[#1B5E20]/10 flex items-center justify-center shrink-0">
+                  <Search className="w-3.5 h-3.5 text-[#1B5E20]" />
+                </div>
+                <div className="text-[12.5px] text-gray-700 leading-tight flex-1 min-w-0">
+                  <span className="text-gray-500">À propos de la recherche : </span>
+                  <Link to={`/SearchRequestDetail?id=${aboutSearch.id}`}
+                    className="font-semibold text-[#1B5E20] hover:underline">
+                    {aboutSearch.title}
+                  </Link>
+                </div>
+              </div>
+            )}
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">

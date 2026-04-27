@@ -70,10 +70,26 @@ export default function Login() {
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
+  // Récupère ?next= et ?action= pour rediriger vers une page spécifique
+  // après un login/signup réussi (utilisé par "Bourse aux recherches",
+  // "Discuter avec l'acheteur", "Proposer un produit", etc.).
+  const getRedirectAfterAuth = () => {
+    const params = new URLSearchParams(window.location.search);
+    const rawNext = params.get("next");
+    const action = params.get("action");
+    let next = rawNext && rawNext.startsWith("/") ? rawNext : "/";
+    if (action) {
+      next += (next.includes("?") ? "&" : "?") + "action=" + encodeURIComponent(action);
+    }
+    return next;
+  };
+
   const handleGoogleLogin = async () => {
+    const next = getRedirectAfterAuth();
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://www.swingmarketgolf.com";
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: "https://www.swingmarketgolf.com/" }
+      options: { redirectTo: origin + next }
     });
   };
 
@@ -82,7 +98,7 @@ export default function Login() {
     setLoading(true); setError("");
     const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
     if (error) setError("Email ou mot de passe incorrect.");
-    else window.location.href = "/";
+    else window.location.href = getRedirectAfterAuth();
     setLoading(false);
   };
 
@@ -93,9 +109,17 @@ export default function Login() {
     setLoading(true); setError("");
     const pwdChecks = [form.password.length >= 8, /[A-Z]/.test(form.password), /[0-9]/.test(form.password), /[^A-Za-z0-9]/.test(form.password)];
     if (pwdChecks.filter(Boolean).length < 4) { setError("Le mot de passe doit être Fort."); setLoading(false); return; }
+    const next = getRedirectAfterAuth();
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://www.swingmarketgolf.com";
     const { data: signUpData, error } = await supabase.auth.signUp({
       email: form.email, password: form.password,
-      options: { data: { full_name: form.firstName + " " + form.lastName, is_pro: isPro, ...(isPro ? { company: form.companyName } : {}) } }
+      options: {
+        data: { full_name: form.firstName + " " + form.lastName, is_pro: isPro, ...(isPro ? { company: form.companyName } : {}) },
+        // Le lien de confirmation email renverra sur la page demandée
+        // (avec son éventuel ?action=publish_search) — utile pour la
+        // bourse aux recherches : auto-publication au retour.
+        emailRedirectTo: origin + next,
+      }
     });
     if (error) setError(error.message);
     else {
@@ -108,6 +132,12 @@ export default function Login() {
           is_pro: !!isPro,
           plan: isPro ? "basique" : null,
         });
+      }
+      // Si Supabase a déjà créé une session (auto-confirmation activée),
+      // on redirige direct vers la page d'origine sans passer par l'email.
+      if (signUpData?.session) {
+        window.location.href = next;
+        return;
       }
       setSuccess("Compte créé ! Vérifiez votre email pour confirmer votre inscription.");
       sendSignupConfirmation({ email: form.email, full_name: form.firstName + " " + form.lastName });
