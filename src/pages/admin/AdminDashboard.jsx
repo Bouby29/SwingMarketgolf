@@ -511,9 +511,42 @@ export default function AdminDashboard() {
     loadData();
   };
 
+  // Cascade applicative : la FK conversations.product_id (et favorites.product_id)
+  // bloque le DELETE products. On supprime d'abord les références dans les tables
+  // liées avant le DELETE final. Ne touche PAS aux orders (historique financier
+  // à conserver).
+  const cascadeDeleteProducts = async (ids) => {
+    if (!ids || ids.length === 0) return null;
+    // 1. messages liés aux conversations qui référencent ces produits
+    //    (on récupère d'abord les conversation_ids puis on supprime les messages)
+    const { data: convs } = await supabaseAdmin
+      .from("conversations")
+      .select("id")
+      .in("product_id", ids);
+    const convIds = (convs || []).map(c => c.id);
+    if (convIds.length > 0) {
+      // Tente de supprimer les messages — si la table n'existe pas / FK CASCADE
+      // déjà en place, l'erreur est silencieuse.
+      try {
+        await supabaseAdmin.from("messages").delete().in("conversation_id", convIds);
+      } catch (e) { console.warn("[bulk delete] messages:", e); }
+    }
+    // 2. conversations liées aux produits
+    try {
+      await supabaseAdmin.from("conversations").delete().in("product_id", ids);
+    } catch (e) { console.warn("[bulk delete] conversations:", e); }
+    // 3. favoris liés aux produits
+    try {
+      await supabaseAdmin.from("favorites").delete().in("product_id", ids);
+    } catch (e) { console.warn("[bulk delete] favorites:", e); }
+    // 4. enfin, les produits eux-mêmes
+    return supabaseAdmin.from("products").delete().in("id", ids);
+  };
+
   const deleteProduct = async (id) => {
-    if (!confirm("Supprimer cette annonce ?")) return;
-    await supabaseAdmin.from("products").delete().eq("id", id);
+    if (!confirm("Supprimer cette annonce ? Les conversations et favoris liés seront aussi supprimés.")) return;
+    const result = await cascadeDeleteProducts([id]);
+    if (result?.error) { alert("Erreur : " + result.error.message); return; }
     flash("Annonce supprimée");
     loadData();
   };
@@ -521,9 +554,9 @@ export default function AdminDashboard() {
   // Suppression en masse (multi-sélection dans ProductsSection)
   const bulkDeleteProducts = async (ids) => {
     if (!ids || ids.length === 0) return;
-    if (!confirm(`Supprimer ${ids.length} annonce${ids.length > 1 ? "s" : ""} ? Cette action est irréversible.`)) return;
-    const { error } = await supabaseAdmin.from("products").delete().in("id", ids);
-    if (error) { alert("Erreur : " + error.message); return; }
+    if (!confirm(`Supprimer ${ids.length} annonce${ids.length > 1 ? "s" : ""} ? Les conversations et favoris liés seront aussi supprimés. Cette action est irréversible.`)) return;
+    const result = await cascadeDeleteProducts(ids);
+    if (result?.error) { alert("Erreur : " + result.error.message); return; }
     flash(`✓ ${ids.length} annonce${ids.length > 1 ? "s supprimées" : " supprimée"}`);
     loadData();
   };
@@ -2638,7 +2671,23 @@ function ProductsSection({ products, onEdit, onDelete, onBulkDelete }) {
   // Multi-sélection : Set d'ids pour ajout/suppression rapide
   const [selectedIds, setSelectedIds] = useState(() => new Set());
 
-  const allVisibleIds = useMemo(() => products.map((p) => p.id), [products]);
+  // ─── Pagination ───
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const totalPages = Math.max(1, Math.ceil(products.length / pageSize));
+
+  // Reset à la page 1 si la liste rétrécit (ex: filtre / suppression)
+  useEffect(() => {
+    if (page > totalPages) setPage(1);
+  }, [page, totalPages]);
+
+  const pagedProducts = useMemo(
+    () => products.slice((page - 1) * pageSize, page * pageSize),
+    [products, page, pageSize]
+  );
+
+  // Le checkbox "tout sélectionner" agit sur la PAGE COURANTE uniquement.
+  const allVisibleIds = useMemo(() => pagedProducts.map((p) => p.id), [pagedProducts]);
   const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id) => selectedIds.has(id));
   const someSelected = !allSelected && allVisibleIds.some((id) => selectedIds.has(id));
 
@@ -2749,7 +2798,7 @@ function ProductsSection({ products, onEdit, onDelete, onBulkDelete }) {
               </tr>
             </thead>
             <tbody>
-              {products.map(p => {
+              {pagedProducts.map(p => {
                 const stat = ORDER_STATUS[p.status] || { label: p.status || "—", cls: "prep" };
                 const isSelected = selectedIds.has(p.id);
                 return (
@@ -2798,10 +2847,108 @@ function ProductsSection({ products, onEdit, onDelete, onBulkDelete }) {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {products.length > 0 && (
+          <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: "12px 18px", borderTop: `1px solid ${COLORS.ink150}`,
+            background: COLORS.ink50, fontSize: 12.5, color: COLORS.ink600,
+            flexWrap: "wrap", gap: 12,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <span>
+                <strong style={{ color: COLORS.ink900 }}>{(page - 1) * pageSize + 1}</strong>
+                {"–"}
+                <strong style={{ color: COLORS.ink900 }}>{Math.min(page * pageSize, products.length)}</strong>
+                {" sur "}
+                <strong style={{ color: COLORS.ink900 }}>{fmtInt(products.length)}</strong>
+                {" annonces"}
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                Par page :
+                <select
+                  value={pageSize}
+                  onChange={(e) => { setPageSize(parseInt(e.target.value)); setPage(1); }}
+                  style={{
+                    padding: "4px 8px", borderRadius: 6,
+                    border: `1px solid ${COLORS.ink200}`,
+                    fontSize: 12.5, background: COLORS.paper, cursor: "pointer",
+                  }}
+                >
+                  {[25, 50, 100, 200].map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <button
+                onClick={() => setPage(1)}
+                disabled={page === 1}
+                style={paginationBtn(page === 1)}
+                title="Première page"
+              >«</button>
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                style={paginationBtn(page === 1)}
+              >
+                ‹ Précédent
+              </button>
+
+              {/* Pages numérotées (jusqu'à 5 visibles autour de la page courante) */}
+              {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+                const num = start + i;
+                if (num > totalPages) return null;
+                const active = num === page;
+                return (
+                  <button
+                    key={num}
+                    onClick={() => setPage(num)}
+                    style={{
+                      ...paginationBtn(false),
+                      background: active ? COLORS.ink900 : COLORS.paper,
+                      color: active ? "#fff" : COLORS.ink700,
+                      borderColor: active ? COLORS.ink900 : COLORS.ink200,
+                      fontWeight: active ? 700 : 500,
+                      minWidth: 30,
+                    }}
+                  >{num}</button>
+                );
+              })}
+
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                style={paginationBtn(page === totalPages)}
+              >
+                Suivant ›
+              </button>
+              <button
+                onClick={() => setPage(totalPages)}
+                disabled={page === totalPages}
+                style={paginationBtn(page === totalPages)}
+                title="Dernière page"
+              >»</button>
+            </div>
+          </div>
+        )}
       </section>
     </>
   );
 }
+
+// Style commun pour les boutons de pagination
+const paginationBtn = (disabled) => ({
+  height: 28, padding: "0 10px",
+  border: `1px solid ${COLORS.ink200}`,
+  background: COLORS.paper, color: COLORS.ink700,
+  borderRadius: 6, fontSize: 12, fontWeight: 500,
+  cursor: disabled ? "not-allowed" : "pointer",
+  opacity: disabled ? 0.4 : 1,
+  display: "inline-flex", alignItems: "center", gap: 4,
+});
 
 function UsersSection({ profiles, onEdit, onHistory }) {
   return (
