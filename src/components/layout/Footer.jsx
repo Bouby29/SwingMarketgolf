@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslate, AVAILABLE_LANGUAGES } from '../providers/TranslationProvider';
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import Tagline from "./Tagline";
 
 const InstagramIcon = () =>
 <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -35,9 +36,10 @@ export default function Footer() {
 
               
             </div>
-            <span className="text-lg font-bold hidden md:block mb-4">
+            <span className="text-lg font-bold hidden md:block">
               SwingMarket<span className="text-[#C5A028]">Golf</span>
             </span>
+            <Tagline variant="footer" />
             <p className="text-gray-400 text-sm leading-relaxed">
               La marketplace du matériel de golf. Achetez et vendez vos clubs, balles et accessoires.
             </p>

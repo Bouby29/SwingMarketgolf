@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import AnnouncementTicker from "./AnnouncementTicker";
+import Tagline from "./Tagline";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -212,6 +213,7 @@ export default function Navbar() {
                 <span className="text-white font-bold text-sm">S</span>
               </div>
               <span className="text-lg font-bold text-[#1B5E20]">SwingMarket<span className="text-[#C5A028]">Golf</span></span>
+              <Tagline variant="compact" />
             </Link>
 
             <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl mx-4">
