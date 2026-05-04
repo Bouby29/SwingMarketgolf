@@ -588,22 +588,31 @@ export default function AdminDashboard() {
   };
 
   const saveBlog = async () => {
+    if (!editBlog.title?.trim()) { alert("Le titre est obligatoire"); return; }
+    if (!editBlog.content?.trim()) { alert("Le contenu est obligatoire"); return; }
+    const payload = {
+      title: editBlog.title.trim(),
+      content: editBlog.content,
+      image_url: editBlog.image_url?.trim() || null,
+      status: editBlog.status === "published" ? "published" : "draft",
+    };
     if (editBlog.id) {
-      await supabaseAdmin.from("blog_posts").update({
-        title: editBlog.title, content: editBlog.content,
-        excerpt: editBlog.excerpt, slug: editBlog.slug,
-        published: editBlog.published,
-      }).eq("id", editBlog.id);
+      const { error } = await supabaseAdmin.from("blog_posts").update(payload).eq("id", editBlog.id);
+      if (error) { alert("Erreur : " + error.message); return; }
     } else {
-      await supabaseAdmin.from("blog_posts").insert({
-        title: editBlog.title, content: editBlog.content,
-        excerpt: editBlog.excerpt,
-        slug: editBlog.slug || editBlog.title.toLowerCase().replace(/\s+/g, "-"),
-        published: editBlog.published,
-      });
+      const { error } = await supabaseAdmin.from("blog_posts").insert(payload);
+      if (error) { alert("Erreur : " + error.message); return; }
     }
     setEditBlog(null);
     flash("Article sauvegardé");
+    loadData();
+  };
+
+  const toggleBlogStatus = async (post) => {
+    const next = post.status === "published" ? "draft" : "published";
+    const { error } = await supabaseAdmin.from("blog_posts").update({ status: next }).eq("id", post.id);
+    if (error) { alert("Erreur : " + error.message); return; }
+    flash(next === "published" ? "Article publié" : "Article dépublié");
     loadData();
   };
 
@@ -1394,8 +1403,8 @@ export default function AdminDashboard() {
           )}
           {section === "blog" && (
             <BlogSection posts={blogPosts}
-              onAdd={() => setEditBlog({ title: "", content: "", excerpt: "", slug: "", published: false })}
-              onEdit={(b) => setEditBlog({ ...b })} onDelete={deleteBlog} />
+              onAdd={() => setEditBlog({ title: "", content: "", image_url: "", status: "draft" })}
+              onEdit={(b) => setEditBlog({ ...b })} onDelete={deleteBlog} onToggle={toggleBlogStatus} />
           )}
           {section === "admins" && (
             <AdminsSection admins={admins} newAdmin={newAdmin} setNewAdmin={setNewAdmin}
@@ -3284,41 +3293,74 @@ function ReviewsSection({ reviews, profilesById, onAdd, onEdit, onDelete }) {
   );
 }
 
-function BlogSection({ posts, onAdd, onEdit, onDelete }) {
+function BlogSection({ posts, onAdd, onEdit, onDelete, onToggle }) {
+  const published = posts.filter(p => p.status === "published").length;
+  const drafts = posts.length - published;
   return (
     <>
-      <PageHeader title="Blog" sub={`${fmtInt(posts.length)} article(s)`}
+      <PageHeader title="Blog" sub={`${fmtInt(posts.length)} article(s) · ${published} publié(s) · ${drafts} brouillon(s)`}
         right={<button onClick={onAdd} style={{ ...styles.btn, ...styles.btnPrimary }}><Plus size={14} /> Nouvel article</button>} />
       <section style={styles.card}>
         <div style={{ overflowX: "auto" }}>
           <table style={styles.table}>
             <thead>
               <tr>
+                <th style={{ ...styles.th, width: 64 }}></th>
                 <th style={styles.th}>Titre</th>
-                <th style={styles.th}>Slug</th>
                 <th style={styles.th}>Statut</th>
-                <th style={styles.th}>Date</th>
-                <th style={styles.th}></th>
+                <th style={styles.th}>Créé le</th>
+                <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {posts.map(bp => (
-                <tr key={bp.id} style={styles.tr}>
-                  <td style={{ ...styles.td, fontWeight: 600 }}>{bp.title}</td>
-                  <td style={{ ...styles.td, color: COLORS.ink600, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>{bp.slug}</td>
-                  <td style={styles.td}>
-                    <StatusBadge variant={bp.published ? "deliv" : "pay"} label={bp.published ? "Publié" : "Brouillon"} />
-                  </td>
-                  <td style={{ ...styles.td, color: COLORS.ink600 }}>{fmtDate(bp.created_at)}</td>
-                  <td style={styles.td}>
-                    <button onClick={() => onEdit(bp)} style={styles.rowAction}><Pencil size={14} /></button>
-                    <button onClick={() => onDelete(bp.id)} style={{ ...styles.rowAction, color: COLORS.danger }}><Trash2 size={14} /></button>
-                  </td>
-                </tr>
-              ))}
+              {posts.map(bp => {
+                const isPub = bp.status === "published";
+                return (
+                  <tr key={bp.id} style={styles.tr}>
+                    <td style={styles.td}>
+                      <div style={{
+                        width: 48, height: 48, borderRadius: 8,
+                        background: bp.image_url
+                          ? `url(${bp.image_url}) center/cover`
+                          : "linear-gradient(135deg, #1B5E20, #4CAF50)",
+                        display: "grid", placeItems: "center",
+                        color: "white", fontWeight: 800, fontSize: 14,
+                        border: `1px solid ${COLORS.border}`,
+                      }}>
+                        {!bp.image_url && (bp.title || "?").slice(0, 2).toUpperCase()}
+                      </div>
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: 600, maxWidth: 460 }}>
+                      <div>{bp.title}</div>
+                      {bp.content && (
+                        <div style={{ fontSize: 12, color: COLORS.ink500, marginTop: 4, fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
+                          {bp.content.slice(0, 140)}…
+                        </div>
+                      )}
+                    </td>
+                    <td style={styles.td}>
+                      <button onClick={() => onToggle(bp)} title={isPub ? "Dépublier" : "Publier"}
+                        style={{ ...styles.btn, ...(isPub ? styles.btnGhost : styles.btnGhost), padding: "4px 10px", fontSize: 11.5, cursor: "pointer" }}>
+                        <StatusBadge variant={isPub ? "deliv" : "pay"} label={isPub ? "Publié" : "Brouillon"} />
+                      </button>
+                    </td>
+                    <td style={{ ...styles.td, color: COLORS.ink600, fontSize: 12.5 }}>{fmtDate(bp.created_at)}</td>
+                    <td style={{ ...styles.td, textAlign: "right" }}>
+                      {isPub && (
+                        <a href={`/BlogPost?id=${bp.id}`} target="_blank" rel="noreferrer"
+                           style={{ ...styles.rowAction, textDecoration: "none", color: COLORS.ink600 }} title="Voir sur le site">
+                          ↗
+                        </a>
+                      )}
+                      <button onClick={() => onEdit(bp)} style={styles.rowAction} title="Modifier"><Pencil size={14} /></button>
+                      <button onClick={() => onDelete(bp.id)} style={{ ...styles.rowAction, color: COLORS.danger }} title="Supprimer"><Trash2 size={14} /></button>
+                    </td>
+                  </tr>
+                );
+              })}
               {posts.length === 0 && (
-                <tr><td colSpan={5} style={{ ...styles.td, textAlign: "center", color: COLORS.ink500, padding: 32 }}>
-                  Aucun article pour l'instant.
+                <tr><td colSpan={5} style={{ ...styles.td, textAlign: "center", color: COLORS.ink500, padding: 48 }}>
+                  Aucun article pour l'instant. Cliquez sur <strong>Nouvel article</strong> pour commencer.
                 </td></tr>
               )}
             </tbody>
@@ -3737,42 +3779,123 @@ function OrderModal({ order, setOrder, onSave }) {
 }
 
 function BlogModal({ post, setPost, onSave }) {
+  const wordCount = (post.content || "").trim().split(/\s+/).filter(Boolean).length;
+  const readMin = Math.max(1, Math.round(wordCount / 220));
+  const insertAtCursor = (before, after = "") => {
+    const ta = document.getElementById("blog-content-ta");
+    if (!ta) return;
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    const text = post.content || "";
+    const sel = text.slice(start, end);
+    const next = text.slice(0, start) + before + sel + after + text.slice(end);
+    setPost({ ...post, content: next });
+    setTimeout(() => {
+      ta.focus();
+      ta.selectionStart = start + before.length;
+      ta.selectionEnd = start + before.length + sel.length;
+    }, 0);
+  };
+
   return (
     <Modal wide title={post.id ? "Modifier l'article" : "Nouvel article"} onClose={() => setPost(null)}
       footer={
         <>
+          <div style={{ marginRight: "auto", fontSize: 12, color: COLORS.ink500 }}>
+            {wordCount} mots · ~{readMin} min de lecture
+          </div>
           <button onClick={() => setPost(null)} style={{ ...styles.btn, ...styles.btnGhost }}>Annuler</button>
-          <button onClick={onSave} style={{ ...styles.btn, ...styles.btnPrimary }}>Sauvegarder</button>
+          <button onClick={() => { setPost({ ...post, status: "draft" }); setTimeout(onSave, 0); }}
+            style={{ ...styles.btn, ...styles.btnGhost }}>Enregistrer brouillon</button>
+          <button onClick={() => { setPost({ ...post, status: "published" }); setTimeout(onSave, 0); }}
+            style={{ ...styles.btn, ...styles.btnPrimary }}>
+            {post.status === "published" ? "Mettre à jour" : "Publier"}
+          </button>
         </>
       }>
-      <FormField label="Titre">
-        <input style={modalInputStyle} value={post.title || ""}
-          onChange={e => setPost({ ...post, title: e.target.value })} />
-      </FormField>
-      <div style={{ marginTop: 12 }}>
-        <FormField label="Slug (URL)">
-          <input style={modalInputStyle} value={post.slug || ""}
-            onChange={e => setPost({ ...post, slug: e.target.value })}
-            placeholder="mon-article-de-blog" />
-        </FormField>
+      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 18 }}>
+        {/* ── Colonne édition ── */}
+        <div>
+          <FormField label="Titre de l'article *">
+            <input style={modalInputStyle} value={post.title || ""}
+              placeholder="Comment choisir son driver de golf ?"
+              onChange={e => setPost({ ...post, title: e.target.value })} />
+          </FormField>
+
+          <div style={{ marginTop: 12 }}>
+            <FormField label="Image de couverture (URL)">
+              <input style={modalInputStyle} value={post.image_url || ""}
+                placeholder="https://… (optionnel)"
+                onChange={e => setPost({ ...post, image_url: e.target.value })} />
+            </FormField>
+            <div style={{ fontSize: 11.5, color: COLORS.ink500, marginTop: 4 }}>
+              Laisse vide pour utiliser une couverture stylisée auto-générée.
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <FormField label="Statut">
+              <select style={modalInputStyle}
+                value={post.status === "published" ? "published" : "draft"}
+                onChange={e => setPost({ ...post, status: e.target.value })}>
+                <option value="draft">📝 Brouillon (non visible)</option>
+                <option value="published">✅ Publié (visible sur le site)</option>
+              </select>
+            </FormField>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <FormField label="Contenu *">
+              <div style={{ display: "flex", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
+                <button type="button" onClick={() => insertAtCursor("## ")} style={{ ...styles.btn, ...styles.btnGhost, padding: "4px 10px", fontSize: 11.5 }}>H2</button>
+                <button type="button" onClick={() => insertAtCursor("**", "**")} style={{ ...styles.btn, ...styles.btnGhost, padding: "4px 10px", fontSize: 11.5, fontWeight: 700 }}>B</button>
+                <button type="button" onClick={() => insertAtCursor("*", "*")} style={{ ...styles.btn, ...styles.btnGhost, padding: "4px 10px", fontSize: 11.5, fontStyle: "italic" }}>I</button>
+                <button type="button" onClick={() => insertAtCursor("- ")} style={{ ...styles.btn, ...styles.btnGhost, padding: "4px 10px", fontSize: 11.5 }}>• Liste</button>
+                <button type="button" onClick={() => insertAtCursor("> ")} style={{ ...styles.btn, ...styles.btnGhost, padding: "4px 10px", fontSize: 11.5 }}>" Citation</button>
+              </div>
+              <textarea id="blog-content-ta"
+                style={{ ...modalInputStyle, minHeight: 320, resize: "vertical", fontFamily: "Georgia, serif", fontSize: 14, lineHeight: 1.55 }}
+                value={post.content || ""}
+                placeholder={`Écrivez votre article…\n\nUtilisez Markdown :\n## Sous-titre\n**gras** *italique*\n- liste\n> citation`}
+                onChange={e => setPost({ ...post, content: e.target.value })} />
+            </FormField>
+          </div>
+        </div>
+
+        {/* ── Colonne preview ── */}
+        <div>
+          <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: COLORS.ink500, marginBottom: 8 }}>
+            Aperçu
+          </div>
+          <div style={{
+            border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden",
+            background: "#FAF8F3", height: "100%", maxHeight: 540, overflowY: "auto",
+          }}>
+            <div style={{
+              aspectRatio: "16/10",
+              background: post.image_url
+                ? `url(${post.image_url}) center/cover`
+                : "linear-gradient(135deg, #0A1F0C, #1B5E20 60%, #2E7D32)",
+              display: "grid", placeItems: "center",
+              color: "white", fontFamily: "Georgia, serif", fontSize: 56, fontWeight: 800,
+              textShadow: "0 2px 8px rgba(0,0,0,.3)",
+            }}>
+              {!post.image_url && ((post.title || "SM").split(/\s+/).slice(0, 2).map(w => w[0] || "").join("").toUpperCase() || "SM")}
+            </div>
+            <div style={{ padding: 18 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", color: post.status === "published" ? "#1B5E20" : "#92400E", marginBottom: 8 }}>
+                {post.status === "published" ? "● PUBLIÉ" : "○ BROUILLON"}
+              </div>
+              <h3 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 800, lineHeight: 1.2, color: "#0A1F0C", letterSpacing: "-0.02em" }}>
+                {post.title || "Titre de l'article"}
+              </h3>
+              <div style={{ fontFamily: "Georgia, serif", fontSize: 13.5, lineHeight: 1.7, color: "#2A2F2C", whiteSpace: "pre-wrap" }}>
+                {(post.content || "Le contenu s'affichera ici…").slice(0, 600)}
+                {(post.content || "").length > 600 && "…"}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div style={{ marginTop: 12 }}>
-        <FormField label="Extrait">
-          <textarea style={{ ...modalInputStyle, minHeight: 60, resize: "vertical" }}
-            value={post.excerpt || ""} onChange={e => setPost({ ...post, excerpt: e.target.value })} />
-        </FormField>
-      </div>
-      <div style={{ marginTop: 12 }}>
-        <FormField label="Contenu">
-          <textarea style={{ ...modalInputStyle, minHeight: 200, resize: "vertical" }}
-            value={post.content || ""} onChange={e => setPost({ ...post, content: e.target.value })} />
-        </FormField>
-      </div>
-      <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 14, fontSize: 13 }}>
-        <input type="checkbox" checked={!!post.published}
-          onChange={e => setPost({ ...post, published: e.target.checked })} />
-        Publier immédiatement
-      </label>
     </Modal>
   );
 }

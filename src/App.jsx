@@ -13,6 +13,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Guides from './pages/Guides';
+import JoueursPartenaires from './pages/JoueursPartenaires';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import Setup from './pages/Setup';
 import Contact from './pages/Contact';
@@ -73,6 +74,16 @@ const AuthenticatedApp = () => {
       <Route path="/Guides" element={
         <LayoutWrapper currentPageName="Guides">
           <Guides />
+        </LayoutWrapper>
+      } />
+      <Route path="/joueurs-partenaires" element={
+        <LayoutWrapper currentPageName="JoueursPartenaires">
+          <JoueursPartenaires />
+        </LayoutWrapper>
+      } />
+      <Route path="/joueurs-partenaires/:slug" element={
+        <LayoutWrapper currentPageName="JoueursPartenaires">
+          <JoueursPartenaires />
         </LayoutWrapper>
       } />
       <Route path="/Setup" element={

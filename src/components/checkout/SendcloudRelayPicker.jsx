@@ -118,8 +118,10 @@ export default function SendcloudRelayPicker({ carrierId, onSelect, onClose }) {
     try {
       // Récupérer la clé publique depuis le backend (avec cache)
       if (!_cachedPublicKey) {
-        const keyRes = await base44.functions.invoke("getSendcloudPublicKey", {});
-        _cachedPublicKey = keyRes.data?.public_key;
+        const keyRes = await fetch("/api/sendcloud/public-key");
+        if (!keyRes.ok) throw new Error(`Failed to fetch public key: ${keyRes.status}`);
+        const data = await keyRes.json();
+        _cachedPublicKey = data.public_key;
       }
       if (!_cachedPublicKey) throw new Error("Clé publique introuvable");
 

@@ -70,6 +70,7 @@ import SearchRequestDetail from './pages/SearchRequestDetail';
 import ProfessionnelsSellers from './pages/ProfessionnelsSellers';
 import Profile from './pages/Profile';
 import QuiSommesNous from './pages/QuiSommesNous';
+import JoueursPartenaires from './pages/JoueursPartenaires';
 import Setup from './pages/Setup';
 import __Layout from './Layout.jsx';
 
@@ -97,6 +98,7 @@ export const PAGES = {
     "ProfessionnelsSellers": ProfessionnelsSellers,
     "Profile": Profile,
     "QuiSommesNous": QuiSommesNous,
+    "JoueursPartenaires": JoueursPartenaires,
     "Setup": Setup,
     "Login": Login,
 }

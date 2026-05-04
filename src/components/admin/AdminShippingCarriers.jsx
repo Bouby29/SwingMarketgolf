@@ -18,44 +18,52 @@ export default function AdminShippingCarriers() {
   const handleSyncFromSendcloud = async () => {
     setSyncing(true);
     setSyncResult(null);
-    const res = await base44.functions.invoke("getSendcloudShippingMethods", {});
-    const methods = res.data?.shipping_methods || [];
+    try {
+      const res = await fetch("/api/sendcloud/shipping-methods");
+      if (!res.ok) throw new Error(`Failed to fetch shipping methods: ${res.status}`);
+      const data = await res.json();
+      const methods = data.shipping_methods || [];
 
-    const frMethods = methods.filter(m => {
-      const hasFR = m.countries?.some(c => c.iso_2 === "FR");
-      return hasFR && m.carrier !== "sendcloud";
-    });
-
-    const existing = await entities.ShippingCarrier.list();
-    const existingCodes = new Set(existing.map(e => e.carrier_code));
-
-    let created = 0;
-    const toCreate = frMethods.filter(m => !existingCodes.has(`sendcloud_${m.id}`));
-    
-    // Bulk create in batches of 3 with delay to avoid rate limit
-    for (let i = 0; i < toCreate.length; i++) {
-      const m = toCreate[i];
-      const fr = m.countries?.find(c => c.iso_2 === "FR");
-      await entities.ShippingCarrier.create({
-        carrier_code: `sendcloud_${m.id}`,
-        carrier_name: m.name,
-        description: m.carrier,
-        delivery_time: "",
-        sendcloud_service_id: m.id,
-        sendcloud_service_point: m.service_point_input === "required" || m.service_point_input === "optional",
-        price_grid: [{ weight_min_kg: parseFloat(m.min_weight), weight_max_kg: parseFloat(m.max_weight), price: fr?.price ?? 0 }],
-        is_active: false,
-        order: existing.length + created,
+      const frMethods = methods.filter(m => {
+        const hasFR = m.countries?.some(c => c.iso_2 === "FR");
+        return hasFR && m.carrier !== "sendcloud";
       });
-      created++;
-      // Wait 400ms every 3 creations to avoid rate limit
-      if (created % 3 === 0) await new Promise(r => setTimeout(r, 400));
-    }
 
-    queryClient.invalidateQueries(["admin-carriers"]);
-    setSyncResult({ created, total: frMethods.length });
-    setSyncing(false);
-    toast.success(`Synchronisation : ${created} nouveau(x) transporteur(s) importé(s)`);
+      const existing = await entities.ShippingCarrier.list();
+      const existingCodes = new Set(existing.map(e => e.carrier_code));
+
+      let created = 0;
+      const toCreate = frMethods.filter(m => !existingCodes.has(`sendcloud_${m.id}`));
+      
+      // Bulk create in batches of 3 with delay to avoid rate limit
+      for (let i = 0; i < toCreate.length; i++) {
+        const m = toCreate[i];
+        const fr = m.countries?.find(c => c.iso_2 === "FR");
+        await entities.ShippingCarrier.create({
+          carrier_code: `sendcloud_${m.id}`,
+          carrier_name: m.name,
+          description: m.carrier,
+          delivery_time: "",
+          sendcloud_service_id: m.id,
+          sendcloud_service_point: m.service_point_input === "required" || m.service_point_input === "optional",
+          price_grid: [{ weight_min_kg: parseFloat(m.min_weight), weight_max_kg: parseFloat(m.max_weight), price: fr?.price ?? 0 }],
+          is_active: false,
+          order: existing.length + created,
+        });
+        created++;
+        // Wait 400ms every 3 creations to avoid rate limit
+        if (created % 3 === 0) await new Promise(r => setTimeout(r, 400));
+      }
+
+      queryClient.invalidateQueries(["admin-carriers"]);
+      setSyncResult({ created, total: frMethods.length });
+      setSyncing(false);
+      toast.success(`Synchronisation : ${created} nouveau(x) transporteur(s) importé(s)`);
+    } catch (error) {
+      console.error("Error syncing from Sendcloud:", error);
+      setSyncing(false);
+      toast.error("Impossible de charger les transporteurs depuis Sendcloud");
+    }
   };
 
   const { data: carriers = [] } = useQuery({

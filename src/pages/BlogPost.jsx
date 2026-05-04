@@ -1,76 +1,739 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Calendar, User, Clock } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import {
+  ArrowLeft, ArrowRight, Calendar, Clock, Loader2,
+  AlertCircle, Sparkles, Share2, Check,
+} from "lucide-react";
 
-const categoryColors = {
-  conseils: "bg-green-100 text-green-800",
-  guides: "bg-blue-100 text-blue-800",
-  actualites: "bg-purple-100 text-purple-800",
-  comparatifs: "bg-amber-100 text-amber-800",
+// ─────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────
+const fmtDate = (d) =>
+  d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }) : "";
+
+const readTime = (content) => {
+  if (!content) return "1 min";
+  const words = content.split(/\s+/).length;
+  return `${Math.max(1, Math.round(words / 220))} min`;
 };
-const categoryLabels = { conseils: "Conseils", guides: "Guides", actualites: "Actualités", comparatifs: "Comparatifs" };
 
-const ARTICLES = [
-  { id: 1, category: "guides", title: "Comment bien choisir son driver d\'occasion : le guide complet 2026", author: "Thomas Lefebvre", date: "2 avril 2026", read_time: "8 min", cover: "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=1200&h=600&fit=crop", body: "Vous cherchez un driver d'occasion performant sans vous ruiner ? Ce guide complet vous donne toutes les clés pour faire le bon choix et économiser jusqu'à 70% par rapport au neuf.\n\nTrouver le bon driver d'occasion peut transformer votre jeu. Mais entre le loft, le flex de shaft, les réglages et les marques, il est facile de se perdre. On vous guide pas à pas.\n\n## Le vrai problème quand on achète un driver d'occasion\n\nLa plupart des golfeurs commettent les mêmes erreurs : ils choisissent un driver trop rigide pour leur swing, un loft inadapté à leur profil, ou une tête trop ancienne qui n'offre plus les bénéfices de la technologie moderne. Résultat : moins de distance, moins de précision, et une frustration inutile.\n\n## Comment choisir le bon loft\n\nLe loft du driver (en degrés) conditionne la trajectoire de votre balle. Voici les règles de base selon votre vitesse de swing :\n\nMoins de 80 mph : optez pour un loft de 12° à 14°. Plus de loft = plus de portance = plus de distance pour les swings lents.\n\nEntre 80 et 95 mph (amateur moyen) : un loft de 10.5° à 12° est idéal. C'est la configuration la plus vendue en occasion.\n\nAu-dessus de 95 mph : un loft de 9° à 10.5° vous donnera une trajectoire optimale sans trop de backspin.\n\nLa bonne nouvelle : la majorité des drivers modernes sont réglables entre 8° et 12°, ce qui vous donne une flexibilité précieuse en achetant d'occasion.\n\n## Le shaft : l'élément que l'on sous-estime\n\nLe flex du shaft est souvent plus important que la tête elle-même. Un shaft trop rigide donne des coups bas et courts. Un shaft trop souple produit des balles trop hautes et difficiles à contrôler.\n\nFlex L (Ladies) : moins de 70 mph. Flex A (Senior) : 70-80 mph. Flex R (Regular) : 80-90 mph. Flex S (Stiff) : 90-100 mph. Flex X (Extra Stiff) : plus de 100 mph.\n\nEn occasion, vérifiez toujours l'absence de micro-fissures sur le shaft, surtout près du hosel. Un shaft fissuré est dangereux et non réparable.\n\n## Les meilleures marques en occasion\n\nTaylorMade SIM et M-series (M4, M6) : les plus vendus en occasion, excellent rapport qualité/prix entre 80€ et 200€. Têtes larges et très pardonnantes.\n\nCallaway Epic et Rogue : technologie Jailbreak qui améliore la vitesse de balle. Disponibles entre 100€ et 250€ en bon état.\n\nTitleist TS2 et TS3 : plus orientés joueurs, précis mais moins pardonnants. Idéaux si vous avez déjà un handicap inférieur à 18.\n\nPing G-series (G400, G410, G425) : réputation de solidité et de facilité. Les G410 et G425 restent excellents à 150-220€.\n\n## Ce qu'il faut absolument vérifier avant d'acheter\n\nInspectez la face du driver : des impacts centrés créent une légère usure normale. Une face bosselée ou très marquée sur les bords indique une utilisation intensive.\n\nTestez le grip : un grip usé coûte 8€ à remplacer. Ce n'est pas rédhibitoire mais négociez le prix en conséquence.\n\nVérifiez la visserie sur les modèles réglables : la vis de réglage de loft doit tourner facilement sans forcer.\n\nDemandez l'historique si possible : un driver acheté par un senior qui joue 18 trous par semaine aura bien moins d'usure qu'un driver utilisé au practice tous les jours.\n\n## SwingMarket : trouvez votre driver idéal\n\nSur SwingMarket, chaque annonce de driver est accompagnée de photos détaillées, d'une description de l'état réel, et de la possibilité de contacter le vendeur avant d'acheter. Filtrez par marque, loft, flex et budget pour trouver exactement ce qu'il vous faut.\n\nDes centaines de drivers d'occasion vous attendent, avec des prix entre 50€ et 300€ pour les modèles récents.\n\n## FAQ Driver d'occasion\n\nPeut-on faire confiance aux mesures de loft annoncées par le vendeur ? En général oui, surtout si le vendeur indique le modèle exact. Vous pouvez vérifier les specs sur le site du fabricant.\n\nUn driver de 5 ans est-il encore performant ? Oui. La technologie des drivers évolue, mais un TaylorMade M4 de 2018 ou un Callaway Rogue de 2019 offrent encore d'excellentes performances pour les amateurs.\n\nDoit-on faire ajuster le loft après achat ? Si vous achetez un driver réglable, un pro shop peut vous aider à trouver le réglage optimal lors d'un fitting express (souvent gratuit).\n\nComment savoir si le loft me convient ? Testez sur un simulateur ou au practice : si la balle part trop basse et dévisse, augmentez le loft. Si elle monte très haut et n'avance pas, diminuez-le.\n\n## Conclusion\n\nUn driver d'occasion bien choisi peut transformer votre jeu sans vider votre portefeuille. Concentrez-vous sur le loft adapté à votre vitesse de swing, le flex de shaft, et l'état général du club. Les marques TaylorMade, Callaway et Ping offrent les meilleures options en occasion.\n\nParcourez dès maintenant les drivers disponibles sur SwingMarket et trouvez celui qui correspond à votre profil de jeu et votre budget." },
-  { id: 2, category: "conseils", title: "Balles de golf d\'occasion : tout ce qu\'il faut savoir avant d\'acheter", author: "Marie Dupont", date: "28 mars 2026", read_time: "5 min", cover: "https://images.unsplash.com/photo-1566836610593-62a64888a216?w=1200&h=600&fit=crop", body: "Économiser 60% sur vos balles de golf sans sacrifier la performance : c'est possible avec les balles d'occasion grade A. On vous explique comment choisir, quoi éviter, et où acheter.\n\nChaque année, des millions de balles premium finissent dans les lacs et les roughs des parcours français. Récupérées, nettoyées et triées, elles représentent une opportunité exceptionnelle pour les golfeurs qui cherchent la qualité au meilleur prix.\n\n## Le problème avec les balles neuves\n\nUne boîte de 12 Titleist Pro V1 coûte entre 55€ et 65€. Pour un golfeur qui joue deux fois par semaine et perd en moyenne 3 à 5 balles par partie, la facture annuelle peut dépasser 300€, rien qu'en balles. C'est un budget considérable, surtout quand des alternatives identiques en performance existent à une fraction du prix.\n\n## Les grades de qualité : ce qu'ils signifient vraiment\n\nLe marché des balles d'occasion est structuré autour de trois grades principaux, chacun correspondant à un niveau d'usure précis.\n\nGrade A (Mint ou Near Mint) : ces balles ont été utilisées une à trois fois maximum. Elles ne présentent aucune marque visible à l'œil nu, leur couverture est intacte, et leurs performances sont identiques au neuf. C'est le grade que nous recommandons pour les parties importantes.\n\nGrade B (Good) : légères traces d'utilisation, quelques égratignures superficielles sur la couverture. Les performances restent très proches du neuf pour 95% des coups. Idéales pour les parties régulières.\n\nGrade C (Practice) : balles avec des marques plus visibles, parfois des décolorations légères. Réservez-les à l'entraînement et aux séances de practice. Ne les utilisez pas en compétition.\n\n## Ce que dit la science sur les performances\n\nDes études indépendantes réalisées par des laboratoires spécialisés montrent qu'une balle Pro V1 grade A récupérée offre des performances quasi identiques à une balle neuve : différence de distance inférieure à 2 yards, spin autour du green pratiquement identique, et durabilité similaire.\n\nLa seule balle qui perd réellement en performance est celle qui a séjourné plus de six mois dans l'eau. L'absorption d'eau par la couverture (même sur les balles à couverture urethane) affecte le spin et la trajectoire. Évitez les balles visiblement décolorées ou dont la couverture semble gonflée.\n\n## Les meilleures balles à acheter en occasion\n\nTitleist Pro V1 et Pro V1x : la référence. En grade A, comptez 25-35€ la douzaine au lieu de 60€ neuf. Idéales pour les joueurs avec un handicap inférieur à 18.\n\nCallaway Chrome Soft : excellent feel, bonne distance et contrôle. Très populaires en occasion, disponibles entre 20-30€ la douzaine en grade A.\n\nTaylorMade TP5 et TP5x : balles tour à 5 couches, performances exceptionnelles. En grade A, 25-35€ la douzaine.\n\nSrixon Z-Star : alternative premium souvent moins connue, donc moins chère en occasion. Excellent rapport qualité/prix.\n\nBridgestone Tour B : utilisées par Tiger Woods, ces balles sont disponibles en occasion à des prix très accessibles.\n\n## SwingMarket et les balles d'occasion\n\nSur SwingMarket, vous trouverez des lots de balles d'occasion triées par grade et par marque, proposés par des vendeurs particuliers et professionnels. Chaque vendeur précise le grade, la quantité et l'état exact des balles.\n\nCommandez vos premières balles d'occasion grade A et constatez par vous-même la différence avec votre budget habituel.\n\n## FAQ Balles d'occasion\n\nUne balle d'occasion perd-elle sa compression avec le temps ? Non, si elle n'a pas été stockée dans des conditions extrêmes (gel, chaleur intense). Une balle gardée à température ambiante conserve ses propriétés pendant des années.\n\nPeut-on utiliser des balles d'occasion en compétition officielle ? Oui, il n'y a aucune règle interdisant les balles d'occasion en compétition, à condition qu'elles soient sur la liste des balles conformes USGA/R&A.\n\nComment distinguer une vraie Pro V1 d'une contrefaçon ? Vérifiez le numéro de compression imprimé sur la balle, le finish de la couverture, et le poids (45.93g pour une Pro V1). Les contrefaçons sont généralement plus légères.\n\nCombien de trous peut tenir une balle de golf ? En moyenne, une balle Pro V1 bien entretenue peut tenir 3 à 5 parties de 18 trous avant de voir ses performances diminuer.\n\n## Conclusion\n\nLes balles d'occasion grade A sont le secret des golfeurs malins. Même performance, budget divisé par deux ou trois : il n'y a aucune raison de s'en priver. Commencez par un lot de Pro V1 ou Chrome Soft grade A, et comparez vous-même.\n\nDécouvrez tous les lots de balles disponibles sur SwingMarket et faites vos économies dès aujourd'hui." },
-  { id: 3, category: "comparatifs", title: "Top 10 des putters d\'occasion à moins de 100€ en 2026", author: "Lucas Martin", date: "22 mars 2026", read_time: "10 min", cover: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=1200&h=600&fit=crop", body: "Le putter est le club utilisé en moyenne 40% du temps lors d'une partie. Bien le choisir peut faire tomber votre score de 5 à 10 coups. Et inutile de dépenser une fortune : voici les 10 meilleurs putters d'occasion à moins de 100€.\n\nBeaucoup de golfeurs négligent le putter ou s'en tiennent à leur premier modèle sans jamais le remettre en question. Pourtant, upgrader son putter est souvent la façon la plus rapide d'améliorer son score. On a sélectionné 10 modèles accessibles en occasion pour tous les profils.\n\n## Le vrai coût d'un mauvais putter\n\nUn mauvais putter, c'est 3 à 5 putts de trop par partie. Sur 18 trous, c'est la différence entre un score satisfaisant et une partie frustrante. La bonne nouvelle : avec 60 à 100€ en occasion, vous pouvez accéder à des putters qui étaient vendus neufs entre 200€ et 400€.\n\n## Comment choisir son putter\n\nAvant de choisir un modèle, déterminez votre type de stroke. Si votre stroke est droit (straight-back-straight-through), optez pour un putter à face équilibrée (face-balanced) comme un Odyssey. Si votre stroke est en arc, préférez un putter avec un léger toe-hang comme un Ping Anser.\n\nLa longueur standard est 33-35 pouces. La plupart des golfeurs mesurant entre 1,65m et 1,85m utilisent un putter de 34 pouces.\n\n## Notre top 10\n\n1. Odyssey White Hot Pro 2.0 (60-80€) : l'insert White Hot offre un feel exceptionnel. C'est le putter d'occasion le plus populaire en France.\n\n2. Ping Anser 2 (50-80€) : le design iconique qui a inspiré des dizaines d'imitations. Équilibré, précis, indestructible.\n\n3. TaylorMade Spider (70-100€) : stabilité maximale grâce à sa forme mallet. Idéal pour les golfeurs qui bougent trop les poignets.\n\n4. Cleveland Huntington Beach (40-70€) : excellent feel, face milled de qualité, souvent sous-estimé en occasion.\n\n5. Callaway Odyssey Stroke Lab (80-100€) : shaft composite qui améliore la stabilité du stroke. Innovation réelle à prix accessible en occasion.\n\n6. Scotty Cameron Special Select (90-100€) : attention, les prix varient énormément. Un Scotty Cameron en bon état sous les 100€ est une vraie affaire.\n\n7. Ping Sigma 2 (60-90€) : grip double-épaisseur inclus, excellent pour stabiliser les poignets.\n\n8. Bettinardi BB1 (70-100€) : putter forgé japonais, feel incomparable, rare à ce prix.\n\n9. Evnroll ER2 (70-100€) : rainures brevetées qui améliorent la régularité du roulement sur les putts décentrés.\n\n10. XXIO (50-80€) : marque japonaise de qualité, moins connue en France donc moins chère en occasion.\n\n## Ce qu'il faut inspecter à l'achat\n\nVérifiez la face du putter : des marques d'impacts réguliers sont normales, mais une face bosselée ou très rayée peut affecter le roulement.\n\nLe hosel et la tige ne doivent présenter aucune déformation ou torsion. Un putter tordu ne peut pas être redressé efficacement.\n\nLe grip est souvent usé sur les putters d'occasion. Comptez 8-12€ pour un regrip, ce qui reste très raisonnable.\n\n## SwingMarket : votre sélection de putters d'occasion\n\nFiltrez par marque, forme (blade, mid-mallet, mallet) et prix pour trouver le putter qui correspond à votre stroke. Des centaines de modèles disponibles avec photos détaillées.\n\nTrouvez votre putter idéal sur SwingMarket et améliorez vos scores dès la prochaine partie.\n\n## FAQ Putters d'occasion\n\nUn putter usé peut-il être refinished ? Oui, les putters en acier inoxydable peuvent être poncés et refinished par un artisan. Les putters plaqués (chrome, nickel) sont plus complexes à traiter.\n\nDoit-on faire fitter son putter ? Idéalement oui, surtout pour la longueur et la loft. Mais pour la plupart des amateurs, un putter standard de 34 pouces avec un loft de 3-4° convient parfaitement.\n\nPourquoi les Scotty Cameron sont-ils si chers même en occasion ? Parce que ce sont des putters de collection autant que des outils de jeu. La qualité de la forge et la réputation de la marque maintiennent des prix élevés même sur le marché de l'occasion.\n\n## Conclusion\n\nUpgrader votre putter est l'investissement le plus rentable en golf. Avec 60 à 100€ sur SwingMarket, vous accédez à des putters de qualité tour qui amélioreront immédiatement votre jeu autour du green.\n\nParcourez notre sélection et faites-vous plaisir sans vous ruiner." },
-  { id: 4, category: "conseils", title: "5 conseils pour vendre vos clubs de golf au meilleur prix", author: "Thomas Lefebvre", date: "15 mars 2026", read_time: "6 min", cover: "https://images.unsplash.com/photo-1592919505780-303950717480?w=1200&h=600&fit=crop", body: "Vous avez des clubs qui prennent la poussière dans votre garage ? Avec ces 5 conseils appliqués par les meilleurs vendeurs de SwingMarket, vendez vos clubs jusqu'à 40% plus cher que la moyenne.\n\nChaque mois, des centaines de golfeurs publient des annonces sur SwingMarket. Ceux qui appliquent ces cinq règles simples vendent plus vite et obtiennent de meilleurs prix. Les autres attendent des semaines sans résultat.\n\n## Le problème des annonces qui ne vendent pas\n\nDes photos floues prises à la va-vite, une description de deux lignes et un prix gonflé : c'est la recette pour rester avec ses clubs pendant des mois. Les acheteurs sont exigeants, informés, et ont accès à des dizaines d'annonces en quelques clics.\n\n## Conseil 1 : Nettoyez vos clubs comme un pro\n\nAvant de prendre la moindre photo, nettoyez méticuleusement vos clubs. Pour les fers : utilisez une brosse à dents et de l'eau savonneuse pour nettoyer les rainures. Pour les drivers et bois : un chiffon microfibre humide pour la tête, de l'alcool isopropylique pour les petites taches tenaces.\n\nUn club propre semble visuellement en meilleur état et justifie un prix plus élevé. C'est la première chose que remarque un acheteur.\n\n## Conseil 2 : Photographiez comme un vendeur professionnel\n\nLa lumière naturelle est votre meilleure alliée. Photographiez en extérieur par temps nuageux (pas de reflets) ou dans une pièce bien éclairée avec une lumière diffuse.\n\nPrenez obligatoirement : une photo de face de la tête, une photo de dessus montrant les rainures, une photo du shaft et du grip, et une photo du talon/pointe pour montrer l'état des arêtes.\n\nMinimum 5 photos par club, 8 à 10 pour les drivers et sets complets. Les annonces avec 8+ photos reçoivent en moyenne 3 fois plus de messages que celles avec 2-3 photos.\n\n## Conseil 3 : Rédigez une description qui rassure\n\nMentionnez : la marque et le modèle exact, le loft et le flex du shaft, le nombre de parties estimées, l'état du grip (à changer ou non), et toute particularité (réglages, plombs de tête).\n\nSoyez honnête sur les défauts. Une petite égratignure signalée dans la description est mieux acceptée qu'une surprise à la réception. La confiance est la clé pour une vente sans litige.\n\n## Conseil 4 : Fixez le bon prix\n\nCherchez des annonces similaires sur SwingMarket pour avoir une base de comparaison. Tenez compte de l'âge du modèle, de l'état et des accessoires inclus.\n\nRègle générale : un club de 1-2 ans en excellent état vaut 50-65% du prix neuf. Un club de 3-5 ans en bon état vaut 30-45% du prix neuf. Au-delà de 5 ans, comptez 20-35%.\n\nLaissez une légère marge de négociation (5-10%) dans votre prix. Les acheteurs aiment sentir qu'ils ont fait une bonne affaire.\n\n## Conseil 5 : Répondez vite et proposez des informations supplémentaires\n\nLes vendeurs qui répondent dans l'heure ont un taux de conversion 4 fois supérieur à ceux qui mettent 24h. Activez les notifications SwingMarket sur votre téléphone.\n\nProposez spontanément des photos supplémentaires si l'acheteur hésite. Cette proactivité rassure et conclut des ventes.\n\n## SwingMarket vous aide à vendre\n\nNotre interface de création d'annonce vous guide étape par étape : catégorie, photos, description, prix. Les annonces complètes sont mises en avant dans les résultats de recherche.\n\nPubliez votre première annonce gratuitement sur SwingMarket et vendez vos clubs au meilleur prix.\n\n## FAQ Vendre ses clubs\n\nQuelle commission prend SwingMarket ? SwingMarket prélève une commission dégressive sur le prix de vente, de 10% pour les articles sous 100€ à 4% au-dessus de 1000€. Aucun frais à la publication.\n\nComment fixer le prix d'un set complet ? Évaluez chaque club individuellement puis appliquez une réduction de 10-15% sur le total pour l'attractivité du lot.\n\nDoit-on inclure la livraison ? Les annonces avec livraison incluse se vendent en moyenne 25% plus vite. Incluez Mondial Relay dans le prix et mentionnez-le clairement.\n\n## Conclusion\n\nNettoyer, photographier, décrire honnêtement, fixer le bon prix et répondre vite : cinq règles simples qui font toute la différence. Appliquez-les et vos clubs partiront en quelques jours, pas en plusieurs semaines.\n\nCréez votre annonce maintenant sur SwingMarket." },
-  { id: 5, category: "guides", title: "Fers forgés vs fers coulés : quelle différence pour quel niveau ?", author: "Marie Dupont", date: "8 mars 2026", read_time: "7 min", cover: "https://images.unsplash.com/photo-1530028828-25e6698533b9?w=1200&h=600&fit=crop", body: "Forgés ou coulés ? Ce débat divise les golfs clubs depuis des décennies. Voici enfin une réponse claire, sans jargon, pour savoir quel type de fer correspond vraiment à votre niveau de jeu.\n\nQuand on cherche un jeu de fers d'occasion, la question du forgé vs coulé revient systématiquement. Certains vendeurs mettent en avant le mot 'forgé' comme une garantie de qualité supérieure. La réalité est plus nuancée.\n\n## Le malentendu autour du terme 'forgé'\n\nBeaucoup de golfeurs pensent que forgé signifie automatiquement meilleur. C'est un raccourci trompeur. Un fer forgé n'est pas intrinsèquement supérieur à un fer coulé. Les deux méthodes de fabrication ont leurs avantages, et le choix dépend avant tout de votre niveau de jeu.\n\n## La fabrication : ce qui différencie vraiment les deux méthodes\n\nLes fers forgés sont fabriqués en compressant un bloc d'acier doux (le billet) sous une pression énorme pour lui donner la forme finale. Ce processus crée une structure métallique plus dense et homogène, qui transmet mieux les vibrations au golfeur. C'est le 'feel' dont parlent les joueurs confirmés.\n\nLes fers coulés sont fabriqués en coulant de l'acier liquide dans un moule. Cette méthode permet des designs plus complexes : cavity back profond, zones de tungstène pour abaisser le centre de gravité, faces élastiques. La précision dimensionnelle est excellente.\n\n## Pour quel niveau choisir des fers forgés\n\nLes fers forgés sont recommandés pour les joueurs avec un handicap inférieur à 15, idéalement inférieur à 10. Pourquoi ? Parce que le feel amélioré n'a de valeur que si vous frappez régulièrement au centre de la face. Un joueur qui frappe souvent en dehors du sweet spot ne tirera aucun bénéfice du forgé.\n\nLes fers forgés modernes (Titleist AP2, Miura CB-301, Srixon Z-785) sont beaucoup plus pardonnants que leurs ancêtres. Mais ils restent moins tolérants aux frappes décentrées qu'un bon cavity back coulé.\n\n## Pour quel niveau choisir des fers coulés\n\nSi votre handicap est supérieur à 15, ou si vous êtes en progression, les fers coulés cavity back modernes sont votre meilleur allié. Ils offrent : une zone de tolérance (sweet spot élargi) plus grande, un centre de gravité plus bas qui aide à lancer la balle, et des marges d'erreur plus importantes sur les frappes imprécises.\n\nDes modèles comme le Callaway Apex (coulé), le TaylorMade P790, ou le Ping G-Iron sont des fers coulés qui offrent d'excellentes performances pour les amateurs.\n\n## Et les fers combo ou players distance ?\n\nLa tendance actuelle est aux fers combo : des longs fers (4, 5, 6) avec une construction cavity back pardonnante, et des courts fers (7, 8, 9, PW) avec une construction plus proche du forgé. C'est le meilleur des deux mondes pour les joueurs intermédiaires (handicap 10-20).\n\n## Notre recommandation par niveau\n\nDébutant à 36 : fers coulés cavity back, marques accessibles comme Wilson, Cleveland ou Cobra. Budget 100-200€ en occasion.\n\nIntermédiaire 15-36 : fers coulés cavity back ou players distance, marques Callaway Apex, Ping G, TaylorMade SIM2 Max. Budget 200-400€ en occasion.\n\nConfirmé 5-15 : fers forgés modernes ou combo, Titleist AP2/T100, Mizuno JPX921, Srixon Z-785. Budget 300-600€ en occasion.\n\nExpert sous 5 : fers forgés blade ou muscle back, Miura, Titleist 620 MB, Mizuno MP-20. Budget 400-800€ en occasion.\n\n## SwingMarket pour trouver vos fers\n\nFiltrez par type (forgé/coulé), marque et handicap recommandé sur SwingMarket. Chaque annonce précise le type de fabrication, le loft, le flex du shaft, et l'état général.\n\nTrouvez vos prochains fers sur SwingMarket.\n\n## FAQ Fers forgés vs coulés\n\nPeut-on faire ajuster les lofts et lies sur les deux types ? Oui, mais plus facilement sur les fers forgés (acier plus doux). Les fers coulés en acier inox peuvent être ajustés mais nécessitent plus de précautions.\n\nUn jeu de fers forgés d'occasion vaut-il plus qu'un coulé ? Pas nécessairement. La valeur dépend de la marque, du modèle et de l'état. Un Callaway Apex coulé récent peut valoir plus qu'un vieux fer forgé d'une marque générique.\n\nComment reconnaître un fer forgé d'un coulé en occasion ? Cherchez la mention 'forged' sur la tête du club. Les fers forgés ont souvent un aspect de surface légèrement différent, moins brillant que l'inox poli des coulés.\n\n## Conclusion\n\nForgé ou coulé, l'important est de choisir des fers adaptés à votre niveau de jeu actuel, pas à celui que vous espérez avoir. Un bon cavity back coulé améliorera bien plus votre score qu'un blade forgé mal maîtrisé.\n\nParcourez la sélection de fers d'occasion sur SwingMarket et trouvez le set parfait pour votre niveau." },
-  { id: 6, category: "actualites", title: "Le marché du golf d\'occasion en France : état des lieux 2026", author: "SwingMarket", date: "1 mars 2026", read_time: "4 min", cover: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?w=1200&h=600&fit=crop", body: "Le marché du golf d'occasion en France a connu une croissance de 34% entre 2022 et 2026. Qui achète, qui vend, et quels clubs s'échangent le plus ? SwingMarket analyse les données.\n\nLe golf d'occasion n'est plus un marché de niche. En 2026, un golfeur français sur trois a acheté au moins un club d'occasion au cours des 12 derniers mois. Les mentalités ont changé, les plateformes se sont professionnalisées, et la qualité des produits disponibles n'a jamais été aussi bonne.\n\n## Un marché en pleine expansion\n\nEn 2022, le marché du golf d'occasion en France représentait environ 45 millions d'euros. En 2026, cette estimation dépasse les 60 millions d'euros, portée par plusieurs facteurs structurels.\n\nL'inflation a poussé de nombreux golfeurs à reconsidérer leurs achats. Un driver neuf coûte entre 300€ et 700€ : c'est un budget que tous les golfeurs ne peuvent ou ne veulent pas allouer pour un équipement. L'occasion offre une alternative crédible.\n\nLa prise de conscience environnementale joue également un rôle. Prolonger la durée de vie des équipements sportifs s'inscrit dans une démarche de consommation responsable de plus en plus valorisée.\n\n## Ce qui se vend le mieux\n\nLes drivers représentent 28% des transactions sur SwingMarket. C'est le club qui génère le plus d'envie d'upgrade, et les différences de prix entre neuf et occasion sont les plus importantes.\n\nLes fers (sets complets ou individuels) arrivent en deuxième position avec 24% des ventes. Les golfeurs en progression changent régulièrement de fers pour accompagner l'amélioration de leur technique.\n\nLes putters (18%) bénéficient d'une forte demande due à leur rôle central dans le score. Les Scotty Cameron et Odyssey restent les marques les plus recherchées.\n\nLes sacs de golf (12%) et les chariots électriques (9%) complètent le tableau, avec des prix d'occasion très attractifs sur ces produits à forte décote.\n\n## Le profil des acheteurs\n\nLes données SwingMarket révèlent que les acheteurs de golf d'occasion se répartissent en trois grandes catégories.\n\nLes débutants et intermédiaires (42%) qui cherchent à s'équiper sans investissement massif. Ils privilégient les sets complets et les clubs polyvalents.\n\nLes golfeurs confirmés (35%) qui upgradent régulièrement leur équipement pour suivre l'évolution des technologies. Ils sont les acheteurs les plus exigeants sur l'état et la précision des descriptions.\n\nLes collectionneurs et passionnés (23%) qui recherchent des modèles vintage, des Scotty Cameron, ou des clubs japonais rares.\n\n## Les régions les plus actives\n\nL'Île-de-France concentre 31% des transactions, ce qui s'explique par la densité de golfs et la population de golfeurs. Suivent l'Auvergne-Rhône-Alpes (14%), la Nouvelle-Aquitaine (11%) et l'Occitanie (9%).\n\n## Les perspectives 2026-2028\n\nLe marché du golf d'occasion devrait continuer sa croissance portée par l'augmentation du nombre de pratiquants (2,1 millions en France en 2026), le renouvellement technologique des équipements qui génère des flux de revente importants, et la professionnalisation des plateformes de mise en relation.\n\nSwingMarket ambitionne de devenir la référence française du golf d'occasion, en offrant la meilleure expérience d'achat et de vente aux golfeurs de tous niveaux.\n\n## SwingMarket : au coeur de ce marché\n\nRejoignez la communauté SwingMarket et profitez du meilleur du marché du golf d'occasion français.\n\nParcourez nos annonces ou publiez la vôtre dès maintenant.\n\n## FAQ Marché du golf d'occasion\n\nLes prix du golf d'occasion ont-ils augmenté ? Légèrement, en parallèle avec l'inflation générale. Mais les prix restent très attractifs par rapport au neuf, avec des décotes de 40 à 70% selon les modèles.\n\nComment évolue la technologie des clubs de golf ? Les fabricants sortent de nouvelles gammes tous les 18 à 24 mois. Cela génère des vagues de revente des modèles précédents, bénéfiques pour les acheteurs d'occasion.\n\n## Conclusion\n\nLe marché du golf d'occasion en France est mature, dynamique et porteur. Que vous soyez acheteur ou vendeur, les opportunités n'ont jamais été aussi nombreuses.\n\nRejoignez SwingMarket et participez à ce marché en plein essor." },
-  { id: 7, category: "guides", title: "Bien choisir son chariot de golf électrique d\'occasion", author: "Lucas Martin", date: "22 février 2026", read_time: "6 min", cover: "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=1200&h=600&fit=crop", body: "Un chariot électrique neuf coûte entre 500€ et 2000€. En occasion, vous pouvez trouver un modèle fiable entre 150€ et 500€. Mais quoi vérifier avant d'acheter ? Ce guide vous évite les mauvaises surprises.\n\nLe chariot électrique est l'achat qui change vraiment la vie sur le parcours. Finies les douleurs de dos, la fatigue en fin de partie, la concentration gaspillée à porter son sac. Mais un mauvais chariot électrique d'occasion peut rapidement se transformer en gouffre financier.\n\n## Le problème principal : la batterie\n\nC'est le point critique de tout chariot électrique. Une batterie en fin de vie peut rendre le chariot inutilisable, et son remplacement coûte entre 80€ et 250€ selon le modèle. C'est souvent pourquoi certains chariots sont vendus à des prix très bas.\n\nToujours demander : l'âge de la batterie, le nombre de cycles de charge, et si possible une démonstration avant achat.\n\n## Les types de batteries\n\nBatterie plomb-acide : technologie ancienne, lourde (5-8kg), durée de vie de 3-5 ans selon l'utilisation. Moins chère à remplacer (50-100€) mais moins performante.\n\nBatterie lithium : technologie moderne, légère (1-2kg), durée de vie de 5-8 ans. Plus chère à remplacer (150-250€) mais bien supérieure en autonomie et poids.\n\nPour un chariot d'occasion, privilégiez les modèles avec batterie lithium récente (moins de 3 ans). Un chariot plomb-acide de moins de 2 ans avec une batterie neuve peut aussi être un bon choix si le prix est attractif.\n\n## L'autonomie : ce qu'il faut vérifier\n\nUn chariot correctement entretenu doit pouvoir effectuer au minimum 18 trous sur un parcours plat. Sur un parcours vallonné, comptez 20-30% d'autonomie en moins.\n\nDemandez au vendeur combien de trous il réalise par charge. Une autonomie inférieure à 12 trous sur terrain plat signifie une batterie à changer.\n\n## Les marques fiables en occasion\n\nMotocaddy : la référence en France. Les modèles S1, S3 Pro et M3 GPS sont solides, bien supportés par un réseau de SAV, et disponibles entre 200€ et 600€ en occasion.\n\nPowakaddy : concurrent direct de Motocaddy, même niveau de qualité. Les FW5s et FW7s sont très populaires.\n\nStewart Golf : haut de gamme, chariots très fiables mais plus chers, même en occasion (400-800€).\n\nTrolley Tech : marque française moins connue mais bonne qualité de fabrication, pièces détachées disponibles.\n\n## Ce qu'il faut inspecter\n\nLe châssis : vérifiez l'absence de corrosion, surtout sur les zones de fixation de la batterie. Un châssis rouillé peut se fragiliser.\n\nLes roues : elles doivent tourner librement et sans bruit. Des roulements usés se remplacent facilement (20-30€) mais c'est un point de négociation.\n\nLe moteur : testez le chariot en le faisant fonctionner. Un moteur qui chauffe anormalement ou qui fait des bruits inhabituels est à éviter.\n\nLa télécommande (si incluse) : testez toutes les fonctions. Les télécommandes de remplacement coûtent 30-80€.\n\n## SwingMarket pour votre chariot\n\nFiltrez par marque, type de batterie et budget sur SwingMarket. Les vendeurs de chariots sont généralement très précis sur l'état de la batterie car ils savent que c'est le premier critère de choix.\n\nTrouvez votre chariot électrique d'occasion sur SwingMarket.\n\n## FAQ Chariots électriques d'occasion\n\nPeut-on faire réparer un chariot électrique d'occasion ? Oui, la plupart des grandes marques (Motocaddy, Powakaddy) ont un réseau SAV et les pièces sont disponibles. C'est un avantage important par rapport aux marques génériques.\n\nCombien de temps dure un bon chariot électrique ? Avec un entretien correct (batterie rechargée régulièrement même hors saison, châssis nettoyé après chaque partie pluvieuse), un chariot de qualité peut durer 8 à 12 ans.\n\nDoit-on recharger la batterie après chaque partie ? Idéalement oui pour les batteries lithium. Pour les batteries plomb-acide, ne pas laisser la batterie déchargée plus de 48h.\n\n## Conclusion\n\nUn chariot électrique d'occasion bien choisi vous rendra d'immenses services pendant de nombreuses saisons. La clé : vérifier la batterie, tester avant d'acheter, et privilégier les grandes marques avec un bon réseau SAV.\n\nParcourez les chariots disponibles sur SwingMarket et jouez plus confortablement dès la prochaine partie." },
-  { id: 8, category: "conseils", title: "Entretien de vos clubs : les bons gestes pour préserver leur valeur", author: "Marie Dupont", date: "14 février 2026", read_time: "5 min", cover: "https://images.unsplash.com/photo-1571553207709-5fe35a2a3aea?w=1200&h=600&fit=crop", body: "Un jeu de fers bien entretenu peut conserver 80% de sa valeur de revente. Mal entretenu, il perd 40 à 60% supplémentaire. Voici les gestes simples qui font toute la différence, validés par les meilleurs vendeurs de SwingMarket.\n\nVous avez investi dans de beaux clubs. Que ce soit des clubs neufs ou d'occasion, les entretenir correctement est la meilleure façon de préserver leur valeur et leurs performances. Et c'est plus simple qu'on ne le pense.\n\n## Le problème que personne n'anticipe\n\nLa dégradation des clubs de golf est progressive et souvent invisible jusqu'au moment de vendre. Des rainures encrassées, un grip durci, quelques points de rouille : autant d'éléments qui font chuter le prix de revente de 20 à 40% et qui, surtout, affectent vos performances sur le parcours.\n\n## Nettoyage des fers : la technique correcte\n\nLe nettoyage des fers doit être fait après chaque partie, idéalement sur le parcours même après chaque coup. Voici la méthode complète pour un nettoyage mensuel approfondi.\n\nPréparez un bain d'eau tiède avec quelques gouttes de liquide vaisselle dans un seau. Trempez les têtes (jamais les shafts graphite ni les hosel) pendant 5 minutes maximum. Utilisez une brosse à dents dure ou une brosse spéciale golf pour nettoyer les rainures en allant dans le sens de celles-ci.\n\nSéchez immédiatement et complètement avec un chiffon microfibre. Toute trace d'humidité résiduelle peut créer des points de rouille en quelques heures.\n\n## Entretien des rainures : l'impact sur vos performances\n\nLes rainures des fers et des wedges créent l'effet de spin qui vous permet de contrôler la trajectoire et l'arrêt de la balle. Des rainures obstruées par de la terre et de l'herbe réduisent significativement cet effet.\n\nUtilisez un outil de nettoyage de rainures (3-5€) après chaque coup pour maintenir les rainures propres. C'est le geste le plus impactant sur vos performances.\n\n## Soin des grips : souvent négligé, pourtant essentiel\n\nUn grip usé ou gras oblige à serrer plus fort, ce qui crée des tensions dans le swing. Nettoyez vos grips toutes les 4-6 parties avec de l'eau tiède et du savon doux. Séchez bien et laissez à l'air libre.\n\nLa durée de vie d'un grip est d'environ 40 à 60 parties ou un an d'utilisation régulière. Le regrip coûte 8-12€ par club ou 80-120€ pour un set complet. C'est un investissement rentable qui améliore immédiatement votre prise en main.\n\n## Protection des shafts graphite\n\nLes shafts en graphite sont plus fragiles que l'acier, surtout au niveau du hosel. Évitez les contacts entre clubs dans le sac : utilisez des head covers ou un sac avec des tubes séparateurs.\n\nNe posez jamais vos clubs en acier contre un shaft graphite. Le métal peut rayer le graphite et créer des micro-fissures qui affaibliront progressivement le shaft.\n\n## Stockage optimal\n\nÉvitez de stocker vos clubs dans un coffre de voiture : les variations de température extrêmes (chaleur l'été, froid l'hiver) accélèrent la dégradation des grips et peuvent affecter les colles de hosel.\n\nRangez vos clubs dans un endroit sec et à température stable. Si vous rangez votre sac dans un garage, investissez dans une housse de protection.\n\n## SwingMarket valorise les clubs bien entretenus\n\nSur SwingMarket, les clubs présentant un entretien irréprochable se vendent entre 15 et 25% plus cher que des modèles identiques négligés. Les acheteurs sont de plus en plus exigeants sur les photos de rainures et l'état des grips.\n\nVendez vos clubs bien entretenus au meilleur prix sur SwingMarket.\n\n## FAQ Entretien des clubs\n\nPeut-on utiliser un nettoyeur ultrasons pour les clubs ? Oui, c'est même excellent pour les fers et wedges. Évitez pour les woods et drivers dont les têtes sont collées. Et jamais avec des clubs à shaft graphite si le hosel est immergé.\n\nQuand faut-il faire vérifier les lofts et les lies ? Tous les 2-3 ans pour un joueur régulier, ou si vous constatez une dérive systématique dans une direction. Un pro shop peut faire cela en 30 minutes.\n\nUn point de rouille est-il rédhibitoire pour la revente ? Un point de rouille superficiel traité à temps (papier de verre fin + huile WD-40) n'affecte pas la valeur. La rouille profonde qui a créé des piqûres est plus problématique.\n\n## Conclusion\n\nCinq minutes après chaque partie, une heure de nettoyage complet par mois : c'est le temps qu'il faut consacrer à l'entretien de vos clubs pour préserver leurs performances et leur valeur de revente.\n\nPrenez soin de vos clubs et revendez-les au meilleur prix sur SwingMarket quand vient le moment de changer." },
-  { id: 9, category: "comparatifs", title: "Comparatif : les meilleurs sacs de golf voyage d\'occasion", author: "Thomas Lefebvre", date: "5 février 2026", read_time: "8 min", cover: "https://images.unsplash.com/photo-1610727948975-6a4f9fb5f17f?w=1200&h=600&fit=crop", body: "Partir jouer en Espagne, au Portugal ou en Écosse sans se ruiner sur un sac de voyage à 400€ neuf : c'est possible avec l'occasion. Notre comparatif des meilleurs modèles disponibles entre 80€ et 250€.\n\nLe voyage golf est l'une des plus belles façons de pratiquer. Mais transporter son matériel nécessite un sac de voyage adapté qui protège les clubs pendant les vols. Neuf, un bon sac de voyage coûte entre 150€ et 500€. En occasion, vous trouvez les mêmes modèles entre 60€ et 200€.\n\n## Le problème des sacs de voyage inadaptés\n\nUn sac de voyage insuffisamment protecteur peut coûter très cher : des compagnies aériennes font preuve de peu de précautions avec les bagages de soute. Des shafts tordus, des têtes de driver abîmées, un putter fendu : les dégâts peuvent dépasser 500€ sur un jeu neuf.\n\n## Les deux types de sacs de voyage\n\nSac rigide (hard case) : protection maximale, idéal pour les clubs de valeur. Plus lourd (5-8kg à vide), plus encombrant au stockage. Recommandé pour les voyages fréquents et les clubs haut de gamme.\n\nSac souple (soft case) : plus léger (2-4kg à vide), plus facile à stocker. Protection suffisante avec un bon rembourrage intérieur. Recommandé pour les voyageurs occasionnels.\n\n## Notre sélection\n\nSacs rigides d'occasion :\n\nSKB Deluxe (180-250€ d'occasion) : le standard de protection des joueurs professionnels. Serrures TSA intégrées, roues 360°, intérieur rembourré. Pratiquement indestructible. Valeur neuf : 350-450€.\n\nSun Mountain ClubGlider (120-180€ d'occasion) : conception intelligente avec guidon pour faciliter le déplacement. Très populaire aux États-Unis, de plus en plus présent en occasion en France.\n\nCallaway Fusion (100-150€ d'occasion) : rigide et léger (5kg), bon rapport protection/poids. Idéal pour les voyageurs qui surveillent le poids des bagages.\n\nSacs souples d'occasion :\n\nTitleist Club 14 Travel Cover (80-130€ d'occasion) : référence du sac souple. Rembourrage épais sur les côtés et le dessus, coque rigide au sommet pour protéger les clubs. Valeur neuf : 200-250€.\n\nMotocaddy Travel Cover (60-100€ d'occasion) : conçu pour les chariots électriques Motocaddy, mais utilisable avec n'importe quel sac. Protection correcte, prix accessible.\n\nTaylorMade Travel Cover (70-110€ d'occasion) : bon rembourrage, fermeture éclair robuste. Modèle solide et facile à trouver en occasion.\n\n## Ce qu'il faut vérifier avant d'acheter\n\nPour un sac rigide : vérifiez les charnières (les plus fragiles), les serrures TSA, et l'intégrité de la coque (impacts profonds qui auraient créé des fissures).\n\nPour un sac souple : vérifiez les coutures, surtout aux points de stress (poignées, zones de fermeture), et l'état du rembourrage interne.\n\nDans les deux cas : testez les roues et la capacité à tenir debout sans appui.\n\n## Conseils pour voyager avec ses clubs\n\nToujours retirer les drivers et bois de la housse de sac et les placer à part dans le sac de voyage, entourés de vêtements. Ce sont les clubs les plus vulnérables aux chocs.\n\nUtilisez des head covers sur tous les clubs. Emballez les wedges ensemble avec un rouleau de bulles.\n\nSouscrire l'assurance bagage de la compagnie aérienne (10-20€) est fortement recommandé. Certaines cartes bancaires premium couvrent aussi les équipements sportifs.\n\n## SwingMarket pour votre sac de voyage\n\nFiltrez par type (rigide/souple), marque et budget. Les sacs de voyage sont des produits qui s'usent peu : un sac rigide d'occasion en bon état offre la même protection qu'un neuf.\n\nTrouvez votre sac de voyage golf d'occasion sur SwingMarket.\n\n## FAQ Sacs de voyage golf\n\nLes compagnies aériennes facturent-elles les clubs de golf ? La plupart des compagnies aériennes acceptent les clubs comme bagage en soute au tarif standard d'un bagage supplémentaire (30-60€ selon la compagnie). Vérifiez toujours les conditions avant de réserver.\n\nFaut-il démonter les clubs pour voyager ? Non, sauf les drivers avec shaft extra-long. La plupart des sacs de voyage accommodent des drivers standard jusqu'à 48 pouces.\n\nUn sac souple est-il suffisant pour protéger les clubs ? Un bon sac souple avec une coque rigide au sommet (comme le Titleist Club 14) offre une protection satisfaisante pour des voyages occasionnels. Pour des voyages fréquents, le rigide est préférable.\n\n## Conclusion\n\nUn bon sac de voyage d'occasion protégera vos clubs aussi bien qu'un neuf pour une fraction du prix. Privilegiez les grandes marques (SKB, Titleist, Sun Mountain) et vérifiez l'état des fermetures et du rembourrage.\n\nProfitez de votre prochain voyage golf avec l'équipement idéal trouvé sur SwingMarket." },
+const makeExcerpt = (content, len = 220) => {
+  if (!content) return "";
+  const clean = content
+    .replace(/^#{1,6}\s+/gm, "").replace(/[*_>`]/g, "").replace(/\n+/g, " ").trim();
+  if (clean.length <= len) return clean;
+  return clean.slice(0, len).replace(/\s+\S*$/, "") + "…";
+};
+
+function guessCategory(post) {
+  const text = `${post?.title || ""}`.toLowerCase();
+  if (/guide|comment\b/.test(text))             return { id: "guide",       label: "Guide",       hue: 145 };
+  if (/conseil|astuce|tip\b/.test(text))        return { id: "conseil",     label: "Conseils",    hue: 175 };
+  if (/comparatif|test|review|vs\b/.test(text)) return { id: "comparatif",  label: "Comparatif",  hue: 38  };
+  if (/actu|news|annonce/.test(text))           return { id: "actu",        label: "Actualités",  hue: 268 };
+  if (/entretien|nettoy|réparer/.test(text))    return { id: "entretien",   label: "Entretien",   hue: 200 };
+  return                                              { id: "general",     label: "À lire",      hue: 110 };
+}
+
+// ────── SVG covers (fallback si pas d'image_url) ──────
+const COVER_PATTERNS = [
+  ({ id, c1, c2 }) => (
+    <svg viewBox="0 0 600 380" preserveAspectRatio="xMidYMid slice" className="bp-cov-svg" aria-hidden>
+      <defs><linearGradient id={`g-${id}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={c1} /><stop offset="100%" stopColor={c2} /></linearGradient></defs>
+      <rect width="600" height="380" fill={`url(#g-${id})`} />
+      <g stroke="rgba(255,255,255,.18)" strokeWidth="1.5" fill="none">
+        <path d="M-50 180 Q150 140 300 180 T 700 180" /><path d="M-50 220 Q150 180 300 220 T 700 220" />
+        <path d="M-50 260 Q150 220 300 260 T 700 260" /><path d="M-50 300 Q150 260 300 300 T 700 300" />
+      </g>
+      <circle cx="500" cy="100" r="60" fill="rgba(255,255,255,.06)" /><circle cx="80" cy="60" r="30" fill="rgba(255,255,255,.08)" />
+    </svg>
+  ),
+  ({ id, c1, c2 }) => (
+    <svg viewBox="0 0 600 380" preserveAspectRatio="xMidYMid slice" className="bp-cov-svg" aria-hidden>
+      <defs><linearGradient id={`g-${id}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={c1} /><stop offset="100%" stopColor={c2} /></linearGradient></defs>
+      <rect width="600" height="380" fill={`url(#g-${id})`} />
+      <ellipse cx="300" cy="350" rx="280" ry="40" fill="rgba(0,0,0,.18)" />
+      <line x1="430" y1="80" x2="430" y2="350" stroke="rgba(255,255,255,.85)" strokeWidth="3" />
+      <path d="M430 80 L 540 105 L 430 130 Z" fill="rgba(255,255,255,.92)" />
+      <text x="445" y="112" fontFamily="JetBrains Mono, monospace" fontSize="14" fontWeight="700" fill="#1B5E20">SM</text>
+      <circle cx="160" cy="320" r="14" fill="rgba(255,255,255,.95)" />
+    </svg>
+  ),
+  ({ id, c1, c2 }) => (
+    <svg viewBox="0 0 600 380" preserveAspectRatio="xMidYMid slice" className="bp-cov-svg" aria-hidden>
+      <defs>
+        <linearGradient id={`g-${id}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={c1} /><stop offset="100%" stopColor={c2} /></linearGradient>
+        <radialGradient id={`b-${id}`} cx="35%" cy="35%"><stop offset="0%" stopColor="rgba(255,255,255,1)" /><stop offset="100%" stopColor="rgba(220,220,220,.95)" /></radialGradient>
+      </defs>
+      <rect width="600" height="380" fill={`url(#g-${id})`} />
+      {[[120,90,36],[430,70,28],[200,220,42],[490,200,32],[80,320,26],[340,320,38],[560,330,22],[310,130,22]].map(([cx,cy,r],i)=>(
+        <g key={i} transform={`translate(${cx} ${cy})`}><circle r={r} fill={`url(#b-${id})`}/><circle r={r*0.15} cx={-r*0.3} cy={-r*0.3} fill="rgba(0,0,0,.06)"/><circle r={r*0.12} cx={r*0.2} cy={-r*0.1} fill="rgba(0,0,0,.05)"/></g>
+      ))}
+    </svg>
+  ),
+  ({ id, c1, c2 }) => (
+    <svg viewBox="0 0 600 380" preserveAspectRatio="xMidYMid slice" className="bp-cov-svg" aria-hidden>
+      <defs>
+        <linearGradient id={`g-${id}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={c1} /><stop offset="100%" stopColor={c2} /></linearGradient>
+        <pattern id={`p-${id}`} width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="1"/></pattern>
+      </defs>
+      <rect width="600" height="380" fill={`url(#g-${id})`} /><rect width="600" height="380" fill={`url(#p-${id})`} />
+      <g transform="translate(300 190)"><circle r="130" fill="none" stroke="rgba(255,255,255,.15)" strokeWidth="1.5"/><circle r="90" fill="none" stroke="rgba(255,255,255,.20)" strokeWidth="1.5"/><circle r="55" fill="none" stroke="rgba(255,255,255,.30)" strokeWidth="1.5"/><circle r="22" fill="rgba(255,255,255,.85)"/></g>
+    </svg>
+  ),
+  ({ id, c1, c2 }) => (
+    <svg viewBox="0 0 600 380" preserveAspectRatio="xMidYMid slice" className="bp-cov-svg" aria-hidden>
+      <defs><linearGradient id={`g-${id}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={c1} /><stop offset="100%" stopColor={c2} /></linearGradient></defs>
+      <rect width="600" height="380" fill={`url(#g-${id})`} />
+      <path d="M0 280 Q 150 220 300 280 T 600 280 V 380 H 0 Z" fill="rgba(255,255,255,.10)" />
+      <path d="M0 320 Q 150 270 300 320 T 600 320 V 380 H 0 Z" fill="rgba(255,255,255,.14)" />
+      <path d="M0 350 Q 150 320 300 350 T 600 350 V 380 H 0 Z" fill="rgba(0,0,0,.10)" />
+      <circle cx="490" cy="90" r="50" fill="rgba(255,255,255,.18)" />
+    </svg>
+  ),
+  ({ id, c1, c2 }) => (
+    <svg viewBox="0 0 600 380" preserveAspectRatio="xMidYMid slice" className="bp-cov-svg" aria-hidden>
+      <defs>
+        <linearGradient id={`g-${id}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={c1} /><stop offset="100%" stopColor={c2} /></linearGradient>
+        <pattern id={`d-${id}`} width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="11" cy="11" r="1.5" fill="rgba(255,255,255,.12)"/></pattern>
+      </defs>
+      <rect width="600" height="380" fill={`url(#g-${id})`} /><rect width="600" height="380" fill={`url(#d-${id})`} />
+      <g transform="translate(420 110) rotate(28)" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.45)" strokeWidth="1.2">
+        <rect x="-3" y="0" width="6" height="180" rx="2"/>
+        <path d="M -45 180 Q -50 220 -10 230 L 50 230 Q 60 220 50 200 L 5 195 Z"/>
+      </g>
+    </svg>
+  ),
 ];
 
-export default function BlogPost() {
-  const [params] = useSearchParams();
-  const id = parseInt(params.get("id"));
-  const post = ARTICLES.find(a => a.id === id);
+const PALETTES = [
+  ["#0A1F0C", "#1B5E20"], ["#1B5E20", "#4CAF50"], ["#7B5E12", "#C5A028"],
+  ["#0F172A", "#334155"], ["#064E3B", "#10B981"], ["#3B2F0E", "#8B6914"],
+];
 
-  if (!post) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-      <p className="text-gray-500 text-lg">Article introuvable.</p>
-      <Link to="/Blog" className="text-[#1B5E20] font-semibold hover:underline flex items-center gap-2"><ArrowLeft className="w-4 h-4" /> Retour au blog</Link>
+function hashIndex(s, mod) {
+  let h = 0; const str = String(s || "");
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+  return Math.abs(h) % mod;
+}
+
+function CoverArt({ post, sizeKey = "hero" }) {
+  if (post.image_url) {
+    return (
+      <div className={`bp-cover-wrap bp-cw-${sizeKey}`}>
+        <img src={post.image_url} alt="" className="bp-cov-img" />
+      </div>
+    );
+  }
+  const idx = hashIndex(post.id || post.title, COVER_PATTERNS.length);
+  const palIdx = hashIndex((post.id || post.title) + "p", PALETTES.length);
+  const [c1, c2] = PALETTES[palIdx];
+  const Pattern = COVER_PATTERNS[idx];
+  return (
+    <div className={`bp-cover-wrap bp-cw-${sizeKey}`}>
+      <Pattern id={`${post.id || idx}-${sizeKey}`} c1={c1} c2={c2} />
     </div>
   );
+}
 
-  const paragraphs = post.body.split("\\n\\n");
+// ────── Render markdown-like content ──────
+function renderContent(text) {
+  if (!text) return null;
+  const blocks = text.split(/\n\n+/);
+  return blocks.map((b, i) => {
+    const trimmed = b.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith("## ")) return <h2 key={i} className="bp-h2">{trimmed.replace(/^## /, "")}</h2>;
+    if (trimmed.startsWith("# "))  return <h1 key={i} className="bp-h1">{trimmed.replace(/^# /, "")}</h1>;
+    if (trimmed.startsWith("> "))  return <blockquote key={i} className="bp-quote">{trimmed.replace(/^> /, "")}</blockquote>;
+    if (/^[-•] /.test(trimmed)) {
+      const items = trimmed.split("\n").map((l) => l.replace(/^[-•]\s*/, ""));
+      return <ul key={i} className="bp-list">{items.map((it, j) => <li key={j}>{renderInline(it)}</li>)}</ul>;
+    }
+    return <p key={i} className="bp-p">{renderInline(trimmed)}</p>;
+  });
+}
+
+// Inline : **gras** *italique*
+function renderInline(text) {
+  const parts = [];
+  let last = 0;
+  const re = /(\*\*([^*]+)\*\*)|(\*([^*]+)\*)/g;
+  let m;
+  let key = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    if (m[2]) parts.push(<strong key={key++}>{m[2]}</strong>);
+    else if (m[4]) parts.push(<em key={key++}>{m[4]}</em>);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.length ? parts : text;
+}
+
+// ─────────────────────────────────────────────────────────
+// Page
+// ─────────────────────────────────────────────────────────
+export default function BlogPost() {
+  const [params] = useSearchParams();
+  const id = params.get("id");
+
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [related, setRelated] = useState([]);
+  const [progress, setProgress] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => { window.scrollTo(0, 0); }, [id]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      setProgress(max > 0 ? Math.min(100, (h.scrollTop / max) * 100) : 0);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setPost(null);
+
+    if (!id) { setLoading(false); return; }
+
+    supabase
+      .from("blog_posts")
+      .select("id, title, content, image_url, status, created_at")
+      .eq("id", id)
+      .eq("status", "published")
+      .maybeSingle()
+      .then(async ({ data, error }) => {
+        if (cancelled) return;
+        if (error) console.error("[BlogPost]", error);
+        setPost(data || null);
+        setLoading(false);
+
+        if (data?.id) {
+          const { data: rest } = await supabase
+            .from("blog_posts")
+            .select("id, title, content, image_url, created_at")
+            .eq("status", "published")
+            .neq("id", data.id)
+            .order("created_at", { ascending: false })
+            .limit(3);
+          if (!cancelled) setRelated(rest || []);
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const share = async () => {
+    const url = window.location.href;
+    const title = post?.title || "SwingMarket Blog";
+    if (navigator.share) {
+      try { await navigator.share({ title, url }); return; } catch { /* annulé */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {}
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Style />
+        <main className="bp-main bp-loading">
+          <Loader2 className="w-7 h-7 animate-spin" />
+          <span>Chargement de l'article…</span>
+        </main>
+      </>
+    );
+  }
+
+  if (!post) {
+    return (
+      <>
+        <Style />
+        <main className="bp-main">
+          <div className="bp-empty">
+            <div className="bp-empty-icon"><AlertCircle className="w-7 h-7" /></div>
+            <h1 className="bp-empty-title">Article introuvable</h1>
+            <p className="bp-empty-sub">Cet article n'existe plus ou n'a pas encore été publié.</p>
+            <Link to="/Blog" className="bp-empty-cta">
+              <ArrowLeft className="w-4 h-4" /> Retour au blog
+            </Link>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  const cat = guessCategory(post);
+  const excerpt = makeExcerpt(post.content, 240);
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="relative h-72 md:h-[420px] overflow-hidden">
-        <img src={post.cover} alt={post.title} className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
-          <div className="max-w-3xl mx-auto">
-            <Link to="/Blog" className="inline-flex items-center gap-1 text-white/70 hover:text-white text-sm mb-4 transition-colors"><ArrowLeft className="w-4 h-4" /> Retour au blog</Link>
-            <div className={"inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ml-3 " + categoryColors[post.category]}>{categoryLabels[post.category]}</div>
-            <h1 className="text-2xl md:text-4xl font-black text-white leading-tight">{post.title}</h1>
+    <>
+      <Style />
+
+      <div className="bp-progress" aria-hidden>
+        <div className="bp-progress-bar" style={{ width: `${progress}%` }} />
+      </div>
+
+      <main className="bp-main">
+        <section className="bp-hero">
+          <CoverArt post={post} sizeKey="hero" />
+          <div className="bp-hero-grad" aria-hidden />
+          <div className="bp-hero-content">
+            <div className="bp-back">
+              <Link to="/Blog">
+                <ArrowLeft className="w-3.5 h-3.5" /> Retour au journal
+              </Link>
+            </div>
+
+            <span className="bp-tag" style={{
+              background: `hsla(${cat.hue}, 70%, 55%, .18)`,
+              color: `hsl(${cat.hue} 80% 80%)`,
+              borderColor: `hsla(${cat.hue}, 70%, 60%, .35)`,
+            }}>
+              {cat.label}
+            </span>
+
+            <h1 className="bp-title">{post.title}</h1>
+
+            {excerpt && <p className="bp-excerpt">{excerpt}</p>}
+
+            <div className="bp-byline">
+              <span><Calendar className="w-3.5 h-3.5" /> {fmtDate(post.created_at)}</span>
+              <span className="bp-sep">·</span>
+              <span><Clock className="w-3.5 h-3.5" /> {readTime(post.content)} de lecture</span>
+              <span className="bp-sep">·</span>
+              <button onClick={share} className="bp-share-btn">
+                {copied
+                  ? (<><Check className="w-3.5 h-3.5" /> Lien copié</>)
+                  : (<><Share2 className="w-3.5 h-3.5" /> Partager</>)
+                }
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
-      <div className="max-w-3xl mx-auto px-4 py-10">
-        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-8 pb-6 border-b border-gray-100">
-          <span className="flex items-center gap-1"><User className="w-4 h-4" />{post.author}</span>
-          <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />{post.date}</span>
-          <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{post.read_time} de lecture</span>
-        </div>
-        <div className="space-y-4">
-          {paragraphs.map((p, i) => {
-            if (p.startsWith("## ")) return <h2 key={i} className="text-2xl font-black text-gray-900 mt-10 mb-4 border-l-4 border-[#1B5E20] pl-4">{p.replace("## ", "")}</h2>;
-            if (p.startsWith("**") && p.endsWith("**")) return <p key={i} className="font-bold text-gray-900 text-lg">{p.replace(/\*\*/g, "")}</p>;
-            return <p key={i} className="text-gray-700 leading-relaxed text-base">{p}</p>;
-          })}
-        </div>
-        <div className="mt-12 bg-gradient-to-br from-[#0F3D2E] to-[#1B5E20] rounded-2xl p-8 text-center">
-          <h3 className="text-xl font-black text-white mb-2">Trouvez votre prochain club sur SwingMarket</h3>
-          <p className="text-green-100 mb-6 text-sm">Des milliers d'annonces de matériel golf d'occasion entre particuliers.</p>
-          <Link to="/Marketplace" className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-bold px-8 py-3 rounded-full transition-colors">Voir les annonces</Link>
-        </div>
-        <div className="mt-10 pt-6 border-t border-gray-100">
-          <Link to="/Blog" className="inline-flex items-center gap-2 text-[#1B5E20] font-semibold hover:underline"><ArrowLeft className="w-4 h-4" /> Retour au blog</Link>
-        </div>
-      </div>
-    </div>
+        </section>
+
+        <article className="bp-article">
+          <div className="bp-body">
+            {renderContent(post.content)}
+          </div>
+
+          <section className="bp-cta">
+            <div className="bp-cta-card">
+              <div className="bp-cta-deco" aria-hidden />
+              <Sparkles className="bp-cta-spark w-5 h-5" />
+              <h3 className="bp-cta-title">
+                Trouvez votre prochain club <span className="bp-cta-accent">sur SwingMarket</span>
+              </h3>
+              <p className="bp-cta-sub">
+                Marketplace 100 % golf · paiement sécurisé · vendeurs vérifiés.
+              </p>
+              <Link to="/Marketplace" className="bp-cta-btn">
+                Découvrir les annonces <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </section>
+
+          {related.length > 0 && (
+            <section className="bp-related">
+              <div className="bp-related-head">
+                <span className="bp-related-line" />
+                <h2 className="bp-related-title">À lire aussi</h2>
+              </div>
+              <div className="bp-related-grid">
+                {related.map((r) => {
+                  const rcat = guessCategory(r);
+                  return (
+                    <Link key={r.id} to={`/BlogPost?id=${r.id}`} className="bp-related-card">
+                      <CoverArt post={r} sizeKey="related" />
+                      <div className="bp-related-body">
+                        <span className="bp-tag bp-tag-sm" style={{ color: `hsl(${rcat.hue} 55% 28%)`, background: `hsl(${rcat.hue} 70% 94%)` }}>
+                          {rcat.label}
+                        </span>
+                        <h3 className="bp-related-name">{r.title}</h3>
+                        <div className="bp-related-meta">
+                          <span>{fmtDate(r.created_at)}</span>
+                          <span className="bp-related-dot" />
+                          <span>{readTime(r.content)}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          <div className="bp-footer-back">
+            <Link to="/Blog">
+              <ArrowLeft className="w-4 h-4" /> Retour au journal
+            </Link>
+          </div>
+        </article>
+      </main>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// Styles
+// ─────────────────────────────────────────────────────────
+function Style() {
+  return (
+    <style>{`
+      .bp-main {
+        background: #FAF8F3;
+        color: #0A1F0C;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        min-height: 100vh;
+      }
+
+      .bp-progress {
+        position: fixed; top: 0; left: 0; right: 0;
+        height: 3px;
+        background: rgba(10,31,12,.06);
+        z-index: 50;
+      }
+      .bp-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #1B5E20, #C5A028);
+        transition: width .15s linear;
+      }
+
+      .bp-loading {
+        display: flex; align-items: center; justify-content: center;
+        gap: 12px; padding: 140px 20px;
+        color: #6B7268; font-size: 14px;
+      }
+      .bp-loading svg { color: #1B5E20; }
+
+      .bp-cover-wrap { position: relative; overflow: hidden; }
+      .bp-cov-svg, .bp-cov-img {
+        position: absolute; inset: 0;
+        width: 100%; height: 100%; display: block;
+        object-fit: cover;
+      }
+      .bp-cw-hero { position: absolute; inset: 0; }
+
+      .bp-hero {
+        position: relative;
+        min-height: clamp(380px, 56vh, 580px);
+        overflow: hidden;
+        isolation: isolate;
+      }
+      .bp-hero-grad {
+        position: absolute; inset: 0; z-index: 1;
+        background: linear-gradient(180deg, rgba(0,0,0,.20) 0%, rgba(10,31,12,.45) 60%, rgba(10,31,12,.95) 100%);
+        pointer-events: none;
+      }
+      .bp-hero-content {
+        position: relative; z-index: 2;
+        max-width: 820px; margin: 0 auto;
+        padding: 56px 28px 44px;
+        min-height: clamp(380px, 56vh, 580px);
+        display: flex; flex-direction: column; justify-content: flex-end;
+        color: white;
+      }
+      .bp-back { position: absolute; top: 28px; left: 28px; }
+      .bp-back a {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 11.5px;
+        letter-spacing: .14em; text-transform: uppercase;
+        color: rgba(255,255,255,.75);
+        text-decoration: none;
+        padding: 8px 14px;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.16);
+        border-radius: 999px;
+        backdrop-filter: blur(10px);
+        transition: background .2s, color .2s;
+      }
+      .bp-back a:hover { background: rgba(255,255,255,.16); color: white; }
+
+      .bp-tag {
+        display: inline-block;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 10.5px; font-weight: 700;
+        padding: 5px 12px; border-radius: 999px;
+        letter-spacing: .14em; text-transform: uppercase;
+        border: 1px solid transparent;
+        backdrop-filter: blur(8px);
+        margin-bottom: 14px;
+        align-self: flex-start;
+      }
+      .bp-tag-sm { font-size: 10px; padding: 3px 10px; }
+
+      .bp-title {
+        font-weight: 900;
+        font-size: clamp(30px, 5vw, 60px);
+        line-height: 1.06;
+        letter-spacing: -0.04em;
+        color: white;
+        margin: 0 0 18px;
+        max-width: 720px;
+        text-shadow: 0 2px 30px rgba(0,0,0,.25);
+      }
+      .bp-excerpt {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-style: italic;
+        font-size: clamp(15px, 1.5vw, 19px);
+        line-height: 1.55;
+        color: rgba(255,255,255,.82);
+        margin: 0 0 26px;
+        max-width: 640px;
+      }
+      .bp-byline {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 11.5px;
+        letter-spacing: .08em;
+        color: rgba(255,255,255,.70);
+      }
+      .bp-byline > span { display: inline-flex; align-items: center; gap: 6px; }
+      .bp-sep { color: #E8C84A; opacity: .6; }
+
+      .bp-share-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-family: inherit; font-size: 11.5px;
+        letter-spacing: .08em;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.16);
+        color: rgba(255,255,255,.85);
+        border-radius: 999px;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: background .2s, color .2s, transform .15s;
+      }
+      .bp-share-btn:hover {
+        background: rgba(255,255,255,.16);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      .bp-article { max-width: 760px; margin: 0 auto; padding: 56px 28px 80px; }
+      .bp-body {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 18px; line-height: 1.8;
+        color: #2A2F2C;
+      }
+      .bp-body > * { margin-bottom: 1.3em; }
+      .bp-body > *:last-child { margin-bottom: 0; }
+      .bp-body > p:first-of-type::first-letter {
+        font-family: Georgia, serif;
+        font-weight: 700;
+        font-size: 3.4em;
+        line-height: .9;
+        float: left;
+        padding: .12em .12em 0 0;
+        color: #1B5E20;
+      }
+      .bp-h1 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 900; font-size: 32px;
+        letter-spacing: -0.03em; line-height: 1.15;
+        color: #0A1F0C; margin: 1.6em 0 .6em;
+      }
+      .bp-h2 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 800; font-size: 24px;
+        letter-spacing: -0.02em; line-height: 1.25;
+        color: #0A1F0C; margin: 1.8em 0 .6em;
+        padding-left: 18px;
+        border-left: 4px solid #1B5E20;
+      }
+      .bp-p { margin: 0 0 1.3em; }
+      .bp-list { margin: 0 0 1.3em; padding-left: 24px; }
+      .bp-list li { margin-bottom: .6em; line-height: 1.7; }
+      .bp-list li::marker { color: #C5A028; }
+      .bp-quote {
+        margin: 1.6em 0;
+        padding: 18px 22px 18px 28px;
+        background: linear-gradient(135deg, rgba(197,160,40,.10), rgba(76,175,80,.06));
+        border-left: 4px solid #C5A028;
+        border-radius: 0 14px 14px 0;
+        font-style: italic;
+        color: #4A5450;
+      }
+      .bp-body strong { color: #0A1F0C; font-weight: 700; }
+      .bp-body em { font-style: italic; color: #4A5450; }
+
+      .bp-cta { margin: 64px 0 56px; }
+      .bp-cta-card {
+        position: relative;
+        background:
+          radial-gradient(60% 80% at 80% 0%, rgba(76,175,80,.18), transparent 60%),
+          radial-gradient(50% 70% at 0% 100%, rgba(232,200,74,.14), transparent 60%),
+          linear-gradient(135deg, #0A1F0C 0%, #143818 100%);
+        border-radius: 24px;
+        padding: 48px 32px;
+        text-align: center;
+        color: white;
+        overflow: hidden;
+        isolation: isolate;
+      }
+      .bp-cta-deco {
+        position: absolute; inset: 0; z-index: 0;
+        background-image:
+          linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+        background-size: 32px 32px;
+        mask-image: radial-gradient(60% 80% at 50% 0%, #000 0%, transparent 70%);
+        -webkit-mask-image: radial-gradient(60% 80% at 50% 0%, #000 0%, transparent 70%);
+        pointer-events: none;
+      }
+      .bp-cta-card > * { position: relative; z-index: 1; }
+      .bp-cta-spark { color: #E8C84A; margin-bottom: 12px; }
+      .bp-cta-title {
+        font-weight: 900;
+        font-size: clamp(22px, 2.6vw, 32px);
+        letter-spacing: -0.025em; line-height: 1.18;
+        margin: 0 0 12px;
+      }
+      .bp-cta-accent {
+        background: linear-gradient(135deg, #E8C84A 0%, #C5A028 100%);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        font-family: Georgia, serif; font-style: italic; font-weight: 400;
+      }
+      .bp-cta-sub {
+        font-family: Georgia, serif;
+        font-size: 15px; line-height: 1.6;
+        color: rgba(255,255,255,.72);
+        margin: 0 0 24px;
+      }
+      .bp-cta-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 24px;
+        background: #E8C84A; color: #0A1F0C;
+        font-weight: 800; font-size: 13.5px;
+        text-decoration: none; border-radius: 999px;
+        box-shadow: 0 16px 32px -10px rgba(197,160,40,.55);
+        transition: transform .2s, box-shadow .2s, background .2s;
+      }
+      .bp-cta-btn:hover {
+        transform: translateY(-2px);
+        background: #F2D55C;
+        box-shadow: 0 22px 40px -10px rgba(197,160,40,.7);
+      }
+
+      .bp-related { padding-top: 48px; border-top: 1px solid rgba(10,31,12,.10); }
+      .bp-related-head {
+        display: flex; align-items: center; gap: 14px;
+        margin-bottom: 28px;
+      }
+      .bp-related-line {
+        flex: 0 0 32px; height: 2px;
+        background: linear-gradient(90deg, #C5A028, transparent);
+      }
+      .bp-related-title {
+        font-weight: 900; font-size: 22px;
+        letter-spacing: -0.025em;
+        color: #0A1F0C; margin: 0;
+      }
+      .bp-related-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 20px;
+      }
+      .bp-related-card {
+        text-decoration: none; color: inherit;
+        background: white;
+        border: 1px solid rgba(10,31,12,.08);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex; flex-direction: column;
+        transition: transform .25s, box-shadow .25s, border-color .2s;
+      }
+      .bp-related-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(10,31,12,.16);
+        box-shadow: 0 18px 32px -16px rgba(10,31,12,.18);
+      }
+      .bp-cw-related { position: relative; aspect-ratio: 16 / 10; }
+      .bp-related-body {
+        padding: 14px 16px 16px;
+        display: flex; flex-direction: column; gap: 8px; flex: 1;
+      }
+      .bp-related-name {
+        font-weight: 800; font-size: 15px;
+        letter-spacing: -0.015em;
+        color: #0A1F0C; margin: 0; line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .bp-related-card:hover .bp-related-name { color: #1B5E20; }
+      .bp-related-meta {
+        display: flex; align-items: center; gap: 7px;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 10.5px;
+        color: #6B7268;
+        margin-top: auto;
+      }
+      .bp-related-dot {
+        width: 3px; height: 3px; border-radius: 50%;
+        background: currentColor; opacity: .5;
+      }
+
+      .bp-footer-back { margin-top: 48px; text-align: center; }
+      .bp-footer-back a {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 14px; font-weight: 700;
+        color: #1B5E20;
+        text-decoration: none;
+      }
+      .bp-footer-back a:hover { text-decoration: underline; }
+
+      .bp-empty {
+        max-width: 480px; margin: 80px auto;
+        text-align: center;
+        background: white;
+        border: 1px solid rgba(10,31,12,.08);
+        border-radius: 22px;
+        padding: 48px 32px;
+        box-shadow: 0 12px 32px -16px rgba(10,31,12,.10);
+      }
+      .bp-empty-icon {
+        width: 60px; height: 60px; border-radius: 18px;
+        background: linear-gradient(135deg, #FEF2F2, #FFEFE6);
+        color: #B91C1C;
+        display: grid; place-items: center;
+        margin: 0 auto 22px;
+      }
+      .bp-empty-title {
+        font-weight: 800; font-size: 26px;
+        color: #0A1F0C; margin: 0 0 12px;
+        letter-spacing: -0.02em;
+      }
+      .bp-empty-sub {
+        font-family: Georgia, serif;
+        font-size: 14.5px; line-height: 1.6;
+        color: #4A5450; margin: 0 0 24px;
+      }
+      .bp-empty-cta {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 12px 22px;
+        background: #0A1F0C; color: #fff;
+        font-weight: 700; font-size: 13.5px;
+        text-decoration: none; border-radius: 999px;
+        transition: background .2s, transform .15s;
+      }
+      .bp-empty-cta:hover { background: #143818; transform: translateY(-1px); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .bp-related-card:hover, .bp-cta-btn:hover, .bp-empty-cta:hover, .bp-share-btn:hover { transform: none; }
+        .bp-progress-bar { transition: none; }
+      }
+    `}</style>
   );
 }
