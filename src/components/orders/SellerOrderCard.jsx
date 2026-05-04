@@ -24,6 +24,29 @@ export default function SellerOrderCard({ order }) {
     },
   });
 
+  const createShipmentMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/sendcloud/create-shipment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: order.id }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["my-sales"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-all-orders"] });
+      setLabelError("");
+    },
+    onError: (error) => {
+      setLabelError(error.message || "Erreur lors de la création du bordereau");
+    },
+  });
+
   const { sendOrderPreparing } = useEmailService();
 
   const handleValidate = async () => {
@@ -40,8 +63,8 @@ export default function SellerOrderCard({ order }) {
   };
 
   const handleGenerateLabel = async () => {
-    setLabelError("Génération d'étiquette Sendcloud disponible prochainement.");
-    setGeneratingLabel(false);
+    setGeneratingLabel(true);
+    createShipmentMutation.mutate();
   };
 
   // Suivi Sendcloud
@@ -133,10 +156,10 @@ export default function SellerOrderCard({ order }) {
             <div className="space-y-1">
               <Button
                 onClick={handleGenerateLabel}
-                disabled={generatingLabel}
+                disabled={createShipmentMutation.isPending}
                 className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-xs h-8 rounded-full gap-1 w-full"
               >
-                {generatingLabel ? (
+                {createShipmentMutation.isPending ? (
                   <><Loader2 className="w-3 h-3 animate-spin" /> Génération en cours...</>
                 ) : (
                   <><Printer className="w-3 h-3" /> Générer l'étiquette Sendcloud</>
