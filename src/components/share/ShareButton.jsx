@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Share2, Copy, Mail, MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -319,16 +318,17 @@ export default function ShareButton({ product, variant = "compact", className = 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="sm"
           onClick={handleTriggerClick}
-          className={`rounded-full border-[#173404] text-[#173404] hover:bg-[#173404]/5 font-semibold ${className}`}
+          className={`group inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-white text-[#173404] font-semibold text-sm border border-[#173404]/15 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_-4px_rgba(23,52,4,0.18)] hover:border-[#C5A028]/60 hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_8px_20px_-6px_rgba(197,160,40,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A028]/40 focus-visible:ring-offset-2 ${className}`}
+          aria-label="Partager cette annonce"
         >
-          <Share2 className="w-4 h-4 mr-2" />
-          Partager
-        </Button>
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-[#C5A028] to-[#a8841e] text-white shadow-sm group-hover:scale-105 transition-transform duration-200">
+            <Share2 className="w-3.5 h-3.5" strokeWidth={2.5} />
+          </span>
+          <span className="tracking-wide">Partager</span>
+        </button>
       </PopoverTrigger>
       <PopoverContent
         align="end"
