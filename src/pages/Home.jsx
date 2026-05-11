@@ -10,7 +10,7 @@ import HeroSection from "../components/home/HeroSection";
 import CategoriesGrid from "../components/home/CategoriesGrid";
 import ProductCarousel from "../components/home/ProductCarousel";
 import TrustBanner from "../components/home/TrustBanner";
-import ReviewsSection from "../components/home/ReviewsSection";
+import TestimonialsCarousel from "../components/home/TestimonialsCarousel";
 import SellCTAStrip from "../components/home/SellCTAStrip";
 import AuctionCarousel from "../components/auction/AuctionCarousel";
 import VideoCtaBanner from "../components/home/VideoCtaBanner";
@@ -86,7 +86,7 @@ export default function Home() {
       <AuctionCarousel />
 
 
-      <ReviewsSection />
+      <TestimonialsCarousel />
       <VideoCtaBanner />
       <BrandCarousel />
       <SearchRequestCTA />
