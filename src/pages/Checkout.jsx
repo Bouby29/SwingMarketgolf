@@ -4,12 +4,11 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { supabase } from "@/lib/supabase";
 import { createPageUrl } from "@/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { calculateCommission } from "@/components/utils/commissionCalculator";
-import { calculateShipping } from "@/lib/shippingCalculator";
+import SendcloudRelayPicker from "@/components/checkout/SendcloudRelayPicker";
+import ShippingAddressForm from "@/components/checkout/ShippingAddressForm";
 import {
-  Shield, CheckCircle, Truck, ArrowLeft, MapPin, Users,
+  Shield, Truck, ArrowLeft, MapPin,
   ChevronRight, Lock, Star, Package, Check, AlertCircle,
 } from "lucide-react";
 
@@ -99,10 +98,9 @@ export default function Checkout() {
 
   const [step, setStep] = useState(0);
 
-  const [deliveryMode, setDeliveryMode] = useState(null);
   const [address, setAddress] = useState({ street: "", city: "", postal_code: "", phone: "" });
   const [relayPoint, setRelayPoint] = useState(null);
-  const [meetupDetails, setMeetupDetails] = useState("");
+  const [relayPickerOpen, setRelayPickerOpen] = useState(false);
 
   const [creatingIntent, setCreatingIntent] = useState(false);
   const [intentError, setIntentError] = useState("");
@@ -110,16 +108,12 @@ export default function Checkout() {
   const [orderId, setOrderId] = useState(null);
   const [placing, setPlacing] = useState(false);
 
-  // Tarifs de livraison : chargés dynamiquement depuis shipping_rates.
-  // - defaultRates : prix de base par mode, affichés dans les 3 cartes
-  //   de sélection (au chargement initial du Checkout).
-  // - shippingAmount / shippingCarrier : tarif effectif pour le mode
-  //   actuellement sélectionné, recalculé à chaque changement.
-  // - shippingLoading : true pendant que la requête est en vol.
-  const [defaultRates, setDefaultRates] = useState({});
-  const [shippingAmount, setShippingAmount] = useState(0);
-  const [shippingCarrier, setShippingCarrier] = useState(null);
-  const [shippingLoading, setShippingLoading] = useState(false);
+  // Options de transport disponibles pour la taille du colis du produit
+  // (chargées depuis shipping_rates en fonction de product.package_size).
+  const [shippingOptions, setShippingOptions] = useState([]);
+  const [shippingOptionsLoading, setShippingOptionsLoading] = useState(false);
+  const [selectedShipping, setSelectedShipping] = useState(null);
+  const [commission, setCommission] = useState(0);
 
   useEffect(() => {
     const init = async () => {
@@ -136,129 +130,130 @@ export default function Checkout() {
     init();
   }, [productId]);
 
-  // Charger les tarifs par défaut (1 par mode) au montage,
-  // pour afficher les prix dans les cartes de sélection.
+  // Charger les options de transport pour la taille du colis du produit.
+  // 5 lignes attendues côté DB par taille (mondial_relay, chronopost_relay,
+  // colissimo, chronopost_dom, fedex), ordonnées via display_order.
   useEffect(() => {
-    const loadDefaultRates = async () => {
-      const { data, error } = await supabase
-        .from("shipping_rates")
-        .select("delivery_mode, shipping_price, carrier_name")
-        .eq("is_active", true)
-        .is("price_min", null)
-        .is("price_max", null);
-
-      if (error) {
-        console.error("Erreur chargement defaultRates:", error);
-        return;
-      }
-
-      const rates = {};
-      (data || []).forEach((row) => {
-        rates[row.delivery_mode] = {
-          shipping_price: Number(row.shipping_price) || 0,
-          carrier_name: row.carrier_name ?? null,
-        };
+    if (!product?.package_size) {
+      setShippingOptions([]);
+      setSelectedShipping(null);
+      return;
+    }
+    setShippingOptionsLoading(true);
+    supabase
+      .from("shipping_rates")
+      .select("*")
+      .eq("size_code", product.package_size)
+      .eq("is_active", true)
+      .order("display_order", { ascending: true })
+      .then(({ data, error }) => {
+        setShippingOptionsLoading(false);
+        if (error) {
+          console.error("Erreur chargement shipping_rates:", error);
+          return;
+        }
+        const list = data || [];
+        setShippingOptions(list);
+        if (list[0]) setSelectedShipping(list[0]);
       });
-      setDefaultRates(rates);
-    };
-    loadDefaultRates();
-  }, []);
+  }, [product?.package_size]);
+
+  // Reset du point relais / adresse quand on change d'option (évite
+  // d'envoyer un point relais Mondial Relay avec un transporteur Chronopost).
+  useEffect(() => {
+    setRelayPoint(null);
+  }, [selectedShipping?.id]);
 
   const articlePrice = Number(product?.price || 0);
 
-  const commissionAmount = useMemo(
-    () => (articlePrice > 0 ? Number(calculateCommission(articlePrice).toFixed(2)) : 0),
-    [articlePrice]
-  );
-
-  // Recalcul du tarif de livraison à chaque changement de mode
-  // ou de prix. On ignore les réponses obsolètes via un flag local
-  // (anti-race quand l'utilisateur change vite de mode).
+  // Commission calculée via la RPC Supabase (calculate_commission). On garde
+  // un fallback sur le helper JS si la RPC ne répond pas (offline).
   useEffect(() => {
-    if (!deliveryMode) {
-      setShippingAmount(0);
-      setShippingCarrier(null);
-      setShippingLoading(false);
+    if (!articlePrice) {
+      setCommission(0);
       return;
     }
-
     let cancelled = false;
-    setShippingLoading(true);
-
-    calculateShipping(deliveryMode, articlePrice)
-      .then(({ shipping_price, carrier_name }) => {
+    supabase
+      .rpc("calculate_commission", { article_price: articlePrice })
+      .then(({ data, error }) => {
         if (cancelled) return;
-        setShippingAmount(Number(shipping_price) || 0);
-        setShippingCarrier(carrier_name ?? null);
-      })
-      .finally(() => {
-        if (!cancelled) setShippingLoading(false);
+        if (error || data == null) {
+          setCommission(Number(calculateCommission(articlePrice).toFixed(2)));
+          return;
+        }
+        setCommission(Number(Number(data).toFixed(2)));
       });
-
     return () => {
       cancelled = true;
     };
-  }, [deliveryMode, articlePrice]);
+  }, [articlePrice]);
+
+  const commissionAmount = commission;
+  const shippingAmount = selectedShipping
+    ? Number(parseFloat(selectedShipping.shipping_price).toFixed(2))
+    : 0;
+  const shippingCarrier = selectedShipping?.carrier_name || null;
+  const deliveryMode = selectedShipping?.delivery_mode || null;
 
   const totalPaid = Number((articlePrice + commissionAmount + shippingAmount).toFixed(2));
   const totalLabel = `${totalPaid.toFixed(2)} €`;
 
-  const deliveryValid =
-    deliveryMode === "domicile" ? !!(address.street && address.city && address.postal_code) :
-    deliveryMode === "relay" ? !!relayPoint :
-    deliveryMode === "main_propre" ? true : false;
+  const isAddressValid = (a) =>
+    !!(a && a.street && a.city && a.postal_code);
+
+  const canPay = useMemo(() => {
+    if (!selectedShipping || !product?.package_size) return false;
+    const mode = selectedShipping.delivery_mode;
+    if (mode === "relay") return !!relayPoint;
+    if (mode === "domicile") return isAddressValid(address);
+    if (mode === "main_propre") return true;
+    return false;
+  }, [selectedShipping, relayPoint, address, product?.package_size]);
 
   const handleProceedToPayment = async () => {
-    if (!product || !user || !deliveryValid || creatingIntent) return;
+    if (!product || !user || !canPay || creatingIntent) return;
 
     setCreatingIntent(true);
     setIntentError("");
 
     try {
-      const { data: orderData, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          product_id: product.id,
-          product_title: product.title,
-          buyer_id: user.id,
-          seller_id: product.seller_id,
-          seller_name: product.seller_name,
-          price: articlePrice,
-          commission_amount: commissionAmount,
-          shipping_amount: shippingAmount,
-          total_paid: totalPaid,
-          payment_intent_id: null,
-          status: "pending_payment",
-          payment_status: "pending",
-          delivery_mode: deliveryMode,
-          buyer_address: deliveryMode === "domicile"
-            ? address.street
-            : deliveryMode === "relay"
-              ? (relayPoint?.address || "")
-              : meetupDetails,
-          buyer_city: deliveryMode === "domicile"
-            ? address.city
-            : (relayPoint?.city || ""),
-          buyer_postal_code: deliveryMode === "domicile"
-            ? address.postal_code
-            : (relayPoint?.postal_code || ""),
-          buyer_phone: address.phone,
-          relay_point: deliveryMode === "relay" ? relayPoint : null,
-          created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (orderError || !orderData) {
-        throw new Error(orderError?.message || "Impossible de créer la commande.");
+      // Récupère le JWT pour authentifier l'appel serveur. Le serveur
+      // recalcule tout (article + commission + livraison) — le client
+      // n'envoie que des IDs, jamais des montants.
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) {
+        throw new Error("Session expirée, reconnectez-vous.");
       }
+
+      const deliveryAddressPayload =
+        deliveryMode === "domicile"
+          ? {
+              address1: address.street,
+              address2: "",
+              postalCode: address.postal_code,
+              city: address.city,
+              phone: address.phone || "",
+            }
+          : null;
 
       const res = await fetch("/api/create-payment-intent", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
-          orderId: orderData.id,
-          amount: Math.round(totalPaid * 100),
+          product_id: product.id,
+          shipping_rate_id: selectedShipping.id,
+          delivery_mode: selectedShipping.delivery_mode,
+          relay_point_id:
+            deliveryMode === "relay" ? String(relayPoint?.id || "") : null,
+          relay_point_name:
+            deliveryMode === "relay" ? relayPoint?.name || null : null,
+          delivery_address: deliveryAddressPayload,
+          buyer_email: user.email,
         }),
       });
 
@@ -267,16 +262,7 @@ export default function Checkout() {
         throw new Error(payload.error || "Impossible d'initialiser le paiement.");
       }
 
-      const { error: updateError } = await supabase
-        .from("orders")
-        .update({ payment_intent_id: payload.paymentIntentId })
-        .eq("id", orderData.id);
-
-      if (updateError) {
-        console.error("Erreur update payment_intent_id:", updateError);
-      }
-
-      setOrderId(orderData.id);
+      setOrderId(payload.orderId);
       setClientSecret(payload.clientSecret);
       setStep(1);
     } catch (e) {
@@ -353,154 +339,156 @@ export default function Checkout() {
 
             {step === 0 && (
               <>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Mode de livraison</h2>
+                <h2 className="text-xl font-bold text-[#042C53] mb-1">Choisissez votre livraison</h2>
+                <p className="text-sm text-gray-500 mb-4">
+                  Tarifs adaptés à la taille du colis du vendeur.
+                </p>
 
-                <div
-                  onClick={() => setDeliveryMode("domicile")}
-                  className={`w-full text-left p-5 rounded-2xl border-2 transition-all cursor-pointer ${
-                    deliveryMode === "domicile" ? "border-[#1B5E20] bg-green-50" : "border-gray-200 bg-white hover:border-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                      deliveryMode === "domicile" ? "bg-[#1B5E20]" : "bg-gray-100"
-                    }`}>
-                      <Truck className={`w-5 h-5 ${deliveryMode === "domicile" ? "text-white" : "text-gray-400"}`} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold text-gray-900">Livraison à domicile</p>
-                        <span className="text-sm text-gray-400">
-                          {defaultRates.domicile
-                            ? `${defaultRates.domicile.shipping_price.toFixed(2)} €`
-                            : "—"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {defaultRates.domicile?.carrier_name
-                          ? `Livré par ${defaultRates.domicile.carrier_name} en 2-3 jours ouvrés`
-                          : "Livré directement chez vous en 2-3 jours ouvrés"}
-                      </p>
-                    </div>
+                {!product.package_size && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-2 mb-3">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-sm text-amber-800">
+                      Livraison non configurée pour ce produit. Contactez le vendeur.
+                    </p>
                   </div>
-                  {deliveryMode === "domicile" && (
-                    <div className="mt-4 pt-4 border-t border-green-200 grid grid-cols-1 gap-3" onClick={e => e.stopPropagation()}>
-                      <Input placeholder="Adresse (numéro et rue)" value={address.street} onChange={e => setAddress(a => ({ ...a, street: e.target.value }))} className="text-sm rounded-xl border-gray-200" />
-                      <div className="grid grid-cols-2 gap-3">
-                        <Input placeholder="Code postal" value={address.postal_code} onChange={e => setAddress(a => ({ ...a, postal_code: e.target.value }))} className="text-sm rounded-xl border-gray-200" />
-                        <Input placeholder="Ville" value={address.city} onChange={e => setAddress(a => ({ ...a, city: e.target.value }))} className="text-sm rounded-xl border-gray-200" />
-                      </div>
-                      <Input placeholder="Téléphone" value={address.phone} onChange={e => setAddress(a => ({ ...a, phone: e.target.value }))} className="text-sm rounded-xl border-gray-200" />
-                    </div>
-                  )}
-                </div>
+                )}
 
-                <div
-                  onClick={() => setDeliveryMode("relay")}
-                  className={`w-full text-left p-5 rounded-2xl border-2 transition-all cursor-pointer ${
-                    deliveryMode === "relay" ? "border-[#1B5E20] bg-green-50" : "border-gray-200 bg-white hover:border-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                      deliveryMode === "relay" ? "bg-[#1B5E20]" : "bg-gray-100"
-                    }`}>
-                      <MapPin className={`w-5 h-5 ${deliveryMode === "relay" ? "text-white" : "text-gray-400"}`} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold text-gray-900">Point relais</p>
-                        <span className="text-sm text-gray-400">
-                          {defaultRates.relay
-                            ? `${defaultRates.relay.shipping_price.toFixed(2)} €`
-                            : "—"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {defaultRates.relay?.carrier_name
-                          ? `Retirez votre colis via ${defaultRates.relay.carrier_name}`
-                          : "Retirez votre colis près de chez vous"}
-                      </p>
-                    </div>
+                {shippingOptionsLoading && (
+                  <div className="bg-white border border-gray-100 rounded-xl p-4 text-center text-sm text-gray-500">
+                    <div className="inline-block w-4 h-4 border-2 border-[#173404] border-t-transparent rounded-full animate-spin mr-2 align-[-2px]" />
+                    Chargement des options de livraison…
                   </div>
-                  {deliveryMode === "relay" && (
-                    <div className="mt-4 pt-4 border-t border-green-200" onClick={e => e.stopPropagation()}>
-                      {!relayPoint ? (
-                        <div className="bg-white border-2 border-dashed border-[#1B5E20] rounded-xl p-4 text-center">
-                          <MapPin className="w-6 h-6 text-[#1B5E20] mx-auto mb-2" />
-                          <p className="text-sm font-medium text-[#1B5E20]">Choisir un point relais</p>
-                          <p className="text-xs text-gray-400 mt-1">La carte interactive sera disponible prochainement</p>
-                          <button
-                            onClick={() => setRelayPoint({ name: "Tabac du Centre", city: "Paris", postal_code: "75001", address: "12 rue de Rivoli" })}
-                            className="mt-3 text-xs text-[#1B5E20] underline"
-                          >
-                            Simuler un point relais (test)
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="bg-white border border-green-200 rounded-xl p-4 flex items-start justify-between">
-                          <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-                              <MapPin className="w-4 h-4 text-[#1B5E20]" />
+                )}
+
+                {!shippingOptionsLoading && product.package_size && shippingOptions.length === 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+                    Aucune option de livraison disponible pour ce produit pour le moment.
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  {shippingOptions.map((option) => {
+                    const isSelected = selectedShipping?.id === option.id;
+                    return (
+                      <div key={option.id}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedShipping(option)}
+                          className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                            isSelected
+                              ? "border-[#173404] bg-[#FAF8F3]"
+                              : "border-gray-200 bg-white hover:border-gray-300"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <span
+                                className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-lg ${
+                                  isSelected ? "bg-[#173404] text-white" : "bg-gray-100"
+                                }`}
+                              >
+                                {option.delivery_mode === "relay" ? (
+                                  <MapPin className={`w-5 h-5 ${isSelected ? "text-white" : "text-gray-500"}`} />
+                                ) : (
+                                  <Truck className={`w-5 h-5 ${isSelected ? "text-white" : "text-gray-500"}`} />
+                                )}
+                              </span>
+                              <div>
+                                <p className="font-semibold text-sm text-[#042C53]">
+                                  {option.carrier_name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {option.delivery_estimate || (option.delivery_mode === "relay" ? "Retrait en point relais" : "Livraison à domicile")}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-semibold text-sm text-gray-900">{relayPoint.name}</p>
-                              <p className="text-xs text-gray-500">{relayPoint.address}</p>
-                              <p className="text-xs text-gray-500">{relayPoint.postal_code} {relayPoint.city}</p>
-                            </div>
+                            <p className="font-bold text-[#173404]">
+                              {parseFloat(option.shipping_price).toFixed(2)} €
+                            </p>
                           </div>
-                          <button onClick={() => setRelayPoint(null)} className="text-xs text-[#1B5E20] underline shrink-0 ml-2">Modifier</button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        </button>
+
+                        {isSelected && option.delivery_mode === "relay" && (
+                          <div className="mt-3 pl-4 border-l-2 border-[#173404]">
+                            {relayPoint ? (
+                              <div className="bg-white border border-[#173404]/20 rounded-xl p-3 flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-2 min-w-0">
+                                  <MapPin className="w-4 h-4 text-[#173404] shrink-0 mt-0.5" />
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-sm text-gray-900 truncate">
+                                      {relayPoint.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {relayPoint.street}{" "}
+                                      {relayPoint.house_number}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {relayPoint.postal_code} {relayPoint.city}
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setRelayPickerOpen(true)}
+                                  className="text-xs text-[#173404] underline shrink-0 whitespace-nowrap"
+                                >
+                                  Modifier
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setRelayPickerOpen(true)}
+                                className="w-full bg-white border-2 border-dashed border-[#173404] rounded-xl p-4 text-center hover:bg-[#FAF8F3] transition-colors"
+                              >
+                                <MapPin className="w-6 h-6 text-[#173404] mx-auto mb-1" />
+                                <p className="text-sm font-medium text-[#173404]">
+                                  Choisir un point relais sur la carte
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Carte interactive Sendcloud
+                                </p>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        {isSelected && option.delivery_mode === "domicile" && (
+                          <div className="mt-3 pl-4 border-l-2 border-[#173404]">
+                            <ShippingAddressForm address={address} onChange={setAddress} />
+                          </div>
+                        )}
+                        {isSelected && option.delivery_mode === "main_propre" && (
+                          <div className="mt-3 pl-4 border-l-2 border-amber-500 bg-amber-50/50 rounded-r-lg p-3">
+                            <p className="text-sm font-semibold text-amber-900 mb-1 flex items-center gap-1.5">
+                              <span aria-hidden="true">🤝</span>
+                              Aucune garantie SwingMarketGolf
+                            </p>
+                            <ul className="text-xs text-amber-800 space-y-0.5">
+                              <li>• Vous payez sur la plateforme (commission incluse)</li>
+                              <li>• Pas de frais de port</li>
+                              <li>• Vous convenez du rendez-vous avec le vendeur via la messagerie</li>
+                              <li>• En cas de litige, SwingMarketGolf ne pourra pas intervenir</li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div
-                  onClick={() => setDeliveryMode("main_propre")}
-                  className={`w-full text-left p-5 rounded-2xl border-2 transition-all cursor-pointer ${
-                    deliveryMode === "main_propre" ? "border-[#1B5E20] bg-green-50" : "border-gray-200 bg-white hover:border-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                      deliveryMode === "main_propre" ? "bg-[#1B5E20]" : "bg-gray-100"
-                    }`}>
-                      <Users className={`w-5 h-5 ${deliveryMode === "main_propre" ? "text-white" : "text-gray-400"}`} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold text-gray-900">Remise en main propre</p>
-                        <span className="text-sm text-[#1B5E20] font-medium">
-                          {defaultRates.main_propre && defaultRates.main_propre.shipping_price > 0
-                            ? `${defaultRates.main_propre.shipping_price.toFixed(2)} €`
-                            : "Gratuit"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-0.5">Rencontrez le vendeur pour récupérer l article</p>
-                    </div>
-                  </div>
-                  {deliveryMode === "main_propre" && (
-                    <div className="mt-4 pt-4 border-t border-green-200" onClick={e => e.stopPropagation()}>
-                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                        <p className="text-xs text-amber-700">
-                          Utilisez la messagerie SwingMarket pour organiser le rendez-vous. Ne partagez jamais vos coordonnées en dehors de la plateforme.
-                        </p>
-                      </div>
-                      <Input
-                        placeholder="Ville ou lieu souhaité (optionnel)"
-                        value={meetupDetails}
-                        onChange={e => setMeetupDetails(e.target.value)}
-                        className="text-sm rounded-xl border-gray-200"
-                        onClick={e => e.stopPropagation()}
-                      />
-                    </div>
-                  )}
-                </div>
+                {relayPickerOpen && selectedShipping?.delivery_mode === "relay" && (
+                  <SendcloudRelayPicker
+                    carrierId={selectedShipping.carrier_code}
+                    onSelect={(p) => {
+                      setRelayPoint(p);
+                      setRelayPickerOpen(false);
+                    }}
+                    onClose={() => setRelayPickerOpen(false)}
+                  />
+                )}
 
                 {intentError && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2 mt-3">
                     <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                     <p className="text-sm text-red-700">{intentError}</p>
                   </div>
@@ -508,18 +496,13 @@ export default function Checkout() {
 
                 <button
                   onClick={handleProceedToPayment}
-                  disabled={!deliveryValid || creatingIntent || shippingLoading}
-                  className="w-full bg-[#1B5E20] hover:bg-[#2E7D32] disabled:opacity-40 text-white rounded-full font-semibold py-3 flex items-center justify-center gap-2 transition-colors mt-2"
+                  disabled={!canPay || creatingIntent}
+                  className="w-full bg-[#173404] hover:bg-[#1f4a06] disabled:opacity-40 text-white rounded-full font-semibold py-3 flex items-center justify-center gap-2 transition-colors mt-4"
                 >
                   {creatingIntent ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       Initialisation du paiement…
-                    </>
-                  ) : shippingLoading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Calcul des frais de livraison…
                     </>
                   ) : (
                     <>
@@ -593,23 +576,15 @@ export default function Checkout() {
                   <span className="font-medium text-gray-900">{articlePrice.toFixed(2)} €</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Frais de service</span>
+                  <span className="text-gray-500">Commission SwingMarket</span>
                   <span className="font-medium text-gray-900">{commissionAmount.toFixed(2)} €</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">
-                    {shippingCarrier && !shippingLoading
-                      ? `Livraison via ${shippingCarrier}`
-                      : "Livraison"}
+                    {shippingCarrier ? `Livraison via ${shippingCarrier}` : "Livraison"}
                   </span>
                   <span className="font-medium text-gray-900">
-                    {!deliveryMode
-                      ? "—"
-                      : shippingLoading
-                        ? "Calcul en cours..."
-                        : shippingAmount === 0
-                          ? (deliveryMode === "main_propre" ? "Gratuit" : "À calculer")
-                          : `${shippingAmount.toFixed(2)} €`}
+                    {selectedShipping ? `${shippingAmount.toFixed(2)} €` : "—"}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -619,22 +594,21 @@ export default function Checkout() {
               </div>
 
               <div className="border-t border-gray-100 pt-3 flex justify-between items-center mb-4">
-                <span className="font-bold text-gray-900">Total</span>
-                <span className="text-xl font-extrabold text-[#1B5E20]">{totalLabel}</span>
+                <span className="font-bold text-[#042C53]">Total</span>
+                <span className="text-2xl font-extrabold text-[#173404]">{totalLabel}</span>
               </div>
 
-              {deliveryMode && (
+              {selectedShipping && (
                 <div className="bg-gray-50 rounded-xl p-3 mb-3">
                   <div className="flex items-center gap-2">
-                    {deliveryMode === "domicile" && <Truck className="w-4 h-4 text-[#1B5E20]" />}
-                    {deliveryMode === "relay" && <MapPin className="w-4 h-4 text-[#1B5E20]" />}
-                    {deliveryMode === "main_propre" && <Users className="w-4 h-4 text-[#1B5E20]" />}
+                    {deliveryMode === "relay" ? (
+                      <MapPin className="w-4 h-4 text-[#173404]" />
+                    ) : (
+                      <Truck className="w-4 h-4 text-[#173404]" />
+                    )}
                     <span className="text-xs font-medium text-gray-700">
-                      {deliveryMode === "domicile"
-                        ? "Livraison à domicile"
-                        : deliveryMode === "relay"
-                          ? "Point relais"
-                          : "Remise en main propre"}
+                      {selectedShipping.carrier_name}
+                      {selectedShipping.delivery_estimate ? ` · ${selectedShipping.delivery_estimate}` : ""}
                     </span>
                   </div>
                   {deliveryMode === "domicile" && address.city && (
