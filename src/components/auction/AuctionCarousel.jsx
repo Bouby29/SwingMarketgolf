@@ -95,7 +95,7 @@ export default function AuctionCarousel() {
           {activeAuctions.map(product => (
             <Link
               key={product.id}
-              to={createPageUrl("ProductDetail") + `?id=${product.id}`}
+              to={product.slug ? `/product/${product.slug}` : createPageUrl("ProductDetail") + `?id=${product.id}`}
               className="flex-shrink-0 w-64 bg-white rounded-2xl border border-amber-100 overflow-hidden hover:shadow-lg transition-shadow"
             >
               <div className="relative">

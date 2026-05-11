@@ -56,7 +56,7 @@ export default function Favorites() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {favorites.map(fav => (
             <div key={fav.id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm card-hover">
-              <Link to={createPageUrl("ProductDetail") + `?id=${fav.product_id}`}>
+              <Link to={fav.products?.slug ? `/product/${fav.products.slug}` : createPageUrl("ProductDetail") + `?id=${fav.product_id}`}>
                 <div className="aspect-square overflow-hidden">
                   <img
                     src={fav.products?.images?.[0] || "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=400&h=400&fit=crop"}

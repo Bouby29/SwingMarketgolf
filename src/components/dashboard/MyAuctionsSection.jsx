@@ -80,7 +80,7 @@ export default function MyAuctionsSection({ myProducts }) {
           <Badge variant="outline" className="text-xs">Terminée</Badge>
         )}
         <div>
-          <Link to={createPageUrl("ProductDetail") + `?id=${p.id}`}>
+          <Link to={p.slug ? `/product/${p.slug}` : createPageUrl("ProductDetail") + `?id=${p.id}`}>
             <span className="text-xs text-[#1B5E20] hover:underline">Voir l'annonce →</span>
           </Link>
         </div>

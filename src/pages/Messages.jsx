@@ -358,7 +358,7 @@ export default function Messages() {
                       )}
                     </div>
                     {product && (
-                      <Link to={createPageUrl("ProductDetail") + `?id=${selectedConv.product_id}`} className="shrink-0">
+                      <Link to={product?.slug ? `/product/${product.slug}` : createPageUrl("ProductDetail") + `?id=${selectedConv.product_id}`} className="shrink-0">
                         {product.images?.[0] && (
                           <img src={product.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover border border-gray-200" />
                         )}

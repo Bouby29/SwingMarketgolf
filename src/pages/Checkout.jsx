@@ -313,7 +313,7 @@ export default function Checkout() {
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link
-            to={createPageUrl("ProductDetail") + "?id=" + product.id}
+            to={product.slug ? `/product/${product.slug}` : createPageUrl("ProductDetail") + "?id=" + product.id}
             className="flex items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors text-sm"
           >
             <ArrowLeft className="w-4 h-4" /> Retour

@@ -22,6 +22,7 @@ import CGSPro from './pages/CGSPro';
 import SellerOnboarding from './pages/SellerOnboarding';
 import Abonnements from './pages/Abonnements';
 import ComingSoon from './pages/ComingSoon';
+import ProductDetail from './pages/ProductDetail';
 
 const COMING_SOON_MODE = import.meta.env.VITE_COMING_SOON === 'true';
 
@@ -111,6 +112,11 @@ const AuthenticatedApp = () => {
       <Route path="/Abonnements" element={<Abonnements />} />
       <Route path="/SearchRequest" element={<SearchRequest />} />
       <Route path="/SearchRequestsList" element={<SearchRequestsList />} />
+      <Route path="/product/:slug" element={
+        <LayoutWrapper currentPageName="ProductDetail">
+          <ProductDetail />
+        </LayoutWrapper>
+      } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

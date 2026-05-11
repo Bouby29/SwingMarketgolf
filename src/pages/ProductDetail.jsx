@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SEOHead from "../components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { supabase, entities, auth } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -30,7 +30,9 @@ const shippingPrices = {
 
 export default function ProductDetail() {
   const location = useLocation();
+  const { slug: routeSlug } = useParams();
   const productId = new URLSearchParams(location.search).get("id");
+  const lookupKey = routeSlug ? `slug:${routeSlug}` : `id:${productId}`;
   const [currentPhoto, setCurrentPhoto] = useState(0);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [offerAmount, setOfferAmount] = useState("");
@@ -46,10 +48,23 @@ export default function ProductDetail() {
   }, []);
 
   const { data: product, isLoading } = useQuery({
-    queryKey: ["product", productId],
-    queryFn: () => entities.Product.filter({ id: productId }),
+    queryKey: ["product", lookupKey],
+    queryFn: async () => {
+      if (routeSlug) {
+        const { data } = await supabase
+          .from("products")
+          .select("*")
+          .eq("slug", routeSlug)
+          .maybeSingle();
+        return data ? [data] : [];
+      }
+      if (productId) {
+        return entities.Product.filter({ id: productId });
+      }
+      return [];
+    },
     select: (data) => data[0],
-    enabled: !!productId,
+    enabled: !!routeSlug || !!productId,
   });
 
   const { data: seller } = useQuery({

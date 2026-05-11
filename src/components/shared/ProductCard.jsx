@@ -67,7 +67,7 @@ export default function ProductCard({ product, showFavorite = true }) {
   const isNew = product.created_at && (new Date() - new Date(product.created_at)) < 10 * 24 * 60 * 60 * 1000;
 
   return (
-    <Link to={createPageUrl("ProductDetail") + `?id=${product.id}`} className="group block">
+    <Link to={product.slug ? `/product/${product.slug}` : createPageUrl("ProductDetail") + `?id=${product.id}`} className="group block">
       <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 flex flex-col h-full">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden">
