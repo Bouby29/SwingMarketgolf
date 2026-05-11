@@ -11,27 +11,51 @@ function setMeta(name, content, isProperty = false) {
   el.setAttribute("content", content);
 }
 
-export default function SEOHead({ title, description, image, url, type = "website", structuredData }) {
-  const fullTitle = title ? `${title} | SwingMarket Golf` : "SwingMarket Golf - Marketplace du matériel de golf d'occasion";
-  const fullDescription = description || "Achetez et vendez votre matériel de golf d'occasion. Clubs, balles, sacs, chariots... Paiement sécurisé, livraison partout en France.";
-  const fullImage = image || "https://swingmarketgolf.com/og-image.jpg";
-  const fullUrl = url || (typeof window !== "undefined" ? window.location.href : "https://swingmarketgolf.com");
+export default function SEOHead({
+  title,
+  description,
+  image,
+  url,
+  type = "website",
+  ogImage,
+  ogUrl,
+  ogType,
+  structuredData,
+}) {
+  const resolvedType = ogType || type;
+  const fullTitle = title
+    ? `${title} | SwingMarketGolf`
+    : "SwingMarketGolf - Marketplace du matériel de golf d'occasion";
+  const fullDescription =
+    description ||
+    "Achetez et vendez votre matériel de golf d'occasion. Clubs, balles, sacs, chariots... Paiement sécurisé, livraison partout en France.";
+  const fullImage =
+    ogImage || image || "https://www.swingmarketgolf.com/og-image.jpg";
+  const fullUrl =
+    ogUrl ||
+    url ||
+    (typeof window !== "undefined"
+      ? window.location.href
+      : "https://www.swingmarketgolf.com");
 
   useEffect(() => {
     document.title = fullTitle;
 
     setMeta("description", fullDescription);
-    setMeta("keywords", "golf occasion, matériel golf, clubs golf, balles golf, vente golf, achat golf, SwingMarket");
+    setMeta(
+      "keywords",
+      "golf occasion, matériel golf, clubs golf, balles golf, vente golf, achat golf, SwingMarket"
+    );
     setMeta("robots", "index, follow");
-    setMeta("author", "SwingMarket Golf");
+    setMeta("author", "SwingMarketGolf");
 
     // Open Graph
     setMeta("og:title", fullTitle, true);
     setMeta("og:description", fullDescription, true);
-    setMeta("og:type", type, true);
+    setMeta("og:type", resolvedType, true);
     setMeta("og:url", fullUrl, true);
     setMeta("og:image", fullImage, true);
-    setMeta("og:site_name", "SwingMarket Golf", true);
+    setMeta("og:site_name", "SwingMarketGolf", true);
     setMeta("og:locale", "fr_FR", true);
 
     // Twitter Card
@@ -62,7 +86,7 @@ export default function SEOHead({ title, description, image, url, type = "websit
     } else if (script) {
       script.remove();
     }
-  }, [fullTitle, fullDescription, fullImage, fullUrl, type, structuredData]);
+  }, [fullTitle, fullDescription, fullImage, fullUrl, resolvedType, structuredData]);
 
   return null;
 }

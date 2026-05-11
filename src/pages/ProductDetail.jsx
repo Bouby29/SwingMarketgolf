@@ -15,6 +15,7 @@ import ProductCard from "../components/shared/ProductCard";
 import { calculateCommission, getCommissionTier } from "../components/utils/commissionCalculator";
 import AuctionBidPanel from "../components/auction/AuctionBidPanel";
 import MakeOfferButton from "../components/product/MakeOfferButton";
+import ShareButton from "../components/share/ShareButton";
 
 const conditionLabels = {
   neuf: "Neuf", comme_neuf: "Comme neuf",
@@ -162,10 +163,11 @@ export default function ProductDetail() {
   return (
     <div className="max-w-7xl mx-auto px-3 md:px-4 py-3 md:py-8">
       <SEOHead
-        title={`${product.title} - Occasion | SwingMarket`}
-        description={`Achetez ${product.title} d'occasion au meilleur prix. Produit vérifié, livraison rapide et sécurisée sur SwingMarket.`}
-        image={product.images?.[0]}
-        url={`https://swingmarketgolf.com/ProductDetail?id=${product.id}`}
+        title={`${product.brand ? product.brand + " " : ""}${product.title} — ${product.price}€`}
+        description={`${product.title} d'occasion à ${product.price}€. Vendu par ${seller?.shop_name || seller?.full_name || product.seller_name || "un vendeur"} sur SwingMarketGolf, la marketplace 100% golf. Paiement sécurisé Stripe.`}
+        ogImage={product.images?.[0]}
+        ogUrl={`https://www.swingmarketgolf.com/product/${product.slug || product.id}`}
+        ogType="product"
         type="product"
         structuredData={productStructuredData}
       />
@@ -271,9 +273,12 @@ export default function ProductDetail() {
               <Button onClick={() => { if (!isLoggedIn) { window.location.href="/Login"; return; } setShowOfferModal(true); }} size="lg" className="w-full mb-3 rounded-full bg-[#C5A028] hover:bg-[#b8902a] text-white font-semibold">
                 💰 Faire une offre
               </Button>
-              <Button onClick={handleContact} size="lg" variant="outline" className="w-full mb-6 rounded-full border-[#1B5E20] text-[#1B5E20] hover:bg-green-50 font-semibold">
+              <Button onClick={handleContact} size="lg" variant="outline" className="w-full mb-3 rounded-full border-[#1B5E20] text-[#1B5E20] hover:bg-green-50 font-semibold">
                 <MessageCircle className="w-4 h-4 mr-2" /> Contacter le vendeur
               </Button>
+              <div className="mb-6">
+                <ShareButton product={product} className="w-full justify-center" />
+              </div>
             </>
           ) : (
             <>
@@ -285,8 +290,11 @@ export default function ProductDetail() {
                   <MessageCircle className="w-4 h-4 mr-2" /> Contacter
                 </Button>
               </div>
-              <div className="flex gap-3 mb-6">
+              <div className="flex gap-3 mb-3">
                 <MakeOfferButton product={product} isLoggedIn={isLoggedIn} currentUser={currentUser} />
+              </div>
+              <div className="mb-6">
+                <ShareButton product={product} className="w-full justify-center" />
               </div>
             </>
           )}
