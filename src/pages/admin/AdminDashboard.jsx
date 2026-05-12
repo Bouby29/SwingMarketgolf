@@ -15,16 +15,16 @@ import {
   ArrowRight, ArrowLeft, AlertCircle,
 } from "lucide-react";
 
-// ─────────────────────────────────────────────────────────
-// Auth Supabase admin (inchangé — service_role pour panel admin)
-// ─────────────────────────────────────────────────────────
+// 🚨 TODO SECURITY CRITICAL — REFACTOR PLANNED
+// The service_role key is exposed in the client bundle.
+// This must be replaced with server-side api/admin/* endpoints
+// + a signed admin JWT auth system. See SECURITY.md.
+// Estimated work: 4-6h refactor session.
+// Date detected: 2026-05-11. Tracked in: SECURITY.md
 const supabaseAdmin = createClient(
   "https://pnhiuifejnnklbfpjmdr.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaGl1aWZlam5ua2xiZnBqbWRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzY5MDc4NSwiZXhwIjoyMDg5MjY2Nzg1fQ.pdIrv8cLFbTEJATtDVAqgAODYEJKHS7n_g6BE4ft0qU"
 );
-
-const ADMIN_LOGIN = "admin@swingmarketgolf.com";
-const ADMIN_PASSWORD = "swingadmin2024";
 
 // ─────────────────────────────────────────────────────────
 // Sidebar : sections du design (PILOTAGE / FINANCE / OPÉRATIONS)
@@ -386,7 +386,6 @@ export default function AdminDashboard() {
 
   const doLogin = async () => {
     setAuthError("");
-    const isMainAdmin = pwd === ADMIN_PASSWORD && login === ADMIN_LOGIN;
 
     // Vérification bcrypt côté serveur via la RPC Supabase verify_admin_password.
     // Cette fonction compare p_password contre password_hash (pgcrypto). Plus
@@ -400,7 +399,7 @@ export default function AdminDashboard() {
 
     const dbAdmin = Array.isArray(data) && data.length > 0 ? data[0] : null;
 
-    if (isMainAdmin || dbAdmin) {
+    if (dbAdmin) {
       sessionStorage.setItem("admin_authed", "1");
       setAuthed(true);
     } else {
