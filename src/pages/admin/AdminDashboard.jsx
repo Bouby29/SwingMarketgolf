@@ -387,9 +387,19 @@ export default function AdminDashboard() {
   const doLogin = async () => {
     setAuthError("");
     const isMainAdmin = pwd === ADMIN_PASSWORD && login === ADMIN_LOGIN;
-    const { data: dbAdmin } = await supabaseAdmin
-      .from("admin_users")
-      .select("*").eq("email", login).eq("password", pwd).maybeSingle();
+
+    // Vérification bcrypt côté serveur via la RPC Supabase verify_admin_password.
+    // Cette fonction compare p_password contre password_hash (pgcrypto). Plus
+    // aucun mot de passe en clair ne transite via .eq("password", ...).
+    const { data, error: rpcError } = await supabaseAdmin
+      .rpc("verify_admin_password", { p_email: login, p_password: pwd });
+
+    if (rpcError) {
+      console.error("verify_admin_password RPC error:", rpcError);
+    }
+
+    const dbAdmin = Array.isArray(data) && data.length > 0 ? data[0] : null;
+
     if (isMainAdmin || dbAdmin) {
       sessionStorage.setItem("admin_authed", "1");
       setAuthed(true);
