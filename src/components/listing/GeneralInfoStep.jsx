@@ -8,23 +8,23 @@ import { Gavel, Tag, Package, Info } from "lucide-react";
 const PARCEL_SIZES = [
   {
     value: "small",
-    label: "Petit colis",
-    weight: "1 – 2 kg",
-    examples: "Vêtements, tees, balles, gants, petits accessoires",
+    label: "Petit",
+    weight: "0 - 2 kg",
+    examples: "Gants, tees, balles, casquettes, 1 wedge ou putter seul",
     icon: "📦",
   },
   {
     value: "medium",
-    label: "Colis moyen",
-    weight: "2 – 4 kg",
-    examples: "Chaussures, sac léger, accessoires volumineux",
+    label: "Moyen",
+    weight: "2 - 5 kg",
+    examples: "Putters, wedges, hybrides, 2-3 clubs, accessoires moyens",
     icon: "📫",
   },
   {
     value: "large",
-    label: "Grand colis",
-    weight: "4 – 15 kg",
-    examples: "Clubs, chariots, équipements volumineux",
+    label: "Grand",
+    weight: "5 - 15 kg",
+    examples: "Drivers, sacs vides, sets de fers, gros accessoires",
     icon: "🗃️",
   },
 ];
@@ -162,11 +162,11 @@ export default function GeneralInfoStep({ form, onChange }) {
               }`}
             >
               <div className="text-2xl mb-2">{size.icon}</div>
-              <p className={`font-semibold text-sm mb-0.5 ${form.package_size === size.value ? 'text-[#1B5E20]' : 'text-gray-900'}`}>
+              <p className={`font-semibold text-sm mb-1 ${form.package_size === size.value ? 'text-[#1B5E20]' : 'text-gray-900'}`}>
                 {size.label}
               </p>
-              <p className="text-xs font-medium text-gray-500 mb-1">{size.weight}</p>
-              <p className="text-xs text-gray-400 leading-relaxed">{size.examples}</p>
+              <p className="text-xs text-gray-500 leading-relaxed mb-1.5">{size.examples}</p>
+              <p className="text-[11px] text-gray-400 font-medium">{size.weight}</p>
             </button>
           ))}
         </div>

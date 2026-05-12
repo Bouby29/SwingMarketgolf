@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MapPin, X, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase, entities, auth } from "@/lib/supabase";
-
-// Cache la clé publique pour éviter de la re-fetcher
-let _cachedPublicKey = null;
 
 // Charge Leaflet dynamiquement depuis CDN pour éviter les conflits React
 function useLeaflet(mapRef, points, selectedPoint, onMarkerClick) {
@@ -116,30 +112,15 @@ export default function SendcloudRelayPicker({ carrierId, onSelect, onClose }) {
     setLoading(true);
     setHasSearched(true);
     try {
-      // Récupérer la clé publique depuis le backend (avec cache)
-      if (!_cachedPublicKey) {
-        const keyRes = await fetch("/api/sendcloud/public-key");
-        if (!keyRes.ok) throw new Error(`Failed to fetch public key: ${keyRes.status}`);
-        const data = await keyRes.json();
-        _cachedPublicKey = data.public_key;
-      }
-      if (!_cachedPublicKey) throw new Error("Clé publique introuvable");
-
-      const sendcloudCarrier = carrierId || "mondial_relay";
+      // Proxy serveur : pas de clé publique exposée côté client.
       const params = new URLSearchParams({
-        country: "FR",
         postal_code: postal,
-        language: "fr_FR",
-        results: "20",
+        country: "fr",
         radius: "10000",
-        carriers: sendcloudCarrier,
       });
+      if (carrierId) params.set("carrier", carrierId);
 
-      const response = await fetch(
-        `https://servicepoints.sendcloud.sc/api/v2/service-points/?${params.toString()}`,
-        { headers: { "Authorization": `Basic ${btoa(`${_cachedPublicKey}:`)}` } }
-      );
-
+      const response = await fetch(`/api/sendcloud/service-points?${params.toString()}`);
       if (!response.ok) throw new Error(`API error ${response.status}`);
       const data = await response.json();
       setPoints(Array.isArray(data) ? data : []);
