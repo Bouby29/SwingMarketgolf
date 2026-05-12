@@ -138,13 +138,9 @@ function App() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // 🚧 COMING SOON TEMPORARILY DISABLED FOR PHASE 2 TESTING
-  // TO RE-ENABLE: uncomment the block below
-  /*
   if (COMING_SOON_MODE && window.location.hostname !== "admin.swingmarketgolf.com" && window.location.hostname !== "localhost") {
     return <ComingSoon />;
   }
-  */
 
   return (
     <AuthProvider>
